@@ -38,8 +38,8 @@ const Hero = () => {
         </h1>
 
         <p className="text-base text-textColor small:w-[80%]">
-          Rau củ, thịt cá và hàng thiết yếu từ các kho gần bạn. SmartPantry ghi
-          nhớ những món bạn hay mua để lần sau chỉ cần một chạm là đặt lại.
+          Rau củ, thịt cá và hàng thiết yếu tươi mỗi ngày, đặt online và nhận
+          hàng ngay tại nhà.
         </p>
 
         <LocalizedClientLink href="/store" className="w-full small:w-auto">
