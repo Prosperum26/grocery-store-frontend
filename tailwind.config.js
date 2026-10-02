@@ -21,6 +21,15 @@ module.exports = {
         padding: "padding-top padding-right padding-bottom padding-left",
       },
       colors: {
+        // Montra palette (web-template/Montra-Online-Restaurant)
+        primary: "#f5f3f3",
+        headingColor: "#2e2e2e",
+        textColor: "#515151",
+        lightGray: "#9ca0ab",
+        cartNumBg: "#e80013",
+        cardOverlay: "rgba(256, 256, 256, 0.4)",
+        btnOverlay: "rgba(255, 255, 255, 0.8)",
+        containerbg: "rgba(255, 131, 0, 0.04)",
         grey: {
           0: "#FFFFFF",
           5: "#F9FAFB",
@@ -60,6 +69,7 @@ module.exports = {
       },
       fontFamily: {
         sans: [
+          "Be Vietnam Pro",
           "Inter",
           "-apple-system",
           "BlinkMacSystemFont",

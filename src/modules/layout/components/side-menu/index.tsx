@@ -4,6 +4,7 @@ import { Popover, PopoverPanel, Transition } from "@headlessui/react"
 import { ArrowRightMini, XMark } from "@medusajs/icons"
 import { Text, clx, useToggleState } from "@medusajs/ui"
 import { Fragment } from "react"
+import { HiOutlineMenuAlt2 } from "react-icons/hi"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CountrySelect from "../country-select"
@@ -12,10 +13,10 @@ import { HttpTypes } from "@medusajs/types"
 import { Locale } from "@lib/data/locales"
 
 const SideMenuItems = {
-  Home: "/",
-  Store: "/store",
-  Account: "/account",
-  Cart: "/cart",
+  "Trang chủ": "/",
+  "Cửa hàng": "/store",
+  "Tài khoản": "/account",
+  "Giỏ hàng": "/cart",
 }
 
 type SideMenuProps = {
@@ -37,9 +38,10 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
               <div className="relative flex h-full">
                 <Popover.Button
                   data-testid="nav-menu-button"
-                  className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:text-ui-fg-base"
+                  className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none text-headingColor"
+                  aria-label="Menu"
                 >
-                  Menu
+                  <HiOutlineMenuAlt2 className="text-3xl" />
                 </Popover.Button>
               </div>
 
@@ -79,7 +81,7 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                               href={href}
                               className="text-3xl leading-10 hover:text-ui-fg-disabled"
                               onClick={close}
-                              data-testid={`${name.toLowerCase()}-link`}
+                              data-testid={`${href.replace("/", "") || "home"}-link`}
                             >
                               {name}
                             </LocalizedClientLink>
@@ -126,7 +128,7 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                         />
                       </div>
                       <Text className="flex justify-between txt-compact-small">
-                        © {new Date().getFullYear()} Medusa Store. All rights
+                        © {new Date().getFullYear()} SmartPantry. All rights
                         reserved.
                       </Text>
                     </div>

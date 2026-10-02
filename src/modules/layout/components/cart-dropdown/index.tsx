@@ -15,7 +15,9 @@ import LineItemPrice from "@modules/common/components/line-item-price"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Thumbnail from "@modules/products/components/thumbnail"
 import { usePathname } from "next/navigation"
+import Image from "next/image"
 import { Fragment, useEffect, useRef, useState } from "react"
+import { MdShoppingBasket } from "react-icons/md"
 
 const CartDropdown = ({
   cart: cartState,
@@ -82,10 +84,18 @@ const CartDropdown = ({
       <Popover className="relative h-full">
         <PopoverButton className="h-full">
           <LocalizedClientLink
-            className="hover:text-ui-fg-base"
+            className="relative flex items-center text-textColor transition-transform duration-150 hover:scale-110"
             href="/cart"
             data-testid="nav-cart-link"
-          >{`Cart (${totalItems})`}</LocalizedClientLink>
+            aria-label={`Giỏ hàng (${totalItems})`}
+          >
+            <MdShoppingBasket className="text-2xl" />
+            {totalItems > 0 && (
+              <span className="absolute -right-2 -top-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-cartNumBg px-1 text-xs font-semibold text-white">
+                {totalItems}
+              </span>
+            )}
+          </LocalizedClientLink>
         </PopoverButton>
         <Transition
           show={cartDropdownOpen}
@@ -99,11 +109,11 @@ const CartDropdown = ({
         >
           <PopoverPanel
             static
-            className="hidden small:block absolute top-[calc(100%+1px)] right-0 bg-white border-x border-b border-gray-200 w-[420px] text-ui-fg-base"
+            className="hidden small:block absolute top-[calc(100%+1px)] right-0 w-[420px] overflow-hidden rounded-b-xl bg-white text-ui-fg-base shadow-xl"
             data-testid="nav-cart-dropdown"
           >
             <div className="p-4 flex items-center justify-center">
-              <h3 className="text-large-semi">Cart</h3>
+              <h3 className="text-large-semi text-headingColor">Giỏ hàng</h3>
             </div>
             {cartState && cartState.items?.length ? (
               <>
@@ -151,7 +161,7 @@ const CartDropdown = ({
                                   data-testid="cart-item-quantity"
                                   data-value={item.quantity}
                                 >
-                                  Quantity: {item.quantity}
+                                  Số lượng: {item.quantity}
                                 </span>
                               </div>
                               <div className="flex justify-end">
@@ -168,7 +178,7 @@ const CartDropdown = ({
                             className="mt-1"
                             data-testid="cart-item-remove-button"
                           >
-                            Remove
+                            Xoá
                           </DeleteButton>
                         </div>
                       </div>
@@ -177,8 +187,8 @@ const CartDropdown = ({
                 <div className="p-4 flex flex-col gap-y-4 text-small-regular">
                   <div className="flex items-center justify-between">
                     <span className="text-ui-fg-base font-semibold">
-                      Subtotal{" "}
-                      <span className="font-normal">(excl. taxes)</span>
+                      Tạm tính{" "}
+                      <span className="font-normal">(chưa gồm thuế)</span>
                     </span>
                     <span
                       className="text-large-semi"
@@ -193,11 +203,11 @@ const CartDropdown = ({
                   </div>
                   <LocalizedClientLink href="/cart" passHref>
                     <Button
-                      className="w-full"
+                      className="w-full !bg-gradient-to-br from-orange-400 to-orange-500 !border-none"
                       size="large"
                       data-testid="go-to-cart-button"
                     >
-                      Go to cart
+                      Xem giỏ hàng
                     </Button>
                   </LocalizedClientLink>
                 </div>
@@ -205,15 +215,18 @@ const CartDropdown = ({
             ) : (
               <div>
                 <div className="flex py-16 flex-col gap-y-4 items-center justify-center">
-                  <div className="bg-gray-900 text-small-regular flex items-center justify-center w-6 h-6 rounded-full text-white">
-                    <span>0</span>
-                  </div>
-                  <span>Your shopping bag is empty.</span>
+                  <Image
+                    src="/montra/emptyCart.svg"
+                    alt=""
+                    width={160}
+                    height={120}
+                  />
+                  <span className="text-textColor">Giỏ hàng đang trống.</span>
                   <div>
                     <LocalizedClientLink href="/store">
                       <>
-                        <span className="sr-only">Go to all products page</span>
-                        <Button onClick={close}>Explore products</Button>
+                        <span className="sr-only">Đi tới trang sản phẩm</span>
+                        <Button onClick={close}>Mua sắm ngay</Button>
                       </>
                     </LocalizedClientLink>
                   </div>

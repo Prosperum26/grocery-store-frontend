@@ -1,8 +1,8 @@
 import { listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
-import { Text } from "@medusajs/ui"
 
 import InteractiveLink from "@modules/common/components/interactive-link"
+import SectionTitle from "@modules/common/components/section-title"
 import ProductPreview from "@modules/products/components/product-preview"
 
 export default async function ProductRail({
@@ -27,21 +27,39 @@ export default async function ProductRail({
   }
 
   return (
-    <div className="content-container py-12 small:py-24">
-      <div className="flex justify-between mb-8">
-        <Text className="txt-xlarge">{collection.title}</Text>
-        <InteractiveLink href={`/collections/${collection.handle}`}>
-          View all
-        </InteractiveLink>
+    <ProductGridSection
+      title={collection.title}
+      href={`/collections/${collection.handle}`}
+      products={pricedProducts}
+      region={region}
+    />
+  )
+}
+
+export function ProductGridSection({
+  title,
+  href,
+  products,
+  region,
+}: {
+  title: string
+  href: string
+  products: HttpTypes.StoreProduct[]
+  region: HttpTypes.StoreRegion
+}) {
+  return (
+    <section className="content-container py-8 small:py-12">
+      <div className="mb-10 flex items-center justify-between">
+        <SectionTitle title={title} />
+        <InteractiveLink href={href}>Xem tất cả</InteractiveLink>
       </div>
-      <ul className="grid grid-cols-2 small:grid-cols-3 gap-x-6 gap-y-24 small:gap-y-36">
-        {pricedProducts &&
-          pricedProducts.map((product) => (
-            <li key={product.id}>
-              <ProductPreview product={product} region={region} isFeatured />
-            </li>
-          ))}
+      <ul className="grid grid-cols-2 gap-x-4 gap-y-6 rounded-2xl bg-containerbg p-4 small:grid-cols-4 small:gap-x-6 small:p-6">
+        {products.map((product) => (
+          <li key={product.id}>
+            <ProductPreview product={product} region={region} isFeatured />
+          </li>
+        ))}
       </ul>
-    </div>
+    </section>
   )
 }

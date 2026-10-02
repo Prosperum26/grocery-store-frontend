@@ -1,107 +1,53 @@
+import Image from "next/image"
+import { BsFacebook, BsGithub, BsInstagram } from "react-icons/bs"
+
 import { listCategories } from "@lib/data/categories"
-import { listCollections } from "@lib/data/collections"
-import { Text, clx } from "@medusajs/ui"
-
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import MedusaCTA from "@modules/layout/components/medusa-cta"
 
+const socialLinks = [
+  { label: "GitHub", href: "https://github.com/Prosperum26", icon: BsGithub },
+  { label: "Facebook", href: "https://facebook.com", icon: BsFacebook },
+  { label: "Instagram", href: "https://instagram.com", icon: BsInstagram },
+]
+
+// Montra footer: light panel, logo + brand, divider, copyright and round social icons.
 export default async function Footer() {
-  const { collections } = await listCollections({
-    fields: "*products",
-  })
   const productCategories = await listCategories()
+  const topCategories =
+    productCategories?.filter((c) => !c.parent_category).slice(0, 6) ?? []
 
   return (
-    <footer className="border-t border-ui-border-base w-full">
-      <div className="content-container flex flex-col w-full">
-        <div className="flex flex-col gap-y-6 xsmall:flex-row items-start justify-between py-40">
-          <div>
-            <LocalizedClientLink
-              href="/"
-              className="txt-compact-xlarge-plus text-ui-fg-subtle hover:text-ui-fg-base uppercase"
-            >
-              Medusa Store
-            </LocalizedClientLink>
-          </div>
-          <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-3">
-            {productCategories && productCategories?.length > 0 && (
-              <div className="flex flex-col gap-y-2">
-                <span className="txt-small-plus txt-ui-fg-base">
-                  Categories
-                </span>
-                <ul
-                  className="grid grid-cols-1 gap-2"
-                  data-testid="footer-categories"
-                >
-                  {productCategories?.slice(0, 6).map((c) => {
-                    if (c.parent_category) {
-                      return
-                    }
+    <footer className="w-full bg-primary">
+      <div className="content-container flex flex-col py-8 small:py-12">
+        <div className="flex flex-col gap-8 small:flex-row small:items-start small:justify-between">
+          <LocalizedClientLink href="/" className="flex items-center gap-4">
+            <Image
+              src="/montra/logo.png"
+              alt="SmartPantry"
+              width={56}
+              height={56}
+              className="h-12 w-12 object-contain small:h-14 small:w-14"
+            />
+            <span className="text-2xl font-semibold text-headingColor">
+              SmartPantry
+            </span>
+          </LocalizedClientLink>
 
-                    const children =
-                      c.category_children?.map((child) => ({
-                        name: child.name,
-                        handle: child.handle,
-                        id: child.id,
-                      })) || null
-
-                    return (
-                      <li
-                        className="flex flex-col gap-2 text-ui-fg-subtle txt-small"
-                        key={c.id}
-                      >
-                        <LocalizedClientLink
-                          className={clx(
-                            "hover:text-ui-fg-base",
-                            children && "txt-small-plus"
-                          )}
-                          href={`/categories/${c.handle}`}
-                          data-testid="category-link"
-                        >
-                          {c.name}
-                        </LocalizedClientLink>
-                        {children && (
-                          <ul className="grid grid-cols-1 ml-3 gap-2">
-                            {children &&
-                              children.map((child) => (
-                                <li key={child.id}>
-                                  <LocalizedClientLink
-                                    className="hover:text-ui-fg-base"
-                                    href={`/categories/${child.handle}`}
-                                    data-testid="category-link"
-                                  >
-                                    {child.name}
-                                  </LocalizedClientLink>
-                                </li>
-                              ))}
-                          </ul>
-                        )}
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
-            )}
-            {collections && collections.length > 0 && (
+          <div className="grid grid-cols-2 gap-10 text-sm small:gap-x-16">
+            {topCategories.length > 0 && (
               <div className="flex flex-col gap-y-2">
-                <span className="txt-small-plus txt-ui-fg-base">
-                  Collections
+                <span className="font-semibold text-headingColor">
+                  Danh mục
                 </span>
-                <ul
-                  className={clx(
-                    "grid grid-cols-1 gap-2 text-ui-fg-subtle txt-small",
-                    {
-                      "grid-cols-2": (collections?.length || 0) > 3,
-                    }
-                  )}
-                >
-                  {collections?.slice(0, 6).map((c) => (
+                <ul className="grid grid-cols-1 gap-2" data-testid="footer-categories">
+                  {topCategories.map((c) => (
                     <li key={c.id}>
                       <LocalizedClientLink
-                        className="hover:text-ui-fg-base"
-                        href={`/collections/${c.handle}`}
+                        className="text-textColor hover:text-headingColor"
+                        href={`/categories/${c.handle}`}
+                        data-testid="category-link"
                       >
-                        {c.title}
+                        {c.name}
                       </LocalizedClientLink>
                     </li>
                   ))}
@@ -109,47 +55,48 @@ export default async function Footer() {
               </div>
             )}
             <div className="flex flex-col gap-y-2">
-              <span className="txt-small-plus txt-ui-fg-base">Medusa</span>
-              <ul className="grid grid-cols-1 gap-y-2 text-ui-fg-subtle txt-small">
+              <span className="font-semibold text-headingColor">Mua sắm</span>
+              <ul className="grid grid-cols-1 gap-2">
                 <li>
-                  <a
-                    href="https://github.com/medusajs"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-ui-fg-base"
-                  >
-                    GitHub
-                  </a>
+                  <LocalizedClientLink className="text-textColor hover:text-headingColor" href="/store">
+                    Tất cả sản phẩm
+                  </LocalizedClientLink>
                 </li>
                 <li>
-                  <a
-                    href="https://docs.medusajs.com"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-ui-fg-base"
-                  >
-                    Documentation
-                  </a>
+                  <LocalizedClientLink className="text-textColor hover:text-headingColor" href="/account/orders">
+                    Đơn hàng của tôi
+                  </LocalizedClientLink>
                 </li>
                 <li>
-                  <a
-                    href="https://github.com/medusajs/nextjs-starter-medusa"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-ui-fg-base"
-                  >
-                    Source code
-                  </a>
+                  <LocalizedClientLink className="text-textColor hover:text-headingColor" href="/cart">
+                    Giỏ hàng
+                  </LocalizedClientLink>
                 </li>
               </ul>
             </div>
           </div>
         </div>
-        <div className="flex w-full mb-16 justify-between text-ui-fg-muted">
-          <Text className="txt-compact-small">
-            © {new Date().getFullYear()} Medusa Store. All rights reserved.
-          </Text>
-          <MedusaCTA />
+
+        <hr className="my-6 border-gray-200 small:my-8" />
+
+        <div className="flex flex-col items-center justify-center gap-4 small:flex-row small:justify-between">
+          <span className="text-center text-sm text-gray-500">
+            © {new Date().getFullYear()} SmartPantry · MSIS4133 Nhóm 05, UIT
+          </span>
+          <div className="flex gap-4 text-xl">
+            {socialLinks.map(({ label, href, icon: Icon }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={label}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-textColor shadow-sm transition-transform duration-150 hover:scale-110"
+              >
+                <Icon />
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </footer>
