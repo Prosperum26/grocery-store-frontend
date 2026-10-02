@@ -1,4 +1,4 @@
-# SmartPantry-UIT — Real-Time Predictive Inventory Grocery Application
+# Com4Fud — Real-Time Predictive Inventory Grocery Application
 
 Đồ án môn **MSIS4133 – Công nghệ thông tin trong Thương mại điện tử** (Trường ĐH Công nghệ Thông tin, ĐHQG-HCM), Học kỳ 1 năm học 2026–2027.
 Nhóm 05 · Hướng 1 (Advanced & Next-Gen E-Commerce Web Development) · Đề tài 5.
@@ -6,8 +6,7 @@ Nhóm 05 · Hướng 1 (Advanced & Next-Gen E-Commerce Web Development) · Đề
 > Mở rộng nền tảng headless commerce **MedusaJS v2** với pre-warming giỏ hàng dự đoán trên RAM, kiểm soát tồn kho "nóng" nguyên tử bằng Redis, và trợ lý nấu ăn dựa trên RAG.
 
 ## Giới thiệu
-
-SmartPantry-UIT là một website bán hàng tạp hóa B2C theo mô hình **dark store** (một thương hiệu, nhiều kho giao hàng tại TP.HCM). Thay vì tự viết lại các phần thương mại cơ bản (catalog, giá, giỏ hàng, đơn hàng, tồn kho, xác thực, trang admin), nhóm dùng MedusaJS v2 và tập trung vào bốn tính năng khác biệt:
+ Com4Fud là một website bán hàng tạp hóa B2C theo mô hình **dark store** (một thương hiệu, nhiều kho giao hàng tại TP.HCM). Thay vì tự viết lại các phần thương mại cơ bản (catalog, giá, giỏ hàng, đơn hàng, tồn kho, xác thực, trang admin), nhóm dùng MedusaJS v2 và tập trung vào bốn tính năng khác biệt:
 
 1. **Predictive Caching ("Buy It Again")**: mô hình LightGBM (chạy qua ONNX Runtime) dự đoán giỏ hàng mua lại của từng khách khi đăng nhập, rồi pre-warm vào Redis. Mục tiêu P95 < 10 ms.
 2. **Atomic Hot-Stock Gate**: Redis Lua script giữ hàng tồn ít (hàng tươi sống) một cách nguyên tử trước khi thanh toán, bọc trong Medusa workflow có compensation. Mục tiêu không bán vượt tồn kho.
@@ -40,26 +39,3 @@ flowchart LR
 | [grocery-store-ai](https://github.com/Prosperum26/grocery-store-ai) | Microservice AI: `/predict`, `/embed`, `/search` | Python 3.11, FastAPI, LightGBM/ONNX, Polars, bge-m3, pgvector |
 
 Code storefront đang được phát triển trên nhánh `dev` của repo này.
-
-## Thành viên
-
-| Thành viên | MSSV | Vai trò |
-| :--- | :---: | :--- |
-| Nguyễn Phú Hưng (Lead) | 22520518 | Frontend Lead: Medusa Next.js Storefront, client-side prefetching |
-| Đoàn Đình Văn | 22521634 | Backend Architect: Medusa custom modules, workflows, Redis concurrency |
-| Lê Đức Mạnh | 22520847 | AI/ML Engineer: feature engineering, LightGBM, vector pipelines |
-| Phạm Quốc Bảo | 22520112 | Data & Integration: seed catalog, VNPAY provider, Locust benchmark |
-
-Giảng viên: TS. Trần Văn Hải Triều · Trợ giảng: KS. Lê Võ Đình Kha
-
-## Lộ trình
-
-| Tuần | Mốc chính |
-| :--- | :--- |
-| 3 (21/09 – 27/09) | Proposal và xử lý dữ liệu Instacart |
-| 4 (28/09 – 04/10) | Khởi tạo Medusa, Docker Compose, catalog, layout storefront |
-| 5 (05/10 – 11/10) | Predictive caching, hot-stock gate, trang "Buy It Again" |
-| 6 (12/10 – 18/10) | Recipe module, semantic search, Chef Copilot |
-| 7 (19/10 – 25/10) | VNPAY, realtime gateway, admin widgets |
-| 8 (26/10 – 01/11) | Benchmark Locust, kiểm thử concurrency |
-| 9–10 (02/11 – 15/11) | Báo cáo cuối kỳ và bảo vệ |
