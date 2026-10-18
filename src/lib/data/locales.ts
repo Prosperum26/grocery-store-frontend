@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { isMockMode } from "@lib/mock/mode"
 import { getCacheOptions } from "./cookies"
 
 export type Locale = {
@@ -13,6 +14,9 @@ export type Locale = {
  * Returns null if the endpoint returns 404 (locales not configured).
  */
 export const listLocales = async (): Promise<Locale[] | null> => {
+  // Vietnamese only for now (docs/07: "tiếng Việt thuần").
+  if (isMockMode()) return null
+
   const next = {
     ...(await getCacheOptions("locales")),
   }

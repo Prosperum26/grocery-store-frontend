@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { isMockMode } from "@lib/mock/mode"
 import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
@@ -17,6 +18,9 @@ import {
 
 export const retrieveCustomer =
   async (): Promise<HttpTypes.StoreCustomer | null> => {
+    // Account pages get a demo customer in FE-10; until then nobody is signed in.
+    if (isMockMode()) return null
+
     const authHeaders = await getAuthHeaders()
 
     if (!authHeaders) return null

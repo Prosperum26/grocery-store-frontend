@@ -3,9 +3,13 @@
 import { sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
+import { isMockMode } from "@lib/mock/mode"
+import { MOCK_REGION } from "@lib/mock/regions"
 import { getCacheOptions } from "./cookies"
 
 export const listRegions = async () => {
+  if (isMockMode()) return [MOCK_REGION]
+
   const next = {
     ...(await getCacheOptions("regions")),
   }
@@ -21,6 +25,8 @@ export const listRegions = async () => {
 }
 
 export const retrieveRegion = async (id: string) => {
+  if (isMockMode()) return MOCK_REGION
+
   const next = {
     ...(await getCacheOptions(["regions", id].join("-"))),
   }
