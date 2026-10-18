@@ -1,7 +1,6 @@
 "use client"
 
 import { clx } from "@medusajs/ui"
-import type { IconType } from "react-icons"
 
 /**
  * Selectable pill (fchip() in ui.js): ink when on, white with border when off.
@@ -10,7 +9,7 @@ import type { IconType } from "react-icons"
 export default function FilterChip({
   pressed,
   onClick,
-  icon: Icon,
+  icon,
   count,
   size = "md",
   className,
@@ -18,7 +17,8 @@ export default function FilterChip({
 }: {
   pressed: boolean
   onClick: () => void
-  icon?: IconType
+  /** Icon element, e.g. icon={<LuPercent />}. */
+  icon?: React.ReactNode
   count?: number
   size?: "sm" | "md"
   className?: string
@@ -38,12 +38,13 @@ export default function FilterChip({
         className
       )}
     >
-      {Icon && (
-        <Icon
-          size={16}
+      {icon && (
+        <span
           aria-hidden="true"
-          className={pressed ? "text-accent" : "text-ink-2"}
-        />
+          className={clx("flex text-base", pressed ? "text-accent" : "text-ink-2")}
+        >
+          {icon}
+        </span>
       )}
       {children}
       {count !== undefined && (

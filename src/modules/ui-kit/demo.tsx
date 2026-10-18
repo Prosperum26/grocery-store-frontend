@@ -56,16 +56,16 @@ export default function UiKitDemo() {
 
       <Section title="Nút">
         <div className="flex flex-wrap items-center gap-3">
-          <Button icon={LuShoppingBag}>Thêm vào giỏ</Button>
-          <Button variant="secondary" iconRight={LuArrowRight}>Xem công thức</Button>
+          <Button icon={<LuShoppingBag />}>Thêm vào giỏ</Button>
+          <Button variant="secondary" iconRight={<LuArrowRight />}>Xem công thức</Button>
           <Button variant="deep">Xác nhận</Button>
-          <Button variant="warn" iconRight={LuArrowRight}>Mua ngay</Button>
-          <Button variant="accent" icon={LuChefHat}>Hỏi Trợ lý Bếp</Button>
-          <Button variant="danger" icon={LuTrash2} size="sm">Xóa khỏi giỏ</Button>
+          <Button variant="warn" iconRight={<LuArrowRight />}>Mua ngay</Button>
+          <Button variant="accent" icon={<LuChefHat />}>Hỏi Trợ lý Bếp</Button>
+          <Button variant="danger" icon={<LuTrash2 />} size="sm">Xóa khỏi giỏ</Button>
           <Button variant="dangerSoft" size="sm">Hủy đơn</Button>
           <Button variant="ghost" size="sm">Bỏ qua</Button>
-          <Button icon={LuPlus} size="sm" aria-label="Thêm cà chua vào giỏ" />
-          <Button size="lg" icon={LuShoppingBag}>Thêm · 85.000đ</Button>
+          <Button icon={<LuPlus />} size="sm" aria-label="Thêm cà chua vào giỏ" />
+          <Button size="lg" icon={<LuShoppingBag />}>Thêm · 85.000đ</Button>
           <Button size="xs">Rất nhỏ</Button>
           <Button aria-disabled>Không dùng được</Button>
         </div>
@@ -118,14 +118,14 @@ export default function UiKitDemo() {
               {c}
             </FilterChip>
           ))}
-          <FilterChip pressed={onSale} onClick={() => setOnSale(!onSale)} icon={LuPercent} size="sm">
+          <FilterChip pressed={onSale} onClick={() => setOnSale(!onSale)} icon={<LuPercent />} size="sm">
             Đang giảm giá
           </FilterChip>
         </div>
         <div className="grid gap-4 small:grid-cols-3">
           <Field label="Email" type="email" placeholder="ban@email.com" autoComplete="email" />
-          <Field label="Mã giảm giá" icon={LuTicket} mono defaultValue="TUOI20" suffix={<Chip tone="brand" icon={LuCheck}>Đã áp dụng</Chip>} />
-          <Field label="Số điện thoại" icon={LuSearch} error="Số điện thoại chưa đúng." defaultValue="0903" />
+          <Field label="Mã giảm giá" icon={<LuTicket />} mono defaultValue="TUOI20" suffix={<Chip tone="brand" icon={LuCheck}>Đã áp dụng</Chip>} />
+          <Field label="Số điện thoại" icon={<LuSearch />} error="Số điện thoại chưa đúng." defaultValue="0903" />
         </div>
       </Section>
 
@@ -144,8 +144,8 @@ export default function UiKitDemo() {
       <Section title="Giữ chỗ tính năng chưa có">
         <div className="flex flex-wrap items-center gap-3">
           <ComingSoonBadge />
-          <ComingSoonButton feature="Trợ lý Bếp" icon={LuChefHat} variant="accent">Hỏi Trợ lý Bếp</ComingSoonButton>
-          <ComingSoonButton feature="Báo khi có hàng" icon={LuBell} variant="secondary" size="sm">Báo khi có hàng</ComingSoonButton>
+          <ComingSoonButton feature="Trợ lý Bếp" icon={<LuChefHat />} variant="accent">Hỏi Trợ lý Bếp</ComingSoonButton>
+          <ComingSoonButton feature="Báo khi có hàng" icon={<LuBell />} variant="secondary" size="sm">Báo khi có hàng</ComingSoonButton>
         </div>
         <ComingSoonPanel title="Trợ lý Bếp" description="Gợi ý thực đơn và gom nguyên liệu vào giỏ cho bạn." />
       </Section>

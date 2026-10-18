@@ -2,7 +2,6 @@
 
 import { clx } from "@medusajs/ui"
 import React from "react"
-import type { IconType } from "react-icons"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
@@ -51,8 +50,13 @@ const ICON_ONLY: Record<ButtonSize, string> = {
 type CommonProps = {
   variant?: ButtonVariant
   size?: ButtonSize
-  icon?: IconType
-  iconRight?: IconType
+  /**
+   * An icon element, e.g. icon={<LuBell />}. Elements (not components) so
+   * server components can pass them to this client component. react-icons
+   * size themselves to 1em, so the wrapper font-size sets the icon size.
+   */
+  icon?: React.ReactNode
+  iconRight?: React.ReactNode
   fullWidth?: boolean
   pill?: boolean
   className?: string
@@ -105,14 +109,14 @@ export default function Button(props: ButtonProps) {
   const {
     variant,
     size = "md",
-    icon: Icon,
-    iconRight: IconRight,
+    icon,
+    iconRight,
     fullWidth,
     pill,
     className,
     children,
   } = props
-  const iconSize = size === "xs" || size === "sm" ? 16 : 18
+  const iconSize = size === "xs" || size === "sm" ? "text-base" : "text-lg"
   const classes = buttonClasses({
     variant,
     size,
@@ -123,9 +127,17 @@ export default function Button(props: ButtonProps) {
   })
   const content = (
     <>
-      {Icon && <Icon size={iconSize} aria-hidden="true" />}
+      {icon && (
+        <span aria-hidden="true" className={clx("flex", iconSize)}>
+          {icon}
+        </span>
+      )}
       {children}
-      {IconRight && <IconRight size={iconSize} aria-hidden="true" />}
+      {iconRight && (
+        <span aria-hidden="true" className={clx("flex", iconSize)}>
+          {iconRight}
+        </span>
+      )}
     </>
   )
 

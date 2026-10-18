@@ -2,7 +2,6 @@
 
 import { clx } from "@medusajs/ui"
 import React, { useId } from "react"
-import type { IconType } from "react-icons"
 import { LuTriangleAlert } from "react-icons/lu"
 
 /**
@@ -12,7 +11,7 @@ import { LuTriangleAlert } from "react-icons/lu"
  */
 export default function Field({
   label,
-  icon: Icon,
+  icon,
   error,
   helper,
   suffix,
@@ -22,7 +21,8 @@ export default function Field({
   ...input
 }: {
   label: string
-  icon?: IconType
+  /** Icon element, e.g. icon={<LuTicket />}. */
+  icon?: React.ReactNode
   error?: string
   helper?: string
   suffix?: React.ReactNode
@@ -46,7 +46,11 @@ export default function Field({
           error ? "border-[1.5px] border-sale" : "border-line-2"
         )}
       >
-        {Icon && <Icon size={18} aria-hidden="true" className="text-ink-3" />}
+        {icon && (
+          <span aria-hidden="true" className="flex text-lg text-ink-3">
+            {icon}
+          </span>
+        )}
         <input
           id={inputId}
           aria-invalid={error ? true : undefined}

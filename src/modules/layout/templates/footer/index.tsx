@@ -1,101 +1,128 @@
-import Image from "next/image"
-import { BsFacebook, BsGithub, BsInstagram } from "react-icons/bs"
+import { LuClock, LuMail, LuMapPin, LuPhone } from "react-icons/lu"
+import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa6"
 
-import { listCategories } from "@lib/data/categories"
+import { POLICIES, SITE_CONTACT, SOCIAL_LINKS } from "@lib/mock/site"
+import Chip from "@modules/common/components/chip"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import Logo from "@modules/layout/components/logo"
 
-const socialLinks = [
-  { label: "GitHub", href: "https://github.com/Prosperum26", icon: BsGithub },
-  { label: "Facebook", href: "https://facebook.com", icon: BsFacebook },
-  { label: "Instagram", href: "https://instagram.com", icon: BsInstagram },
+const SOCIAL_ICONS = { Facebook: FaFacebookF, Instagram: FaInstagram, TikTok: FaTiktok }
+
+const SHOP_LINKS = [
+  { label: "Rau củ", href: "/categories/rau-cu" },
+  { label: "Thịt", href: "/categories/thit" },
+  { label: "Hải sản", href: "/categories/hai-san" },
+  { label: "Trứng & Sữa", href: "/categories/trung-sua" },
+  { label: "Tất cả sản phẩm", href: "/store" },
 ]
 
-// Montra footer: light panel, logo + brand, divider, copyright and round social icons.
-export default async function Footer() {
-  const productCategories = await listCategories()
-  const topCategories =
-    productCategories?.filter((c) => !c.parent_category).slice(0, 6) ?? []
+const HELP_LINKS = [
+  { label: "Trợ lý Bếp", href: "/tro-ly-bep" },
+  { label: "Đơn hàng của tôi", href: "/account/orders" },
+  { label: "Giỏ hàng", href: "/cart" },
+]
 
+function Column({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <footer className="w-full bg-primary">
-      <div className="content-container flex flex-col py-8 small:py-12">
-        <div className="flex flex-col gap-8 small:flex-row small:items-start small:justify-between">
-          <LocalizedClientLink href="/" className="flex items-center gap-4">
-            <Image
-              src="/montra/logo.png"
-              alt="SmartPantry"
-              width={56}
-              height={56}
-              className="h-12 w-12 object-contain small:h-14 small:w-14"
-            />
-            <span className="text-2xl font-semibold text-headingColor">
-              SmartPantry
-            </span>
-          </LocalizedClientLink>
+    <div className="flex flex-col gap-3">
+      <h2 className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-accent">
+        {title}
+      </h2>
+      <ul className="flex flex-col gap-2.5 text-sm">{children}</ul>
+    </div>
+  )
+}
 
-          <div className="grid grid-cols-2 gap-10 text-sm small:gap-x-16">
-            {topCategories.length > 0 && (
-              <div className="flex flex-col gap-y-2">
-                <span className="font-semibold text-headingColor">
-                  Danh mục
-                </span>
-                <ul className="grid grid-cols-1 gap-2" data-testid="footer-categories">
-                  {topCategories.map((c) => (
-                    <li key={c.id}>
-                      <LocalizedClientLink
-                        className="text-textColor hover:text-headingColor"
-                        href={`/categories/${c.handle}`}
-                        data-testid="category-link"
-                      >
-                        {c.name}
-                      </LocalizedClientLink>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <div className="flex flex-col gap-y-2">
-              <span className="font-semibold text-headingColor">Mua sắm</span>
-              <ul className="grid grid-cols-1 gap-2">
-                <li>
-                  <LocalizedClientLink className="text-textColor hover:text-headingColor" href="/store">
-                    Tất cả sản phẩm
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink className="text-textColor hover:text-headingColor" href="/account/orders">
-                    Đơn hàng của tôi
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink className="text-textColor hover:text-headingColor" href="/cart">
-                    Giỏ hàng
-                  </LocalizedClientLink>
-                </li>
-              </ul>
-            </div>
+const linkClass = "text-on-dark hover:text-white hover:underline"
+
+/** Store footer of the v2 design (footer() in ui.js) plus contact and policies. */
+export default function Footer() {
+  return (
+    <footer className="bg-brand-deep text-white" data-surface="dark">
+      <div className="content-container flex flex-col gap-8 pb-28 pt-12 small:pb-9">
+        <div className="grid gap-10 small:grid-cols-[1.4fr_1fr_1fr_1fr]">
+          <div className="flex flex-col gap-4">
+            <LocalizedClientLink href="/" aria-label="Com4Fud, về trang chủ" className="w-fit">
+              <Logo inverse />
+            </LocalizedClientLink>
+            <p className="text-sm text-on-dark">Đi chợ trực tuyến cho bữa cơm nhà.</p>
+            <address className="flex flex-col gap-2 text-sm not-italic text-on-dark">
+              <a href={SITE_CONTACT.hotlineHref} className="flex items-center gap-2 hover:text-white">
+                <LuPhone size={16} aria-hidden="true" className="text-accent" />
+                Tổng đài <span className="font-mono">{SITE_CONTACT.hotline}</span>
+              </a>
+              <a href={`mailto:${SITE_CONTACT.email}`} className="flex items-center gap-2 hover:text-white">
+                <LuMail size={16} aria-hidden="true" className="text-accent" />
+                {SITE_CONTACT.email}
+              </a>
+              <span className="flex items-center gap-2">
+                <LuMapPin size={16} aria-hidden="true" className="text-accent" />
+                {SITE_CONTACT.address}
+              </span>
+              <span className="flex items-center gap-2">
+                <LuClock size={16} aria-hidden="true" className="text-accent" />
+                {SITE_CONTACT.hours}
+              </span>
+            </address>
           </div>
+
+          <Column title="Mua sắm">
+            {SHOP_LINKS.map((l) => (
+              <li key={l.href}>
+                <LocalizedClientLink href={l.href} className={linkClass}>
+                  {l.label}
+                </LocalizedClientLink>
+              </li>
+            ))}
+          </Column>
+
+          <Column title="Hỗ trợ">
+            {HELP_LINKS.map((l) => (
+              <li key={l.href}>
+                <LocalizedClientLink href={l.href} className={linkClass}>
+                  {l.label}
+                </LocalizedClientLink>
+              </li>
+            ))}
+          </Column>
+
+          <Column title="Chính sách">
+            {POLICIES.map((p) => (
+              <li key={p.slug}>
+                <LocalizedClientLink href={`/chinh-sach/${p.slug}`} className={linkClass}>
+                  {p.title}
+                </LocalizedClientLink>
+              </li>
+            ))}
+          </Column>
         </div>
 
-        <hr className="my-6 border-gray-200 small:my-8" />
+        <hr className="border-dark-line" />
 
-        <div className="flex flex-col items-center justify-center gap-4 small:flex-row small:justify-between">
-          <span className="text-center text-sm text-gray-500">
-            © {new Date().getFullYear()} SmartPantry · MSIS4133 Nhóm 05, UIT
-          </span>
-          <div className="flex gap-4 text-xl">
-            {socialLinks.map(({ label, href, icon: Icon }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={label}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-textColor shadow-sm transition-transform duration-150 hover:scale-110"
-              >
-                <Icon />
-              </a>
-            ))}
+        <div className="flex flex-col gap-4 small:flex-row small:items-center small:justify-between">
+          <p className="text-xs text-on-dark">© 2026 Com4Fud · Đồ án MSIS4133, UIT</p>
+          <div className="flex items-center gap-4">
+            <ul className="flex items-center gap-2" aria-label="Mạng xã hội">
+              {SOCIAL_LINKS.map((s) => {
+                const Icon = SOCIAL_ICONS[s.label]
+                return (
+                  <li key={s.label}>
+                    <a
+                      href={s.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${s.label} (mở tab mới)`}
+                      className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-mid text-white hover:bg-brand"
+                    >
+                      <Icon size={16} aria-hidden="true" />
+                    </a>
+                  </li>
+                )
+              })}
+            </ul>
+            <span className="flex items-center gap-2 text-xs text-on-dark">
+              Thanh toán qua <Chip mono>VNPAY</Chip>
+            </span>
           </div>
         </div>
       </div>
