@@ -54,7 +54,7 @@ export default function MobileNav({ cartCount }: { cartCount: number }) {
   }, [open])
 
   return (
-    <div className="small:hidden" data-surface="dark">
+    <div className="small:hidden">
       <button
         ref={fabRef}
         type="button"
@@ -74,6 +74,9 @@ export default function MobileNav({ cartCount }: { cartCount: number }) {
       <nav
         id="mobile-nav-bar"
         aria-label="Điều hướng chính"
+        // Only the open bar is a dark surface (lime focus ring); the floating
+        // button sits on the light page and keeps the green ring.
+        data-surface="dark"
         hidden={!open}
         className="fixed inset-x-4 bottom-5 z-40 rounded-full bg-brand-deep px-2 shadow-toast shadow-accent"
       >

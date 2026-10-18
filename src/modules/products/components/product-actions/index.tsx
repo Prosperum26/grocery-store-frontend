@@ -1,6 +1,8 @@
 "use client"
 
 import { addToCart } from "@lib/data/cart"
+import { isMockMode } from "@lib/mock/mode"
+import { useComingSoon } from "@modules/common/components/coming-soon"
 import { useIntersection } from "@lib/hooks/use-in-view"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
@@ -38,6 +40,7 @@ export default function ProductActions({
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [isAdding, setIsAdding] = useState(false)
+  const { open: openComingSoon } = useComingSoon()
   const countryCode = useParams().countryCode as string
 
   // If there is only 1 variant, preselect the options
@@ -123,6 +126,12 @@ export default function ProductActions({
   // add the selected variant to the cart
   const handleAddToCart = async () => {
     if (!selectedVariant?.id) return null
+
+    // No cart in mock mode yet (FE-8): say so instead of doing nothing.
+    if (isMockMode()) {
+      openComingSoon("Giỏ hàng")
+      return null
+    }
 
     setIsAdding(true)
 

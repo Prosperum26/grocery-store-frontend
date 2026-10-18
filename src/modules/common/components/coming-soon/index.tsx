@@ -18,8 +18,9 @@ import Button, { ButtonProps } from "@modules/common/components/button"
  * a badge where the feature sits, and a dialog when someone tries to use it.
  * Copy is fixed here so every placeholder says the same thing.
  */
-export const COMING_SOON_TITLE = "Đang trong quá trình phát triển"
-export const COMING_SOON_TEXT = "Tính năng này sẽ sớm ra mắt."
+import { COMING_SOON_TEXT, COMING_SOON_TITLE } from "@lib/util/coming-soon-copy"
+
+export { COMING_SOON_TEXT, COMING_SOON_TITLE }
 
 export function ComingSoonBadge({ className }: { className?: string }) {
   return (

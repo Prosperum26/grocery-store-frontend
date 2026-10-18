@@ -5,13 +5,16 @@ import { useState } from "react"
 import { LuCheck, LuPlus } from "react-icons/lu"
 
 import { addToCart } from "@lib/data/cart"
+import { isMockMode } from "@lib/mock/mode"
+import { useComingSoon } from "@modules/common/components/coming-soon"
 import Button from "@modules/common/components/button"
 
 /**
  * The "+" of a product card. Products with several pack sizes open the
  * product page so the shopper picks one; out-of-stock products get a
- * disabled button that still says why. In mock mode addToCart does nothing
- * yet (the in-browser cart comes in FE-8), so the button only confirms.
+ * disabled button that still says why. In mock mode there is no cart yet
+ * (the in-browser cart comes in FE-8), so the button opens the coming-soon
+ * dialog instead of pretending the item was added.
  */
 export default function AddButton({
   handle,
@@ -28,6 +31,7 @@ export default function AddButton({
 }) {
   const { countryCode } = useParams() as { countryCode: string }
   const [state, setState] = useState<"idle" | "adding" | "added">("idle")
+  const { open } = useComingSoon()
 
   if (!inStock) {
     return (
@@ -42,6 +46,10 @@ export default function AddButton({
   }
 
   const add = async () => {
+    if (isMockMode()) {
+      open("Giỏ hàng")
+      return
+    }
     setState("adding")
     try {
       await addToCart({ variantId, quantity: 1, countryCode })

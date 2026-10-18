@@ -29,6 +29,10 @@ export default async function ProductPreview({
     >
       <LocalizedClientLink
         href={`/products/${product.handle}`}
+        // The title link right below names this product; hide this image-only
+        // duplicate from screen readers and the tab order.
+        aria-hidden="true"
+        tabIndex={-1}
         className="relative block aspect-square w-full overflow-hidden rounded-lg bg-containerbg"
       >
         {image ? (

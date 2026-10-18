@@ -1,6 +1,8 @@
 "use client"
 
 import { addToCart } from "@lib/data/cart"
+import { isMockMode } from "@lib/mock/mode"
+import { useComingSoon } from "@modules/common/components/coming-soon"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { motion } from "framer-motion"
@@ -20,6 +22,7 @@ export default function QuickAdd({
 }) {
   const { countryCode } = useParams() as { countryCode: string }
   const [isAdding, setIsAdding] = useState(false)
+  const { open } = useComingSoon()
 
   const variants = product.variants ?? []
 
@@ -36,6 +39,11 @@ export default function QuickAdd({
   }
 
   const handleAdd = async () => {
+    // No cart in mock mode yet (FE-8): say so instead of doing nothing.
+    if (isMockMode()) {
+      open("Giỏ hàng")
+      return
+    }
     setIsAdding(true)
     try {
       await addToCart({ variantId: variants[0].id, quantity: 1, countryCode })
