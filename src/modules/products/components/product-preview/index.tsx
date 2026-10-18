@@ -1,7 +1,8 @@
 import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import PlaceholderImage from "@modules/common/icons/placeholder-image"
+import ProductArt from "@modules/products/components/product-art"
+import { toProductVM } from "@lib/viewmodels/product"
 import Image from "next/image"
 import PreviewPrice from "./price"
 import QuickAdd from "./quick-add"
@@ -33,16 +34,14 @@ export default async function ProductPreview({
         {image ? (
           <Image
             src={image}
-            alt={product.title ?? ""}
+            alt=""
             fill
             sizes="(max-width: 576px) 280px, (max-width: 992px) 360px, 400px"
             className="object-contain p-4 transition-transform duration-300 group-hover:scale-110"
             draggable={false}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <PlaceholderImage size={24} />
-          </div>
+          <ProductArt product={toProductVM(product)} decorative />
         )}
       </LocalizedClientLink>
 

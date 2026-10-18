@@ -3,6 +3,8 @@ import Image from "next/image"
 import React from "react"
 
 import PlaceholderImage from "@modules/common/icons/placeholder-image"
+import ProductArt from "@modules/products/components/product-art"
+import type { Tint } from "types/viewmodels"
 
 type ThumbnailProps = {
   thumbnail?: string | null
@@ -12,6 +14,10 @@ type ThumbnailProps = {
   isFeatured?: boolean
   className?: string
   "data-testid"?: string
+  /** Com4Fud illustration (product.metadata.art), used when there is no photo. */
+  art?: string
+  tint?: Tint
+  title?: string
 }
 
 const Thumbnail: React.FC<ThumbnailProps> = ({
@@ -21,8 +27,22 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
   isFeatured,
   className,
   "data-testid": dataTestid,
+  art,
+  tint = "green",
+  title = "",
 }) => {
   const initialImage = thumbnail || images?.[0]?.url
+
+  if (!initialImage && art) {
+    return (
+      <div
+        className={clx("relative aspect-square overflow-hidden rounded-card", className)}
+        data-testid={dataTestid}
+      >
+        <ProductArt product={{ title, art, tint }} decorative dots={false} />
+      </div>
+    )
+  }
 
   return (
     <Container
