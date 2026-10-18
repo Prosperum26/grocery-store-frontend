@@ -18,6 +18,8 @@ type ProductArtProps = {
   decorative?: boolean
   className?: string
   sizes?: string
+  /** Overrides the tint plate colour, e.g. white circles on a dark banner. */
+  plateColor?: string
 }
 
 /**
@@ -32,6 +34,7 @@ export default function ProductArt({
   decorative = false,
   className,
   sizes = "(max-width: 1024px) 50vw, 300px",
+  plateColor,
 }: ProductArtProps) {
   const alt = decorative ? "" : product.title
   const { plate, dot } = tintColors(product.tint)
@@ -60,7 +63,7 @@ export default function ProductArt({
         className
       )}
       style={{
-        backgroundColor: plate,
+        backgroundColor: plateColor ?? plate,
         backgroundImage: dots ? `${dotLayer}, ${dotLayer}` : undefined,
         backgroundSize: dots ? "14px 28px, 14px 28px" : undefined,
         backgroundPosition: dots ? "0 0, 7px 14px" : undefined,
