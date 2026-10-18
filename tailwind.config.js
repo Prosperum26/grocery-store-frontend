@@ -21,15 +21,43 @@ module.exports = {
         padding: "padding-top padding-right padding-bottom padding-left",
       },
       colors: {
-        // Montra palette (web-template/Montra-Online-Restaurant)
-        primary: "#f5f3f3",
-        headingColor: "#2e2e2e",
-        textColor: "#515151",
-        lightGray: "#9ca0ab",
-        cartNumBg: "#e80013",
-        cardOverlay: "rgba(256, 256, 256, 0.4)",
+        // Com4Fud palette: layout of the v2 design, green colours of v1
+        // (docs/plans/2026-10-18-sync-ui-v2-frontend.md §1.2). Named by role,
+        // not by hue, because v2 called the buy colour "red".
+        brand: {
+          DEFAULT: "#1F6B3A",
+          deep: "#0F3D2E",
+          mid: "#16503A",
+          vivid: "#3C9A5B",
+          bg: "#DCEFD9",
+        },
+        // Lime: only for "Mua lại" and "Trợ lý Bếp". Text on it is ink/accent-ink.
+        accent: { DEFAULT: "#C8F169", soft: "#EEFAD0", ink: "#3D5A00" },
+        sale: {
+          DEFAULT: "#C8361F",
+          vivid: "#E8492B",
+          bg: "#FDE4DE",
+          deep: "#9E2815",
+          line: "#F3BFB3",
+        },
+        warn: { DEFAULT: "#E9A23B", bg: "#FCEFD6", ink: "#7A4B00" },
+        ink: { DEFAULT: "#10241B", 2: "#4E5D55", 3: "#626E67" },
+        page: { DEFAULT: "#F2F4EC", 2: "#E8ECDF" },
+        surface: "#FFFFFF",
+        line: { DEFAULT: "#DDE3D6", 2: "#C3CCBD" },
+        "on-dark": "#B5C7BA",
+        "dark-line": "#2C5A45",
+        sky: { DEFAULT: "#2563A8", bg: "#DFEAF7" },
+        plum: { DEFAULT: "#6B3FA0", bg: "#EDE4F7" },
+        // TODO FE-14: remove these Montra aliases once no file uses them.
+        primary: "#F2F4EC",
+        headingColor: "#10241B",
+        textColor: "#4E5D55",
+        lightGray: "#626E67",
+        cartNumBg: "#1F6B3A",
+        cardOverlay: "rgba(255, 255, 255, 0.6)",
         btnOverlay: "rgba(255, 255, 255, 0.8)",
-        containerbg: "rgba(255, 131, 0, 0.04)",
+        containerbg: "#E8ECDF",
         grey: {
           0: "#FFFFFF",
           5: "#F9FAFB",
@@ -44,6 +72,12 @@ module.exports = {
           90: "#111827",
         },
       },
+      boxShadow: {
+        // Solid offset shadows of the v2 stickers and toasts; pick the colour
+        // with shadow-{color}, e.g. "shadow-sticker shadow-ink".
+        sticker: "2px 2px 0 0 var(--tw-shadow-color, #10241B)",
+        toast: "4px 4px 0 0 var(--tw-shadow-color, #10241B)",
+      },
       borderRadius: {
         none: "0px",
         soft: "2px",
@@ -51,6 +85,11 @@ module.exports = {
         rounded: "8px",
         large: "16px",
         circle: "9999px",
+        tag: "6px",
+        chip: "7px",
+        btn: "12px",
+        card: "18px",
+        banner: "24px",
       },
       maxWidth: {
         "8xl": "100rem",
@@ -68,17 +107,11 @@ module.exports = {
         "3xl": "2rem",
       },
       fontFamily: {
-        sans: [
-          "Be Vietnam Pro",
-          "Inter",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "Segoe UI",
-          "Roboto",
-          "Helvetica Neue",
-          "Ubuntu",
-          "sans-serif",
-        ],
+        sans: ["Be Vietnam Pro", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+        // Headings and the logo.
+        display: ["Bricolage Grotesque", "Be Vietnam Pro", "sans-serif"],
+        // Prices and order codes.
+        mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       keyframes: {
         ring: {

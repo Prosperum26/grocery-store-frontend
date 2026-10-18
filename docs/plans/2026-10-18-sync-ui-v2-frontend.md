@@ -64,8 +64,8 @@ Lấy **bố cục và thành phần của v2**, **giữ bảng màu xanh lá c�
 | `sale-line` | `#F3BFB3` | `redLine` | Viền cảnh báo. **Mới, cần kiểm tra** |
 | `warn` | `#E9A23B` | `sun` | Tem giảm giá (chữ và viền `ink`), "sắp hết", "chờ xác nhận" |
 | `warn-bg` / `warn-ink` | `#FCEFD6` / `#7A4B00` | `sunBg` / `sunInk` | |
-| `ink` / `ink-2` / `ink-3` | `#10241B` / `#4E5D55` / `#66736B` | `ink*` | Chữ |
-| `bg` / `bg-2` | `#F2F4EC` / `#E8ECDF` | | Nền trang / nền phụ |
+| `ink` / `ink-2` / `ink-3` | `#10241B` / `#4E5D55` / `#626E67` | `ink*` | Chữ (`ink-3` làm tối từ `#66736B` của v1 để đạt 4,5:1 trên `page`; không dùng `ink-3` trên `page-2`) |
+| `page` / `page-2` | `#F2F4EC` / `#E8ECDF` | `bg` / `bg2` | Nền trang / nền phụ (đổi tên từ `bg` vì lớp `bg-bg` khó đọc) |
 | `surface` | `#FFFFFF` | | Thẻ |
 | `line` / `line-2` | `#DDE3D6` / `#C3CCBD` | | Viền thẻ / viền ô nhập |
 | `on-dark` / `dark-line` | `#B5C7BA` / `#2C5A45` | `onDark2` / `darkLine` | Chữ phụ, viền trên nền tối |
