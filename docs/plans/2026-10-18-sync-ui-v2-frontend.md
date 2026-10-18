@@ -1,4 +1,4 @@
-# Sync giao diện v2 (xương) + palette v1 (xanh lá): phần Frontend (issue #11)
+[x] 25deff3, sửa review 5521dac |[x] 7b113e0 (kèm trang giữ chỗ FE-11) |[x] c6d379a |[x] 1ee281a |[x] 646fbb3 |[x] 17b9c54, fa4b743 |# Sync giao diện v2 (xương) + palette v1 (xanh lá): phần Frontend (issue #11)
 
 > **Cho người làm tiếp:** làm lần lượt từng task, tick `- [ ]` khi xong, ghi commit hash vào bảng mục 0. Mỗi task đủ độc lập để merge riêng, nên có thể dừng giữa chừng. Phần backend (đấu dữ liệu thật) nằm ở `grocery-store-backend/docs/plans/2026-10-18-sync-ui-v2-backend.md` và là **giai đoạn sau**, không thuộc issue này.
 >
@@ -365,4 +365,5 @@ Khi nhóm đấu dữ liệu thật: làm các task BE trong file backend, rồi
 
 | Ngày | Người | Đã xong | Dở dang / lưu ý |
 | :--- | :--- | :--- | :--- |
+| 2026-10-18 | Claude (theo yêu cầu Hưng) | FE-0 … FE-5 + trang giữ chỗ `/tro-ly-bep` (FE-11). Đã review toàn nhánh, sửa 5 lỗi Important (5521dac). | Chưa làm: FE-6 trở đi. Tồn đọng nhỏ từ review: trùng `id="header-search"` giữa bản desktop/điện thoại; `/tro-ly-bep` thiếu h1; Stepper mất focus khi chạm giới hạn; nav điện thoại mất focus sau khi chuyển trang; `/store?q=` chưa lọc và danh mục rỗng chưa có trạng thái trống (FE-6/FE-12); 500 ở handle sản phẩm lạ và `/collections/*` (code Starter); PriceTag sale+unit tương phản 2,96:1; `yarn lint` hỏng sẵn do lệch phiên bản ESLint (FE-13); nút "Thêm cả 5 món" trên điện thoại chỉ hiện 3 món. Bản ghi chi tiết: `.superpowers/sdd/…/progress.md` (không commit). |
 | 2026-10-18 | | Chưa bắt đầu, mới có kế hoạch | |
