@@ -1,5 +1,6 @@
 import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
+import { ComingSoonProvider } from "@modules/common/components/coming-soon"
 import "styles/globals.css"
 
 export const metadata: Metadata = {
@@ -31,7 +32,9 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         <a href="#main" className="skip-link">
           Bỏ qua tới nội dung
         </a>
-        <div className="relative">{props.children}</div>
+        <ComingSoonProvider>
+          <div className="relative">{props.children}</div>
+        </ComingSoonProvider>
       </body>
     </html>
   )

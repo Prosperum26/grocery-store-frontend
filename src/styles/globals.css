@@ -179,3 +179,18 @@
     @apply text-[32px] leading-[44px] font-semibold;
   }
 }
+
+@layer utilities {
+  /* Grows the clickable area of a small control to at least 44x44px without
+     changing how it looks (WCAG 2.5.5 target size). Needs a positioned
+     parent, so the control itself gets `relative`. */
+  .touch-target::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}
