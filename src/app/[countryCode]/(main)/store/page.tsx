@@ -1,33 +1,23 @@
 import { Metadata } from "next"
 
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { parseListingParams } from "@lib/util/catalog"
 import StoreTemplate from "@modules/store/templates"
 
 export const metadata: Metadata = {
-  title: "Store",
-  description: "Explore all of our products.",
+  title: "Tất cả sản phẩm | Com4Fud",
+  description: "Rau củ, thịt cá và hàng thiết yếu, lọc theo danh mục, còn hàng và đang giảm giá.",
 }
 
 type Params = {
-  searchParams: Promise<{
-    sortBy?: SortOptions
-    page?: string
-  }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
   params: Promise<{
     countryCode: string
   }>
 }
 
 export default async function StorePage(props: Params) {
-  const params = await props.params;
-  const searchParams = await props.searchParams;
-  const { sortBy, page } = searchParams
+  const { countryCode } = await props.params
+  const listing = parseListingParams(await props.searchParams)
 
-  return (
-    <StoreTemplate
-      sortBy={sortBy}
-      page={page}
-      countryCode={params.countryCode}
-    />
-  )
+  return <StoreTemplate countryCode={countryCode} params={listing} />
 }

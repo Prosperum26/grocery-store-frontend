@@ -48,5 +48,10 @@ export type ProductVM = {
   thumbnail?: string
   origin?: string
   prepOptions?: string[]
+  /** Handles of products bought together with this one ("Thường mua kèm"). */
+  companions?: string[]
+  description?: string
   variants: ProductVariantVM[]
+  /** ISO date; used by "Mới nhất" sorting. */
+  createdAt?: string
 }

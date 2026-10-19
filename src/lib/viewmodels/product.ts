@@ -47,6 +47,9 @@ export function toProductVM(product: HttpTypes.StoreProduct): ProductVM {
     thumbnail: product.thumbnail ?? undefined,
     origin: meta.origin ?? undefined,
     prepOptions: Array.isArray(meta.prep_options) ? meta.prep_options : undefined,
+    companions: Array.isArray(meta.companions) ? meta.companions : undefined,
+    description: product.description ?? undefined,
     variants,
+    createdAt: product.created_at ? String(product.created_at) : undefined,
   }
 }
