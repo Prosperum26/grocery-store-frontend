@@ -13,12 +13,12 @@
 
 | Task | Nội dung | Mục issue | Trạng thái |
 | :--- | :--- | :--- | :--- |
-| FE-0 | Nền: chế độ mock, lớp dữ liệu giả, kiểu view-model, pin phiên bản | 2 | [ ] |
-| FE-1 | Token màu, font, Tailwind, ghi đè biến `@medusajs/ui`, nền tảng a11y | 1 | [ ] |
-| FE-2 | Minh họa nông sản (`public/art`) + `ProductArt` | 2 | [ ] |
-| FE-3 | Thành phần dùng chung + hệ thống "Đang trong quá trình phát triển" | 1, 3 | [ ] |
-| FE-4 | Header, Footer, điều hướng điện thoại, trang chính sách | 1 | [ ] |
-| FE-5 | Trang chủ | 2 | [ ] |
+| FE-0 | Nền: chế độ mock, lớp dữ liệu giả, kiểu view-model, pin phiên bản | 2 | [x] 17b9c54, fa4b743 |
+| FE-1 | Token màu, font, Tailwind, ghi đè biến `@medusajs/ui`, nền tảng a11y | 1 | [x] 646fbb3 |
+| FE-2 | Minh họa nông sản (`public/art`) + `ProductArt` | 2 | [x] 1ee281a |
+| FE-3 | Thành phần dùng chung + hệ thống "Đang trong quá trình phát triển" | 1, 3 | [x] c6d379a |
+| FE-4 | Header, Footer, điều hướng điện thoại, trang chính sách | 1 | [x] 7b113e0 (kèm trang giữ chỗ FE-11) |
+| FE-5 | Trang chủ | 2 | [x] 25deff3, sửa sau review 5521dac |
 | FE-6 | Danh sách sản phẩm (PLP) + lọc/sắp xếp | 2 | [ ] |
 | FE-7 | Chi tiết sản phẩm (PDP) | 2 | [ ] |
 | FE-8 | Giỏ hàng | 2 | [ ] |
