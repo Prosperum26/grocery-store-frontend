@@ -1,7 +1,9 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { DEMO_STORE_CUSTOMER } from "@lib/mock/customer"
 import { isMockMode } from "@lib/mock/mode"
+import { isDemoSignedIn } from "./demo-session"
 import { COMING_SOON_TEXT, COMING_SOON_TITLE } from "@lib/util/coming-soon-copy"
 import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
@@ -19,8 +21,11 @@ import {
 
 export const retrieveCustomer =
   async (): Promise<HttpTypes.StoreCustomer | null> => {
-    // Account pages get a demo customer in FE-10; until then nobody is signed in.
-    if (isMockMode()) return null
+    // Mock mode: the demo customer, only after the demo sign-in (plan O5).
+    if (isMockMode()) {
+      if (!(await isDemoSignedIn())) return null
+      return process.env.NODE_ENV === "production" ? null : DEMO_STORE_CUSTOMER
+    }
 
     const authHeaders = await getAuthHeaders()
 

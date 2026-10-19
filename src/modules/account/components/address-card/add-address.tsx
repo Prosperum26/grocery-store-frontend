@@ -66,14 +66,14 @@ const AddAddress = ({
             <div className="flex flex-col gap-y-2">
               <div className="grid grid-cols-2 gap-x-2">
                 <Input
-                  label="First name"
+                  label="Tên"
                   name="first_name"
                   required
                   autoComplete="given-name"
                   data-testid="first-name-input"
                 />
                 <Input
-                  label="Last name"
+                  label="Họ"
                   name="last_name"
                   required
                   autoComplete="family-name"
@@ -101,7 +101,7 @@ const AddAddress = ({
               />
               <div className="grid grid-cols-[144px_1fr] gap-x-2">
                 <Input
-                  label="Postal code"
+                  label="Mã bưu chính"
                   name="postal_code"
                   required
                   autoComplete="postal-code"
@@ -155,7 +155,7 @@ const AddAddress = ({
               >
                 Cancel
               </Button>
-              <SubmitButton data-testid="save-button">Save</SubmitButton>
+              <SubmitButton data-testid="save-button">Lưu</SubmitButton>
             </div>
           </Modal.Footer>
         </form>

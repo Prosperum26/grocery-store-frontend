@@ -12,7 +12,7 @@ import { retrieveCustomer } from "@lib/data/customer"
 
 export const metadata: Metadata = {
   title: "Profile",
-  description: "View and edit your Medusa Store profile.",
+  description: "Xem và sửa hồ sơ của bạn.",
 }
 
 export default async function Profile() {

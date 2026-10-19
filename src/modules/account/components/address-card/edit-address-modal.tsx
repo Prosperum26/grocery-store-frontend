@@ -123,7 +123,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
 
       <Modal isOpen={state} close={close} data-testid="edit-address-modal">
         <Modal.Title>
-          <Heading className="mb-2">Edit address</Heading>
+          <Heading className="mb-2">Sửa địa chỉ</Heading>
         </Modal.Title>
         <form action={formAction}>
           <input type="hidden" name="addressId" value={address.id} />
@@ -131,7 +131,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
             <div className="grid grid-cols-1 gap-y-2">
               <div className="grid grid-cols-2 gap-x-2">
                 <Input
-                  label="First name"
+                  label="Tên"
                   name="first_name"
                   required
                   autoComplete="given-name"
@@ -139,7 +139,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                   data-testid="first-name-input"
                 />
                 <Input
-                  label="Last name"
+                  label="Họ"
                   name="last_name"
                   required
                   autoComplete="family-name"
@@ -171,7 +171,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
               />
               <div className="grid grid-cols-[144px_1fr] gap-x-2">
                 <Input
-                  label="Postal code"
+                  label="Mã bưu chính"
                   name="postal_code"
                   required
                   autoComplete="postal-code"
@@ -227,7 +227,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
               >
                 Cancel
               </Button>
-              <SubmitButton data-testid="save-button">Save</SubmitButton>
+              <SubmitButton data-testid="save-button">Lưu</SubmitButton>
             </div>
           </Modal.Footer>
         </form>

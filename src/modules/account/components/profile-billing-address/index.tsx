@@ -93,7 +93,7 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
     <form action={formAction} onReset={() => clearState()} className="w-full">
       <input type="hidden" name="addressId" value={billingAddress?.id} />
       <AccountInfo
-        label="Billing address"
+        label="Địa chỉ thanh toán"
         currentInfo={currentInfo}
         isSuccess={successState}
         isError={!!state.error}
@@ -103,14 +103,14 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
         <div className="grid grid-cols-1 gap-y-2">
           <div className="grid grid-cols-2 gap-x-2">
             <Input
-              label="First name"
+              label="Tên"
               name="first_name"
               defaultValue={billingAddress?.first_name || undefined}
               required
               data-testid="billing-first-name-input"
             />
             <Input
-              label="Last name"
+              label="Họ"
               name="last_name"
               defaultValue={billingAddress?.last_name || undefined}
               required
@@ -147,7 +147,7 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
           />
           <div className="grid grid-cols-[144px_1fr] gap-x-2">
             <Input
-              label="Postal code"
+              label="Mã bưu chính"
               name="postal_code"
               defaultValue={billingAddress?.postal_code || undefined}
               required

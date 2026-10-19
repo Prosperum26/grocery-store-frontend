@@ -1,22 +1,19 @@
 import { Metadata } from "next"
-
-import Overview from "@modules/account/components/overview"
 import { notFound } from "next/navigation"
+
 import { retrieveCustomer } from "@lib/data/customer"
-import { listOrders } from "@lib/data/orders"
+import OrdersTemplate from "@modules/account/templates/orders-template"
 
 export const metadata: Metadata = {
-  title: "Account",
-  description: "Overview of your account activity.",
+  title: "Đơn hàng của tôi | Com4Fud",
+  description: "Đơn hàng và trạng thái giao hàng của bạn.",
 }
 
-export default async function OverviewTemplate() {
+// The account home is the order list (design 07), not a separate overview.
+export default async function AccountHome() {
   const customer = await retrieveCustomer().catch(() => null)
-  const orders = (await listOrders().catch(() => null)) || null
-
   if (!customer) {
     notFound()
   }
-
-  return <Overview customer={customer} orders={orders} />
+  return <OrdersTemplate />
 }
