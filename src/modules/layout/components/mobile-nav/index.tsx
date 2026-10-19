@@ -16,6 +16,7 @@ import {
 import { cx } from "@lib/util/cx"
 import CountBadge from "@modules/common/components/count-badge"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { useLiveCartCount } from "@modules/layout/components/cart-button/live"
 
 // Phone navigation of the v2 design (navFab()/navOpen() in ui.js): a round
 // floating button that expands into a 5-item bar. Hidden from 1024px up,
@@ -28,7 +29,8 @@ const ITEMS: { label: string; href: string; icon: IconType; match: (p: string) =
   { label: "Tài khoản", href: "/account", icon: LuUser, match: (p) => p.startsWith("account") },
 ]
 
-export default function MobileNav({ cartCount }: { cartCount: number }) {
+export default function MobileNav() {
+  const cartCount = useLiveCartCount()
   const [open, setOpen] = useState(false)
   const fabRef = useRef<HTMLButtonElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)

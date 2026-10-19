@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { MOCK_CART_LINES, mockCartTotals } from "./cart"
+import { buildCartView, MOCK_CART_SEED } from "./cart"
+import { toProductVM } from "../viewmodels/product"
 import { MOCK_CATEGORIES } from "./categories"
 import { MOCK_PRODUCTS, findMockProduct } from "./products"
 import { MOCK_ORDERS } from "./orders"
@@ -33,14 +34,26 @@ describe("mock catalog", () => {
 })
 
 describe("mock cart", () => {
+  const catalog = MOCK_PRODUCTS.map(toProductVM)
+
   it("adds up to the design totals", () => {
-    expect(mockCartTotals(MOCK_CART_LINES)).toEqual({
-      itemCount: 9,
+    const view = buildCartView(MOCK_CART_SEED, catalog, "TUOI20")
+    expect(view).toMatchObject({
+      count: 9,
       subtotal: 395000,
       shipping: 15000,
       discount: 20000,
       total: 390000,
+      outOfStockCount: 1,
+      priceChangedCount: 1,
     })
+  })
+
+  it("keeps out-of-stock lines out of the totals", () => {
+    const view = buildCartView(MOCK_CART_SEED, catalog, null)
+    const shrimp = view.lines.find((l) => l.handle === "tom-the-tuoi")!
+    expect(shrimp.inStock).toBe(false)
+    expect(view.subtotal).toBe(395000)
   })
 })
 

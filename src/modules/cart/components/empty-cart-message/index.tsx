@@ -1,25 +1,22 @@
-import { Heading, Text } from "@medusajs/ui"
+import Button from "@modules/common/components/button"
 
-import InteractiveLink from "@modules/common/components/interactive-link"
-
-const EmptyCartMessage = () => {
+/** Empty cart (FE-12): says so, and offers one way forward. */
+export default function EmptyCartMessage() {
   return (
-    <div className="py-48 px-2 flex flex-col justify-center items-start" data-testid="empty-cart-message">
-      <Heading
-        level="h1"
-        className="flex flex-row text-3xl-regular gap-x-2 items-baseline"
-      >
-        Cart
-      </Heading>
-      <Text className="text-base-regular mt-4 mb-6 max-w-[32rem]">
-        You don&apos;t have anything in your cart. Let&apos;s change that, use
-        the link below to start browsing our products.
-      </Text>
-      <div>
-        <InteractiveLink href="/store">Explore products</InteractiveLink>
-      </div>
-    </div>
+    <section
+      aria-labelledby="empty-cart-title"
+      data-testid="empty-cart-message"
+      className="flex flex-col items-start gap-4 rounded-card border border-dashed border-line-2 bg-surface p-6 small:p-10"
+    >
+      <h2 id="empty-cart-title" className="font-display text-2xl font-bold text-ink">
+        Giỏ hàng đang trống
+      </h2>
+      <p className="max-w-md text-sm text-ink-2">
+        Chọn vài món rau củ, thịt cá để bắt đầu. Giỏ hàng sẽ hiện ở đây.
+      </p>
+      <Button variant="primary" href="/store">
+        Đi chợ ngay
+      </Button>
+    </section>
   )
 }
-
-export default EmptyCartMessage

@@ -1,6 +1,5 @@
 import { LuBell, LuUser } from "react-icons/lu"
 
-import { retrieveCart } from "@lib/data/cart"
 import { retrieveCustomer } from "@lib/data/customer"
 import { ComingSoonButton } from "@modules/common/components/coming-soon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -9,9 +8,9 @@ import {
   MobileAddressRow,
 } from "@modules/layout/components/address-pill"
 import {
-  CartButtonDesktop,
-  CartButtonMobile,
-} from "@modules/layout/components/cart-button"
+  LiveCartDesktop,
+  LiveCartMobile,
+} from "@modules/layout/components/cart-button/live"
 import CategoryNav from "@modules/layout/components/category-nav"
 import HeaderSearch from "@modules/layout/components/header-search"
 import Logo from "@modules/layout/components/logo"
@@ -23,12 +22,7 @@ import UtilityBar from "@modules/layout/components/utility-bar"
  * mHomeTop() + the floating nav on phones). Breakpoint `small` = 1024px.
  */
 export default async function Nav() {
-  const [cart, customer] = await Promise.all([
-    retrieveCart().catch(() => null),
-    retrieveCustomer().catch(() => null),
-  ])
-  const count = cart?.items?.reduce((sum, i) => sum + i.quantity, 0) ?? 0
-  const subtotal = cart?.item_subtotal ?? 0
+  const customer = await retrieveCustomer().catch(() => null)
   const accountLabel = customer ? "Tài khoản của tôi" : "Đăng nhập"
 
   return (
@@ -51,7 +45,7 @@ export default async function Nav() {
             >
               <LuUser size={20} aria-hidden="true" />
             </LocalizedClientLink>
-            <CartButtonDesktop count={count} subtotal={subtotal} />
+            <LiveCartDesktop />
           </div>
           <div className="content-container">
             <CategoryNav />
@@ -65,7 +59,7 @@ export default async function Nav() {
               <Logo size={32} />
             </LocalizedClientLink>
             <div className="flex items-center gap-2">
-              <CartButtonMobile count={count} />
+              <LiveCartMobile />
               <ComingSoonButton
                 feature="Thông báo"
                 variant="secondary"
@@ -79,7 +73,7 @@ export default async function Nav() {
           <HeaderSearch showAssistant={false} />
         </div>
       </header>
-      <MobileNav cartCount={count} />
+      <MobileNav />
     </>
   )
 }

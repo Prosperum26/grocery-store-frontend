@@ -27,8 +27,6 @@ export default function ProductCard({
   const percent = salePercent(product.originalPrice, product.price)
   const outOfStock = product.stockQty <= 0
   const href = `/products/${product.handle}`
-  const mainVariant =
-    product.variants.find((v) => v.label === product.unitLabel) ?? product.variants[0]
 
   return (
     <article
@@ -83,7 +81,6 @@ export default function ProductCard({
           <AddButton
             handle={product.handle}
             title={product.title}
-            variantId={mainVariant?.id}
             variantCount={product.variants.length}
             inStock={!outOfStock}
           />
