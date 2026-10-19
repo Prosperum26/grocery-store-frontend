@@ -1,52 +1,92 @@
-import { Heading } from "@medusajs/ui"
-import { cookies as nextCookies } from "next/headers"
+import { DEMO_ORDER } from "@lib/mock/checkout"
+import { formatVnd } from "@lib/util/price"
+import Button from "@modules/common/components/button"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { Banner } from "@modules/common/components/notice"
+import { LuCircleCheck, LuTruck } from "react-icons/lu"
 
-import CartTotals from "@modules/common/components/cart-totals"
-import Help from "@modules/order/components/help"
-import Items from "@modules/order/components/items"
-import OnboardingCta from "@modules/order/components/onboarding-cta"
-import OrderDetails from "@modules/order/components/order-details"
-import ShippingDetails from "@modules/order/components/shipping-details"
-import PaymentDetails from "@modules/order/components/payment-details"
-import { HttpTypes } from "@medusajs/types"
+/**
+ * Confirmation of the v2 design (06_Dat_Hang_Thanh_Cong_*): a check, a
+ * short thank-you, the receipt as a ticket, and two ways forward. The
+ * receipt is the sample order of the design, so a notice says so.
+ */
+export default function OrderCompletedTemplate() {
+  return (
+    <div className="content-container flex flex-col items-center gap-8 py-10 small:py-14">
+      <div className="flex w-full max-w-2xl flex-col items-center gap-4 text-center">
+        <LuCircleCheck aria-hidden="true" size={72} className="text-brand" />
+        <h1 className="font-display text-3xl font-bold text-ink small:text-[40px] small:leading-tight">
+          Đặt hàng thành công
+        </h1>
+        <p className="max-w-md text-base text-ink-2">Cảm ơn bạn đã đặt hàng. Đơn của bạn đang được cửa hàng xử lý.</p>
+      </div>
 
-type OrderCompletedTemplateProps = {
-  order: HttpTypes.StoreOrder
+      <div className="w-full max-w-2xl">
+        <Banner
+          tone="info"
+          title="Đây là đơn mẫu của bản giao diện"
+          description="Chưa có đơn thật được tạo. Khi nối với hệ thống đơn hàng, trang này sẽ hiển thị đơn vừa đặt."
+        />
+      </div>
+
+      <section
+        aria-labelledby="order-receipt-title"
+        className="w-full max-w-md rounded-[10px] border-[1.5px] border-ink bg-surface shadow-[6px_6px_0_0_var(--tw-shadow-color)] shadow-accent"
+      >
+        <h2
+          id="order-receipt-title"
+          className="flex items-center justify-between rounded-t-[8px] bg-brand px-4 py-2.5 font-mono text-xs font-bold tracking-wide text-accent"
+        >
+          <span>COM4FUD · PHIẾU ĐẶT HÀNG</span>
+          <span>ĐÃ NHẬN</span>
+        </h2>
+        <dl className="flex flex-col gap-2.5 px-5 py-4 text-sm">
+          <Row label="Mã đơn" value={DEMO_ORDER.code} mono />
+          <Row label="Đặt lúc" value={DEMO_ORDER.placed} mono />
+          <Row label="Giao" value={DEMO_ORDER.slot} />
+          <Row label="Thanh toán" value={DEMO_ORDER.payment} />
+        </dl>
+        <div aria-hidden="true" className="mx-5 border-t border-dashed border-ink-3" />
+        <dl className="flex flex-col gap-2 px-5 py-4 text-sm">
+          <Row label={`Tạm tính (${DEMO_ORDER.count} món)`} value={formatVnd(DEMO_ORDER.subtotal)} mono />
+          <Row label="Phí giao hàng" value={formatVnd(DEMO_ORDER.shipping)} mono />
+          <Row label={`Mã ${DEMO_ORDER.voucher}`} value={`−${formatVnd(DEMO_ORDER.discount)}`} mono />
+          <div className="flex items-end justify-between pt-2">
+            <dt className="font-semibold text-ink">Tổng thanh toán</dt>
+            <dd className="font-mono text-xl font-bold text-ink">{formatVnd(DEMO_ORDER.total)}</dd>
+          </div>
+        </dl>
+        <div aria-hidden="true" className="flex h-10 items-end gap-[2px] px-5 pb-4 opacity-70">
+          {Array.from({ length: 48 }, (_, i) => (
+            <span
+              key={i}
+              className="bg-ink"
+              style={{ width: i % 3 === 0 ? 3 : 1.5, height: i % 5 === 0 ? "100%" : "70%" }}
+            />
+          ))}
+        </div>
+      </section>
+
+      <div className="flex flex-wrap justify-center gap-3">
+        <Button variant="primary" size="lg" href="/account/orders" icon={<LuTruck />}>
+          Theo dõi đơn
+        </Button>
+        <Button variant="secondary" size="lg" href="/store">
+          Tiếp tục mua sắm
+        </Button>
+      </div>
+      <LocalizedClientLink href="/" className="text-sm text-ink-2 underline-offset-2 hover:underline">
+        Về trang chủ
+      </LocalizedClientLink>
+    </div>
+  )
 }
 
-export default async function OrderCompletedTemplate({
-  order,
-}: OrderCompletedTemplateProps) {
-  const cookies = await nextCookies()
-
-  const isOnboarding = cookies.get("_medusa_onboarding")?.value === "true"
-
+function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="py-6 min-h-[calc(100vh-64px)]">
-      <div className="content-container flex flex-col justify-center items-center gap-y-10 max-w-4xl h-full w-full">
-        {isOnboarding && <OnboardingCta orderId={order.id} />}
-        <div
-          className="flex flex-col gap-4 max-w-4xl h-full bg-white w-full py-10"
-          data-testid="order-complete-container"
-        >
-          <Heading
-            level="h1"
-            className="flex flex-col gap-y-3 text-ui-fg-base text-3xl mb-4"
-          >
-            <span>Thank you!</span>
-            <span>Your order was placed successfully.</span>
-          </Heading>
-          <OrderDetails order={order} />
-          <Heading level="h2" className="flex flex-row text-3xl-regular">
-            Summary
-          </Heading>
-          <Items order={order} />
-          <CartTotals totals={order} />
-          <ShippingDetails order={order} />
-          <PaymentDetails order={order} />
-          <Help />
-        </div>
-      </div>
+    <div className="flex items-baseline justify-between gap-4">
+      <dt className="text-ink-2">{label}</dt>
+      <dd className={mono ? "font-mono font-semibold text-ink" : "font-semibold text-ink"}>{value}</dd>
     </div>
   )
 }
