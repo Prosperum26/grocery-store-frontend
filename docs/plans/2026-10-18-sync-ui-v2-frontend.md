@@ -1,4 +1,4 @@
-[x] 25deff3, sửa review 5521dac |[x] 7b113e0 (kèm trang giữ chỗ FE-11) |[x] c6d379a |[x] 1ee281a |[x] 646fbb3 |[x] 17b9c54, fa4b743 |# Sync giao diện v2 (xương) + palette v1 (xanh lá): phần Frontend (issue #11)
+# Sync giao diện v2 (xương) + palette v1 (xanh lá): phần Frontend (issue #11)
 
 > **Cho người làm tiếp:** làm lần lượt từng task, tick `- [ ]` khi xong, ghi commit hash vào bảng mục 0. Mỗi task đủ độc lập để merge riêng, nên có thể dừng giữa chừng. Phần backend (đấu dữ liệu thật) nằm ở `grocery-store-backend/docs/plans/2026-10-18-sync-ui-v2-backend.md` và là **giai đoạn sau**, không thuộc issue này.
 >
@@ -6,7 +6,7 @@
 
 **Issue:** Prosperum26/grocery-store-backend#11 "[UI/Storefront] Đồng bộ toàn bộ giao diện Storefront theo bản thiết kế Figma".
 **Mục tiêu:** thay hoàn toàn giao diện mặc định/Montra bằng khung xương v2 + bộ màu xanh lá v1. **Chỉ làm vỏ giao diện**: layout, typography, màu, component, điều hướng. Chưa đấu catalog thật, chưa làm logic backend.
-**Nguồn thiết kế:** bản SVG đã tải về `Com4Fud_UI_SVG/v2/` (README, ảnh `preview_png/`, mã sinh ở `v2/_source/src/*.js`). Không cần truy cập Figma. Ảnh PNG v2 vẽ bằng **màu đỏ-xanh cũ**, chỉ để xem bố cục; màu lấy từ mục 1.2.
+**Nguồn thiết kế:** bản SVG đã tải về `Com4Fud_UI_SVG/v2/` (thực tế nằm ở `Com4Fud_UI_SVG/Com4Fud_UI_SVG/`, mã sinh ở `_source/src/*.js`) (README, ảnh `preview_png/`, mã sinh ở `v2/_source/src/*.js`). Không cần truy cập Figma. Ảnh PNG v2 vẽ bằng **màu đỏ-xanh cũ**, chỉ để xem bố cục; màu lấy từ mục 1.2.
 **Nhánh:** `feature/sync-figma-ui`.
 
 ## 0. Bảng trạng thái
@@ -19,15 +19,15 @@
 | FE-3 | Thành phần dùng chung + hệ thống "Đang trong quá trình phát triển" | 1, 3 | [x] c6d379a |
 | FE-4 | Header, Footer, điều hướng điện thoại, trang chính sách | 1 | [x] 7b113e0 (kèm trang giữ chỗ FE-11) |
 | FE-5 | Trang chủ | 2 | [x] 25deff3, sửa sau review 5521dac |
-| FE-6 | Danh sách sản phẩm (PLP) + lọc/sắp xếp | 2 | [ ] |
-| FE-7 | Chi tiết sản phẩm (PDP) | 2 | [ ] |
-| FE-8 | Giỏ hàng | 2 | [ ] |
-| FE-9 | Thanh toán + Đặt hàng thành công | 2 | [ ] |
-| FE-10 | Tài khoản: đăng nhập/đăng ký, Đơn hàng của tôi, Theo dõi đơn, Hồ sơ | 2, 3 | [ ] |
-| FE-11 | Trợ lý Bếp (trang giữ chỗ) | 3 | [ ] |
-| FE-12 | Trạng thái giao diện: trống, tải, lỗi, 404, mất mạng | 2 | [ ] |
-| FE-13 | Rà soát accessibility | cả issue | [ ] |
-| FE-14 | Kiểm tra liên kết, build, responsive, dọn dẹp, README | nghiệm thu | [ ] |
+| FE-6 | Danh sách sản phẩm (PLP) + lọc/sắp xếp | 2 | [x] chưa commit (2026-10-19) |
+| FE-7 | Chi tiết sản phẩm (PDP) | 2 | [x] chưa commit |
+| FE-8 | Giỏ hàng | 2 | [x] chưa commit |
+| FE-9 | Thanh toán + Đặt hàng thành công | 2 | [x] chưa commit |
+| FE-10 | Tài khoản: đăng nhập/đăng ký, Đơn hàng của tôi, Theo dõi đơn, Hồ sơ | 2, 3 | [x] chưa commit (một phần, xem tồn đọng) |
+| FE-11 | Trợ lý Bếp (trang giữ chỗ) | 3 | [x] 7b113e0 |
+| FE-12 | Trạng thái giao diện: trống, tải, lỗi, 404, mất mạng | 2 | [x] chưa commit (skeleton chưa làm lại) |
+| FE-13 | Rà soát accessibility | cả issue | [ ] chưa chạy Lighthouse/NVDA |
+| FE-14 | Kiểm tra liên kết, build, responsive, dọn dẹp, README | nghiệm thu | [x] chưa commit (lint còn hỏng) |
 
 ## 1. Bối cảnh và những gì đã chốt
 
@@ -340,7 +340,16 @@ Issue yêu cầu cân nhắc accessibility; các task trên đã có yêu cầu 
 
 | Màn | Khác gì | Lý do |
 | :--- | :--- | :--- |
-| (điền khi làm) | | |
+| 02 PLP | Bỏ lọc khoảng giá, nguồn gốc, đơn vị; sắp xếp là `<select>` thay cho nút phân đoạn; 9 món/trang ở cả hai cỡ, điện thoại dùng số trang thay "Xem thêm" | Mục 1.1 (chỉ 2 bộ lọc); `<select>` dễ dùng bằng bàn phím và trên điện thoại |
+| 02 PLP | Bỏ khối "Bếp AI" ở thanh bên, bỏ "cập nhật 06:00" | Không chữ AI; không hứa điều chưa chắc |
+| 03 PDP | Không có ảnh phụ, điểm sao, tim, dải "17:00–19:00 / thùng lạnh / đổi trả 24 giờ", banner "chỉ còn 3 khay trong kho Q.7" | O3, quy tắc "chỉ hiện điều chắc chắn" |
+| 03 PDP | Cách sơ chế chỉ là lựa chọn trên giao diện, chưa lưu vào giỏ | Giỏ giả chưa có trường này |
+| 04 Giỏ | Bỏ "Chọn tất cả/Xóa đã chọn", "Báo khi có hàng", dải miễn phí giao 300.000đ, "Kho chỉ được trừ khi bấm Đặt hàng" | FE-8, O3, O4; giữ hàng nguyên tử chưa có |
+| 05 Thanh toán | Chỉ VNPAY; bỏ COD, MoMo, "Sandbox", "Thùng giữ lạnh", phụ phí cao điểm và nhãn "Miễn phí" theo khung giờ | Mục 1.1; phí giao cố định 15.000đ cho mọi khung |
+| 06 Thành công | Thêm banner "Đây là đơn mẫu"; phiếu luôn là đơn mẫu C4F-261007-0142, không lấy từ giỏ | Chưa có đơn thật |
+| 07 Đơn hàng | Không có bộ lọc trạng thái; "Mua lại" mở hộp thoại giữ chỗ | Đơn giả chỉ có ảnh minh họa, không có danh sách món |
+| 08 Theo dõi | Không bản đồ; "Dự kiến tới lúc" là giữ chỗ; tài xế chỉ có ở đơn mẫu đang giao | Mục 1.1, 1.5 |
+| 09 Đăng nhập | Không đăng ký, không Google; gửi form mở hộp thoại giữ chỗ; nút tài khoản dùng thử chỉ ở dev | O5 |
 
 ## 3. Cách chia đôi công việc khi sync dở
 
@@ -365,5 +374,6 @@ Khi nhóm đấu dữ liệu thật: làm các task BE trong file backend, rồi
 
 | Ngày | Người | Đã xong | Dở dang / lưu ý |
 | :--- | :--- | :--- | :--- |
+| 2026-10-19 | Claude | FE-6, 7, 8, 9, 10, 12, 14 (chưa commit). Giỏ giả + toast ở `app/[countryCode]/layout.tsx`; bỏ Stripe, luồng transfer đơn, module checkout/order cũ; `tsc` 0 lỗi (trước 18), 76 test qua, `yarn build` qua, `check-links` 44 URL sạch. | Chưa làm: FE-13 (Lighthouse, NVDA); skeleton theo thiết kế; nối `fromMedusa`/giỏ thật; trang `/collections/*` vẫn là code Starter; vài câu tiếng Anh trong form Hồ sơ/Địa chỉ của Starter; `yarn lint` hỏng sẵn (`@next/next/no-html-link-for-pages`). |
 | 2026-10-18 | Claude (theo yêu cầu Hưng) | FE-0 … FE-5 + trang giữ chỗ `/tro-ly-bep` (FE-11). Đã review toàn nhánh, sửa 5 lỗi Important (5521dac). | Chưa làm: FE-6 trở đi. Tồn đọng nhỏ từ review: trùng `id="header-search"` giữa bản desktop/điện thoại; `/tro-ly-bep` thiếu h1; Stepper mất focus khi chạm giới hạn; nav điện thoại mất focus sau khi chuyển trang; `/store?q=` chưa lọc và danh mục rỗng chưa có trạng thái trống (FE-6/FE-12); 500 ở handle sản phẩm lạ và `/collections/*` (code Starter); PriceTag sale+unit tương phản 2,96:1; `yarn lint` hỏng sẵn do lệch phiên bản ESLint (FE-13); nút "Thêm cả 5 món" trên điện thoại chỉ hiện 3 món. Bản ghi chi tiết: `.superpowers/sdd/…/progress.md` (không commit). |
 | 2026-10-18 | | Chưa bắt đầu, mới có kế hoạch | |
