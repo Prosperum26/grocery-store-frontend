@@ -4,6 +4,7 @@ import { listProducts } from "@lib/data/products"
 import { MOCK_CART_SEED } from "@lib/mock/cart"
 import { isMockMode } from "@lib/mock/mode"
 import { toProductVM } from "@lib/viewmodels/product"
+import OfflineBanner from "@modules/common/components/offline-banner"
 
 /**
  * Shared state of the store and checkout: the browser cart and toasts. The
@@ -22,7 +23,10 @@ export default async function CountryLayout(props: {
 
   return (
     <MockCartProvider catalog={catalog} seed={isMockMode() ? MOCK_CART_SEED : []}>
-      <ToastProvider>{props.children}</ToastProvider>
+      <ToastProvider>
+        <OfflineBanner />
+        {props.children}
+      </ToastProvider>
     </MockCartProvider>
   )
 }
