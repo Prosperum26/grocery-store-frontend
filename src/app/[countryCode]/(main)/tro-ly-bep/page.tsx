@@ -15,6 +15,7 @@ export default function KitchenAssistantPage() {
   return (
     <div className="content-container py-10 small:py-16">
       <ComingSoonPanel
+        as="h1"
         title="Trợ lý Bếp"
         description="Gợi ý thực đơn cho cả tuần và gom đủ nguyên liệu còn hàng vào giỏ cho bạn."
         icon={

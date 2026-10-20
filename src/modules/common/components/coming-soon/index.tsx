@@ -157,12 +157,15 @@ export function ComingSoonPanel({
   icon,
   children,
   className,
+  as: Heading = "h2",
 }: {
   title: string
   description?: string
   icon?: React.ReactNode
   children?: React.ReactNode
   className?: string
+  /** Use "h1" when the panel is the whole page. */
+  as?: "h1" | "h2"
 }) {
   return (
     <section
@@ -174,7 +177,7 @@ export function ComingSoonPanel({
     >
       {icon}
       <ComingSoonBadge />
-      <h2 className="text-2xl font-bold text-ink">{title}</h2>
+      <Heading className="text-2xl font-bold text-ink">{title}</Heading>
       {description && <p className="max-w-md text-sm text-ink-2">{description}</p>}
       {children}
     </section>
