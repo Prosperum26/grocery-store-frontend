@@ -49,7 +49,7 @@ export function MobileAddressRow() {
         type="button"
         aria-haspopup="dialog"
         onClick={() => open("Chọn khung giờ giao")}
-        aria-label="Khung giờ giao: 17:00 đến 19:00"
+        aria-label="Khung giờ giao 17:00–19:00"
         className="touch-target relative inline-flex h-7 shrink-0 items-center gap-1 rounded-full bg-brand-bg px-2.5 font-mono text-xs font-bold text-brand-deep"
       >
         <LuClock size={13} aria-hidden="true" />

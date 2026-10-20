@@ -1,6 +1,7 @@
 "use client"
 
 import { useParams } from "next/navigation"
+import { useId } from "react"
 import { LuChefHat, LuSearch } from "react-icons/lu"
 
 import { cx } from "@lib/util/cx"
@@ -18,6 +19,9 @@ export default function HeaderSearch({
   className?: string
 }) {
   const { countryCode } = useParams()
+  // The header renders this component twice (desktop and phone), so the id
+  // must be unique per instance for the label to point at the right input.
+  const inputId = useId()
 
   return (
     <form
@@ -29,12 +33,12 @@ export default function HeaderSearch({
         className
       )}
     >
-      <label htmlFor="header-search" className="sr-only">
+      <label htmlFor={inputId} className="sr-only">
         Tìm sản phẩm
       </label>
       <LuSearch size={20} aria-hidden="true" className="shrink-0 text-ink-2" />
       <input
-        id="header-search"
+        id={inputId}
         name="q"
         type="search"
         placeholder="Tìm “cá lóc”, “canh chua”, “rau ăn lẩu”…"

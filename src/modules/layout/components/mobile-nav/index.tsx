@@ -37,8 +37,26 @@ export default function MobileNav() {
   const pathname = usePathname()
   const current = pathname.split("/").slice(2).join("/")
 
-  // Close after navigating.
-  useEffect(() => setOpen(false), [pathname])
+  const navRef = useRef<HTMLElement>(null)
+  const restoreFocus = useRef(false)
+
+  // Close after navigating. If focus was on a link inside the bar, it would
+  // vanish with the bar, so remember to hand it back to the floating button.
+  useEffect(() => {
+    if (navRef.current?.contains(document.activeElement)) {
+      restoreFocus.current = true
+    }
+    setOpen(false)
+  }, [pathname])
+
+  // The floating button is hidden while the bar is open, so it can only take
+  // focus after the re-render that closes the bar.
+  useEffect(() => {
+    if (!open && restoreFocus.current) {
+      restoreFocus.current = false
+      fabRef.current?.focus()
+    }
+  }, [open])
 
   // Move focus into the bar when it opens; Esc closes it and returns focus
   // to the floating button.
@@ -74,6 +92,7 @@ export default function MobileNav() {
       </button>
 
       <nav
+        ref={navRef}
         id="mobile-nav-bar"
         aria-label="Điều hướng chính"
         // Only the open bar is a dark surface (lime focus ring); the floating
