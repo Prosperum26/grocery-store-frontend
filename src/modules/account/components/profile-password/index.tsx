@@ -15,7 +15,7 @@ const ProfilePassword: React.FC<MyInformationProps> = ({ customer }) => {
 
   // TODO: Add support for password updates
   const updatePassword = async () => {
-    toast.info("Password update is not implemented")
+    toast.info("Chưa hỗ trợ đổi mật khẩu")
   }
 
   const clearState = () => {
@@ -29,9 +29,9 @@ const ProfilePassword: React.FC<MyInformationProps> = ({ customer }) => {
       className="w-full"
     >
       <AccountInfo
-        label="Password"
+        label="Mật khẩu"
         currentInfo={
-          <span>The password is not shown for security reasons</span>
+          <span>Mật khẩu không được hiển thị vì lý do bảo mật</span>
         }
         isSuccess={successState}
         isError={false}

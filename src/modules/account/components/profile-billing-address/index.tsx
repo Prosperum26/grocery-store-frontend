@@ -63,7 +63,7 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
 
   const currentInfo = useMemo(() => {
     if (!billingAddress) {
-      return "No billing address"
+      return "Chưa có địa chỉ thanh toán"
     }
 
     const country =
@@ -118,29 +118,29 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
             />
           </div>
           <Input
-            label="Company"
+            label="Công ty"
             name="company"
             defaultValue={billingAddress?.company || undefined}
             data-testid="billing-company-input"
           />
           <Input
-            label="Phone"
+            label="Số điện thoại"
             name="phone"
-            type="phone"
-            autoComplete="phone"
+            type="tel"
+            autoComplete="tel"
             required
             defaultValue={billingAddress?.phone ?? customer?.phone ?? ""}
             data-testid="billing-phone-input"
           />
           <Input
-            label="Address"
+            label="Địa chỉ"
             name="address_1"
             defaultValue={billingAddress?.address_1 || undefined}
             required
             data-testid="billing-address-1-input"
           />
           <Input
-            label="Apartment, suite, etc."
+            label="Căn hộ, tòa nhà, v.v."
             name="address_2"
             defaultValue={billingAddress?.address_2 || undefined}
             data-testid="billing-address-2-input"
@@ -154,7 +154,7 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
               data-testid="billing-postcal-code-input"
             />
             <Input
-              label="City"
+              label="Thành phố"
               name="city"
               defaultValue={billingAddress?.city || undefined}
               required
@@ -162,7 +162,7 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
             />
           </div>
           <Input
-            label="Province"
+            label="Tỉnh / Thành"
             name="province"
             defaultValue={billingAddress?.province || undefined}
             data-testid="billing-province-input"
