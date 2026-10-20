@@ -46,10 +46,15 @@ export default function Stepper({
     >
       <button
         type="button"
-        className={clx(box, "touch-target relative flex items-center justify-center rounded-full disabled:opacity-35")}
-        disabled={atMin && !showTrash}
+        className={clx(box, "touch-target relative flex items-center justify-center rounded-full aria-disabled:opacity-35")}
+        // aria-disabled instead of disabled: a disabled button drops keyboard
+        // focus when the value reaches the limit; this one keeps it.
+        aria-disabled={atMin && !showTrash}
         aria-label={showTrash ? `Xóa ${label} khỏi giỏ` : `Giảm số lượng ${label}`}
-        onClick={() => (showTrash ? onRemove?.() : onChange(value - 1))}
+        onClick={() => {
+          if (showTrash) onRemove?.()
+          else if (!atMin) onChange(value - 1)
+        }}
       >
         {showTrash ? (
           <LuTrash2 size={iconSize} aria-hidden="true" />
@@ -68,10 +73,12 @@ export default function Stepper({
       </span>
       <button
         type="button"
-        className={clx(box, "touch-target relative flex items-center justify-center rounded-full disabled:opacity-35")}
-        disabled={atMax}
+        className={clx(box, "touch-target relative flex items-center justify-center rounded-full aria-disabled:opacity-35")}
+        aria-disabled={atMax}
         aria-label={`Tăng số lượng ${label}`}
-        onClick={() => onChange(value + 1)}
+        onClick={() => {
+          if (!atMax) onChange(value + 1)
+        }}
       >
         <LuPlus size={iconSize} aria-hidden="true" />
       </button>

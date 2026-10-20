@@ -35,7 +35,15 @@ export default function PriceTag({
       />
       {formatVnd(price)}
       {unit && (
-        <span className="text-xs font-medium text-on-dark">/{unit}</span>
+        // on-dark (#B5C7BA) on the sale red is only 2.96:1, so sale tags use white
+        <span
+          className={clx(
+            "text-xs font-medium",
+            sale ? "text-white" : "text-on-dark"
+          )}
+        >
+          /{unit}
+        </span>
       )}
     </span>
   )
