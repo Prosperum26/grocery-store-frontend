@@ -1,9 +1,14 @@
 import { HttpTypes } from "@medusajs/types"
 import { NextRequest, NextResponse } from "next/server"
+import { isMockMode, MOCK_COUNTRY_CODE } from "@lib/mock/mode"
+import { MOCK_REGION } from "@lib/mock/regions"
 
 const BACKEND_URL = process.env.MEDUSA_BACKEND_URL
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
+// Mock mode serves only /vn, whatever NEXT_PUBLIC_DEFAULT_REGION says.
+const DEFAULT_REGION = isMockMode()
+  ? MOCK_COUNTRY_CODE
+  : process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
 
 const regionMapCache = {
   regionMap: new Map<string, HttpTypes.StoreRegion>(),
@@ -112,7 +117,10 @@ export async function middleware(request: NextRequest) {
 
   let cacheId = cacheIdCookie?.value || crypto.randomUUID()
 
-  const regionMap = await getRegionMap(cacheId)
+  // Mock mode never calls the backend (issue #11 runs without one).
+  const regionMap = isMockMode()
+    ? new Map([[MOCK_COUNTRY_CODE, MOCK_REGION]])
+    : await getRegionMap(cacheId)
 
   const countryCode = regionMap && (await getCountryCode(request, regionMap))
 

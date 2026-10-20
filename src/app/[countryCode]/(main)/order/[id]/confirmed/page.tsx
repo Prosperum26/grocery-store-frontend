@@ -1,23 +1,29 @@
-import { retrieveOrder } from "@lib/data/orders"
-import OrderCompletedTemplate from "@modules/order/templates/order-completed-template"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
+
+import { DEMO_ORDER_ID } from "@lib/mock/checkout"
+import { isMockMode } from "@lib/mock/mode"
+import OrderCompletedTemplate from "@modules/order/templates/order-completed-template"
 
 type Props = {
   params: Promise<{ id: string }>
 }
+
 export const metadata: Metadata = {
-  title: "Order Confirmed",
-  description: "You purchase was successful",
+  title: "Đặt hàng thành công | Com4Fud",
+  description: "Đơn hàng của bạn đã được ghi nhận.",
 }
 
+/**
+ * Confirmation page. In mock mode only the sample order exists; real orders
+ * come with the backend (backend plan BE-6).
+ */
 export default async function OrderConfirmedPage(props: Props) {
-  const params = await props.params
-  const order = await retrieveOrder(params.id).catch(() => null)
+  const { id } = await props.params
 
-  if (!order) {
-    return notFound()
+  if (!isMockMode() || id !== DEMO_ORDER_ID) {
+    notFound()
   }
 
-  return <OrderCompletedTemplate order={order} />
+  return <OrderCompletedTemplate />
 }

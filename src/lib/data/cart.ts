@@ -15,6 +15,7 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 import { getLocale } from "@lib/data/locale-actions"
+import { isMockMode } from "@lib/mock/mode"
 
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
@@ -26,7 +27,8 @@ export async function retrieveCart(cartId?: string, fields?: string) {
   fields ??=
     "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
 
-  if (!id) {
+  // Mock mode keeps the cart in the browser (FE-8), not in Medusa.
+  if (!id || isMockMode()) {
     return null
   }
 
@@ -127,6 +129,8 @@ export async function addToCart({
     throw new Error("Missing variant ID when adding to cart")
   }
 
+  if (isMockMode()) return
+
   const cart = await getOrSetCart(countryCode)
 
   if (!cart) {
@@ -168,6 +172,8 @@ export async function updateLineItem({
     throw new Error("Missing lineItem ID when updating line item")
   }
 
+  if (isMockMode()) return
+
   const cartId = await getCartId()
 
   if (!cartId) {
@@ -194,6 +200,8 @@ export async function deleteLineItem(lineId: string) {
   if (!lineId) {
     throw new Error("Missing lineItem ID when deleting line item")
   }
+
+  if (isMockMode()) return
 
   const cartId = await getCartId()
 

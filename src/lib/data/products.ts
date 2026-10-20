@@ -1,6 +1,8 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { isMockMode } from "@lib/mock/mode"
+import { MockProductQuery, queryMockProducts } from "@lib/mock/query"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -43,6 +45,16 @@ export const listProducts = async ({
       response: { products: [], count: 0 },
       nextPage: null,
     }
+  }
+
+  if (isMockMode()) {
+    const { products, count } = queryMockProducts({
+      ...(queryParams as MockProductQuery),
+      limit,
+      offset,
+    })
+    const nextPage = count > offset + limit ? pageParam + 1 : null
+    return { response: { products, count }, nextPage, queryParams }
   }
 
   const headers = {

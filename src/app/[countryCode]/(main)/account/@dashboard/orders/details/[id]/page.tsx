@@ -1,33 +1,29 @@
-import { retrieveOrder } from "@lib/data/orders"
-import OrderDetailsTemplate from "@modules/order/templates/order-details-template"
 import { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 
-type Props = {
-  params: Promise<{ id: string }>
+import { retrieveCustomer } from "@lib/data/customer"
+import { isMockMode } from "@lib/mock/mode"
+import { MOCK_ORDERS } from "@lib/mock/orders"
+import OrderTrackingTemplate from "@modules/account/templates/order-tracking-template"
+
+type Props = { params: Promise<{ id: string; countryCode: string }> }
+
+export const metadata: Metadata = {
+  title: "Theo dõi đơn hàng | Com4Fud",
+  description: "Tiến trình giao hàng của đơn.",
 }
 
-export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params
-  const order = await retrieveOrder(params.id).catch(() => null)
+export default async function OrderDetailsPage(props: Props) {
+  const { id, countryCode } = await props.params
+  const customer = await retrieveCustomer().catch(() => null)
+  const order = isMockMode() ? MOCK_ORDERS.find((o) => o.id === id) : undefined
 
+  if (!customer) {
+    redirect(`/${countryCode}/account`)
+  }
   if (!order) {
     notFound()
   }
 
-  return {
-    title: `Order #${order.display_id}`,
-    description: `View your order`,
-  }
-}
-
-export default async function OrderDetailPage(props: Props) {
-  const params = await props.params
-  const order = await retrieveOrder(params.id).catch(() => null)
-
-  if (!order) {
-    notFound()
-  }
-
-  return <OrderDetailsTemplate order={order} />
+  return <OrderTrackingTemplate order={order} />
 }

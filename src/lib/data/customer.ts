@@ -1,6 +1,10 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { DEMO_STORE_CUSTOMER } from "@lib/mock/customer"
+import { isMockMode } from "@lib/mock/mode"
+import { isDemoSignedIn } from "./demo-session"
+import { COMING_SOON_TEXT, COMING_SOON_TITLE } from "@lib/util/coming-soon-copy"
 import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
@@ -17,6 +21,12 @@ import {
 
 export const retrieveCustomer =
   async (): Promise<HttpTypes.StoreCustomer | null> => {
+    // Mock mode: the demo customer, only after the demo sign-in (plan O5).
+    if (isMockMode()) {
+      if (!(await isDemoSignedIn())) return null
+      return process.env.NODE_ENV === "production" ? null : DEMO_STORE_CUSTOMER
+    }
+
     const authHeaders = await getAuthHeaders()
 
     if (!authHeaders) return null
@@ -59,7 +69,13 @@ export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
   return updateRes
 }
 
+// Accounts need the backend; in mock mode the forms say so instead of
+// failing with a network error (issue #11: placeholder, never a crash).
+const MOCK_AUTH_MESSAGE = `${COMING_SOON_TITLE}. ${COMING_SOON_TEXT}`
+
 export async function signup(_currentState: unknown, formData: FormData) {
+  if (isMockMode()) return MOCK_AUTH_MESSAGE
+
   const password = formData.get("password") as string
   const customerForm = {
     email: formData.get("email") as string,
@@ -105,6 +121,8 @@ export async function signup(_currentState: unknown, formData: FormData) {
 }
 
 export async function login(_currentState: unknown, formData: FormData) {
+  if (isMockMode()) return MOCK_AUTH_MESSAGE
+
   const email = formData.get("email") as string
   const password = formData.get("password") as string
 

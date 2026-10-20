@@ -1,72 +1,118 @@
-import React, { Suspense } from "react"
-
-import ImageGallery from "@modules/products/components/image-gallery"
+import { MOCK_CATEGORY_LIST } from "@lib/mock/categories"
+import { resolveVariant } from "@lib/mock/cart"
+import { ComingSoonBadge, ComingSoonButton } from "@modules/common/components/coming-soon"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import ProductCard from "@modules/products/components/product-card"
 import ProductActions from "@modules/products/components/product-actions"
-import ProductOnboardingCta from "@modules/products/components/product-onboarding-cta"
+import ProductArt from "@modules/products/components/product-art"
 import ProductTabs from "@modules/products/components/product-tabs"
-import RelatedProducts from "@modules/products/components/related-products"
-import ProductInfo from "@modules/products/templates/product-info"
-import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
-import { notFound } from "next/navigation"
-import { HttpTypes } from "@medusajs/types"
+import ScaleLabel from "@modules/products/components/scale-label"
+import type { ProductVM } from "types/viewmodels"
 
-import ProductActionsWrapper from "./product-actions-wrapper"
-
-type ProductTemplateProps = {
-  product: HttpTypes.StoreProduct
-  region: HttpTypes.StoreRegion
-  countryCode: string
-  images: HttpTypes.StoreProductImage[]
-}
-
-const ProductTemplate: React.FC<ProductTemplateProps> = ({
+/**
+ * Product page of the v2 design (03_Chi_Tiet_San_Pham_*). Desktop: image
+ * with the scale label on the left, buying panel on the right. Phone: one
+ * column, with the buying bar floating above the bottom nav.
+ */
+export default function ProductTemplate({
   product,
-  region,
-  countryCode,
-  images,
-}) => {
-  if (!product || !product.id) {
-    return notFound()
-  }
+  companions,
+}: {
+  product: ProductVM
+  companions: ProductVM[]
+}) {
+  const category = MOCK_CATEGORY_LIST.find((c) => c.handle === product.categoryHandle)
+  const defaultVariant = resolveVariant(product)
 
   return (
-    <>
-      <div
-        className="content-container  flex flex-col small:flex-row small:items-start py-6 relative"
-        data-testid="product-container"
-      >
-        <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-6">
-          <ProductInfo product={product} />
-          <ProductTabs product={product} />
+    <div className="content-container flex flex-col gap-10 pb-44 pt-6 small:pb-16 small:pt-8">
+      <nav aria-label="Đường dẫn">
+        <ol className="flex flex-wrap items-center gap-2 text-sm text-ink-2">
+          <li>
+            <LocalizedClientLink href="/" className="hover:text-ink hover:underline">
+              Trang chủ
+            </LocalizedClientLink>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li>
+            <LocalizedClientLink
+              href={category ? `/categories/${category.handle}` : "/store"}
+              className="hover:text-ink hover:underline"
+            >
+              {category?.name ?? "Tất cả sản phẩm"}
+            </LocalizedClientLink>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li aria-current="page" className="font-semibold text-ink">
+            {product.title}
+          </li>
+        </ol>
+      </nav>
+
+      <div className="grid gap-8 small:grid-cols-[minmax(0,560px)_minmax(0,1fr)] small:gap-12">
+        <div className="relative aspect-square w-full overflow-hidden rounded-[24px] border border-line">
+          <ProductArt product={product} scale={0.62} dots sizes="(max-width: 1024px) 100vw, 560px" />
+          {defaultVariant && (
+            <div className="absolute bottom-5 right-5 hidden small:block">
+              <ScaleLabel variant={defaultVariant} packLabel={defaultVariant.label} />
+            </div>
+          )}
         </div>
-        <div className="block w-full relative">
-          <ImageGallery images={images} />
-        </div>
-        <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-12">
-          <ProductOnboardingCta />
-          <Suspense
-            fallback={
-              <ProductActions
-                disabled={true}
-                product={product}
-                region={region}
-              />
-            }
-          >
-            <ProductActionsWrapper id={product.id} region={region} />
-          </Suspense>
+
+        <div className="flex min-w-0 flex-col gap-6">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-ink-2">
+              {category && <span className="rounded-chip bg-page-2 px-2.5 py-1">{category.name}</span>}
+              {product.origin && <span className="rounded-chip bg-page-2 px-2.5 py-1">{product.origin}</span>}
+            </div>
+            <h1 className="font-display text-3xl font-bold leading-tight text-ink small:text-[40px]">
+              {product.title}
+            </h1>
+          </div>
+          <ProductActions product={product} />
         </div>
       </div>
-      <div
-        className="content-container my-16 small:my-32"
-        data-testid="related-products-container"
+
+      <section aria-labelledby="pdp-info" className="flex flex-col gap-4">
+        <h2 id="pdp-info" className="font-display text-xl font-bold text-ink">
+          Thông tin sản phẩm
+        </h2>
+        <ProductTabs description={product.description} />
+      </section>
+
+      {companions.length > 0 && (
+        <section aria-labelledby="pdp-companions" className="flex flex-col gap-4">
+          <h2 id="pdp-companions" className="font-display text-xl font-bold text-ink">
+            Thường mua kèm
+          </h2>
+          <ul className="grid grid-cols-2 gap-3 small:grid-cols-4 small:gap-5">
+            {companions.map((p) => (
+              <li key={p.id} className="flex">
+                <ProductCard product={p} className="w-full" />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Recipes are not built yet (phase 2, Trợ lý Bếp). Same layout, placeholder content. */}
+      <section
+        aria-labelledby="pdp-recipe"
+        className="flex flex-col gap-4 rounded-card bg-brand-deep p-6 text-white small:flex-row small:items-center small:justify-between small:p-8"
       >
-        <Suspense fallback={<SkeletonRelatedProducts />}>
-          <RelatedProducts product={product} countryCode={countryCode} />
-        </Suspense>
-      </div>
-    </>
+        <div className="flex flex-col gap-2">
+          <ComingSoonBadge />
+          <h2 id="pdp-recipe" className="font-display text-xl font-bold">
+            Món ngon với {product.title.toLowerCase()}
+          </h2>
+          <p className="max-w-xl text-sm text-on-dark">
+            Gợi ý món ăn và nguyên liệu còn hàng sẽ có ở Trợ lý Bếp.
+          </p>
+        </div>
+        <ComingSoonButton feature="Gợi ý món ăn" variant="onDark" className="self-start small:self-auto">
+          Xem gợi ý món
+        </ComingSoonButton>
+      </section>
+    </div>
   )
 }
-
-export default ProductTemplate

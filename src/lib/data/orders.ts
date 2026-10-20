@@ -1,11 +1,17 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { isMockMode } from "@lib/mock/mode"
 import medusaError from "@lib/util/medusa-error"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { HttpTypes } from "@medusajs/types"
 
+// Mock mode: order pages read src/lib/mock/orders.ts directly (FE-9, FE-10),
+// so the Store API order calls return nothing.
+
 export const retrieveOrder = async (id: string) => {
+  if (isMockMode()) return null
+
   const headers = {
     ...(await getAuthHeaders()),
   }
@@ -34,6 +40,8 @@ export const listOrders = async (
   offset: number = 0,
   filters?: Record<string, any>
 ) => {
+  if (isMockMode()) return [] as HttpTypes.StoreOrder[]
+
   const headers = {
     ...(await getAuthHeaders()),
   }

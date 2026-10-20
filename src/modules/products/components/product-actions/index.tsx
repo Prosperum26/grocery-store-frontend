@@ -1,199 +1,198 @@
 "use client"
 
-import { addToCart } from "@lib/data/cart"
-import { useIntersection } from "@lib/hooks/use-in-view"
-import { HttpTypes } from "@medusajs/types"
-import { Button } from "@medusajs/ui"
-import Divider from "@modules/common/components/divider"
-import OptionSelect from "@modules/products/components/product-actions/option-select"
-import { isEqual } from "lodash"
-import { useParams, usePathname, useSearchParams } from "next/navigation"
-import { useEffect, useMemo, useRef, useState } from "react"
-import ProductPrice from "../product-price"
-import MobileActions from "./mobile-actions"
-import { useRouter } from "next/navigation"
+import { lineKey, resolveVariant } from "@lib/mock/cart"
+import { useMockCart } from "@lib/context/mock-cart-context"
+import { useToast } from "@lib/context/toast-context"
+import { cx } from "@lib/util/cx"
+import { formatVnd, pricePerKg, salePercent } from "@lib/util/price"
+import Button from "@modules/common/components/button"
+import LiveStock from "@modules/common/components/live-stock"
+import PriceTag from "@modules/common/components/price-tag"
+import Stepper from "@modules/common/components/stepper"
+import { useRef, useState, type KeyboardEvent } from "react"
+import { LuShoppingBag } from "react-icons/lu"
+import type { ProductVM } from "types/viewmodels"
 
-type ProductActionsProps = {
-  product: HttpTypes.StoreProduct
-  region: HttpTypes.StoreRegion
-  disabled?: boolean
-}
+/**
+ * Pack sizes, preparation and the add-to-cart row of the product page
+ * (03_Chi_Tiet_San_Pham). On phones the row floats above the bottom nav.
+ * The chosen preparation is shown only; the browser cart does not store it yet.
+ */
+export default function ProductActions({ product }: { product: ProductVM }) {
+  const { add, remove, setQuantity, view } = useMockCart()
+  const { show } = useToast()
 
-const optionsAsKeymap = (
-  variantOptions: HttpTypes.StoreProductVariant["options"]
-) => {
-  return variantOptions?.reduce((acc: Record<string, string>, varopt: any) => {
-    acc[varopt.option_id] = varopt.value
-    return acc
-  }, {})
-}
+  const defaultVariant = resolveVariant(product)
+  const [packLabel, setPackLabel] = useState(defaultVariant?.label ?? "")
+  const [prep, setPrep] = useState(product.prepOptions?.[0])
+  const [quantity, setQty] = useState(1)
+  const radios = useRef<(HTMLButtonElement | null)[]>([])
 
-export default function ProductActions({
-  product,
-  disabled,
-}: ProductActionsProps) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const variant = resolveVariant(product, packLabel)
+  const stock = variant?.stockQty ?? 0
+  const soldOut = stock <= 0
+  const qty = Math.min(quantity, Math.max(stock, 1))
+  const percent = variant ? salePercent(variant.originalPrice, variant.price) : null
+  const perKg = variant ? pricePerKg(variant.price, variant.weightGrams) : null
 
-  const [options, setOptions] = useState<Record<string, string | undefined>>({})
-  const [isAdding, setIsAdding] = useState(false)
-  const countryCode = useParams().countryCode as string
-
-  // If there is only 1 variant, preselect the options
-  useEffect(() => {
-    if (product.variants?.length === 1) {
-      const variantOptions = optionsAsKeymap(product.variants[0].options)
-      setOptions(variantOptions ?? {})
+  // Arrow keys move the selection among the pack sizes that can be bought,
+  // as in any radio group.
+  const onPackKeyDown = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const step =
+      e.key === "ArrowRight" || e.key === "ArrowDown"
+        ? 1
+        : e.key === "ArrowLeft" || e.key === "ArrowUp"
+          ? -1
+          : 0
+    if (!step) return
+    e.preventDefault()
+    const n = product.variants.length
+    for (let i = 1; i <= n; i++) {
+      const next = (((index + step * i) % n) + n) % n
+      if (product.variants[next].stockQty > 0) {
+        setPackLabel(product.variants[next].label)
+        radios.current[next]?.focus()
+        return
+      }
     }
-  }, [product.variants])
-
-  const selectedVariant = useMemo(() => {
-    if (!product.variants || product.variants.length === 0) {
-      return
-    }
-
-    return product.variants.find((v) => {
-      const variantOptions = optionsAsKeymap(v.options)
-      return isEqual(variantOptions, options)
-    })
-  }, [product.variants, options])
-
-  // update the options when a variant is selected
-  const setOptionValue = (optionId: string, value: string) => {
-    setOptions((prev) => ({
-      ...prev,
-      [optionId]: value,
-    }))
   }
 
-  //check if the selected options produce a valid variant
-  const isValidVariant = useMemo(() => {
-    return product.variants?.some((v) => {
-      const variantOptions = optionsAsKeymap(v.options)
-      return isEqual(variantOptions, options)
-    })
-  }, [product.variants, options])
-
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString())
-    const value = isValidVariant ? selectedVariant?.id : null
-
-    if (params.get("v_id") === value) {
+  const onAdd = () => {
+    if (!variant || soldOut) return
+    const key = lineKey(product.handle, variant.label)
+    const before = view.lines.find((l) => l.key === key)?.quantity ?? 0
+    const ok = add(product.handle, { variant: variant.label, quantity: qty })
+    if (!ok) {
+      show({ tone: "warn", title: "Số lượng vượt quá tồn kho" })
       return
     }
-
-    if (value) {
-      params.set("v_id", value)
-    } else {
-      params.delete("v_id")
-    }
-
-    router.replace(pathname + "?" + params.toString())
-  }, [selectedVariant, isValidVariant])
-
-  // check if the selected variant is in stock
-  const inStock = useMemo(() => {
-    // If we don't manage inventory, we can always add to cart
-    if (selectedVariant && !selectedVariant.manage_inventory) {
-      return true
-    }
-
-    // If we allow back orders on the variant, we can add to cart
-    if (selectedVariant?.allow_backorder) {
-      return true
-    }
-
-    // If there is inventory available, we can add to cart
-    if (
-      selectedVariant?.manage_inventory &&
-      (selectedVariant?.inventory_quantity || 0) > 0
-    ) {
-      return true
-    }
-
-    // Otherwise, we can't add to cart
-    return false
-  }, [selectedVariant])
-
-  const actionsRef = useRef<HTMLDivElement>(null)
-
-  const inView = useIntersection(actionsRef, "0px")
-
-  // add the selected variant to the cart
-  const handleAddToCart = async () => {
-    if (!selectedVariant?.id) return null
-
-    setIsAdding(true)
-
-    await addToCart({
-      variantId: selectedVariant.id,
-      quantity: 1,
-      countryCode,
+    show({
+      tone: "ok",
+      title: `Đã thêm ${qty} × ${product.title} (${variant.label})`,
+      description: "Giỏ hàng được lưu trong phiên này.",
+      action: {
+        label: "Hoàn tác",
+        onAction: () => {
+          if (before === 0) remove(key)
+          else setQuantity(key, before)
+        },
+      },
     })
-
-    setIsAdding(false)
   }
 
   return (
-    <>
-      <div className="flex flex-col gap-y-2" ref={actionsRef}>
-        <div>
-          {(product.variants?.length ?? 0) > 1 && (
-            <div className="flex flex-col gap-y-4">
-              {(product.options || []).map((option) => {
-                return (
-                  <div key={option.id}>
-                    <OptionSelect
-                      option={option}
-                      current={options[option.id]}
-                      updateOption={setOptionValue}
-                      title={option.title ?? ""}
-                      data-testid="product-options"
-                      disabled={!!disabled || isAdding}
-                    />
-                  </div>
-                )
-              })}
-              <Divider />
-            </div>
-          )}
+    <div className="flex flex-col gap-6">
+      {product.prepOptions && product.prepOptions.length > 0 && (
+        <fieldset className="flex flex-col gap-3">
+          <legend className="text-sm font-semibold text-ink">Cách sơ chế</legend>
+          <div className="flex flex-wrap gap-2">
+            {product.prepOptions.map((option) => {
+              const on = prep === option
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setPrep(option)}
+                  className={cx(
+                    "touch-target relative inline-flex h-9 items-center rounded-full border px-3.5 text-sm font-medium transition-colors",
+                    on ? "border-ink bg-ink text-white" : "border-line-2 bg-surface text-ink hover:bg-page"
+                  )}
+                >
+                  {option}
+                </button>
+              )
+            })}
+          </div>
+        </fieldset>
+      )}
+
+      {/* Pack sizes: a radio group. Sold-out packs stay visible but cannot be chosen. */}
+      <div role="radiogroup" aria-label="Quy cách" className="flex flex-col gap-3">
+        <p className="text-sm font-semibold text-ink">Quy cách</p>
+        <div className="grid grid-cols-2 gap-2.5 small:grid-cols-3">
+          {product.variants.map((v, i) => {
+            const checked = v.label === variant?.label
+            const out = v.stockQty <= 0
+            return (
+              <button
+                key={v.id}
+                ref={(el) => {
+                  radios.current[i] = el
+                }}
+                type="button"
+                role="radio"
+                aria-checked={checked}
+                aria-disabled={out || undefined}
+                tabIndex={checked && !out ? 0 : -1}
+                onKeyDown={(e) => onPackKeyDown(e, i)}
+                onClick={() => {
+                  if (!out) setPackLabel(v.label)
+                }}
+                className={cx(
+                  "flex flex-col items-start gap-0.5 rounded-btn border-[1.5px] px-3.5 py-2.5 text-left transition-colors",
+                  checked ? "border-brand bg-brand-bg" : "border-line-2 bg-surface",
+                  out && "cursor-not-allowed opacity-45"
+                )}
+              >
+                <span className={cx("text-sm font-semibold", checked ? "text-brand" : "text-ink")}>{v.label}</span>
+                <span className="font-mono text-xs text-ink-2">{out ? "Hết hàng" : formatVnd(v.price)}</span>
+              </button>
+            )
+          })}
         </div>
-
-        <ProductPrice product={product} variant={selectedVariant} />
-
-        <Button
-          onClick={handleAddToCart}
-          disabled={
-            !inStock ||
-            !selectedVariant ||
-            !!disabled ||
-            isAdding ||
-            !isValidVariant
-          }
-          variant="primary"
-          className="w-full h-10"
-          isLoading={isAdding}
-          data-testid="add-product-button"
-        >
-          {!selectedVariant && !options
-            ? "Select variant"
-            : !inStock || !isValidVariant
-            ? "Out of stock"
-            : "Add to cart"}
-        </Button>
-        <MobileActions
-          product={product}
-          variant={selectedVariant}
-          options={options}
-          updateOptions={setOptionValue}
-          inStock={inStock}
-          handleAddToCart={handleAddToCart}
-          isAdding={isAdding}
-          show={!inView}
-          optionsDisabled={!!disabled || isAdding}
-        />
       </div>
-    </>
+
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <PriceTag price={variant?.price ?? 0} unit={variant?.label} sale={Boolean(percent)} large />
+          {variant?.originalPrice && variant.originalPrice > variant.price && (
+            <span className="font-mono text-sm text-ink-3 line-through">
+              <span className="sr-only">Giá cũ </span>
+              {formatVnd(variant.originalPrice)}
+            </span>
+          )}
+          {percent && (
+            <span className="rounded-chip bg-sale-bg px-2 py-0.5 text-xs font-bold text-sale-deep">
+              Giảm {percent}%
+            </span>
+          )}
+          {variant && <LiveStock qty={variant.stockQty} lowStock={product.lowStock} unit={product.stockUnit} />}
+        </div>
+        {perKg && <p className="font-mono text-xs text-ink-2">tương đương {formatVnd(perKg)}/kg</p>}
+      </div>
+
+      <div className="fixed inset-x-4 bottom-24 z-30 flex items-center gap-3 rounded-card border border-line bg-surface p-3 shadow-toast small:static small:z-auto small:border-0 small:bg-transparent small:p-0 small:shadow-none">
+        <Stepper
+          value={qty}
+          min={1}
+          max={Math.max(stock, 1)}
+          label={`Số lượng ${product.title}`}
+          onChange={setQty}
+          className={soldOut ? "pointer-events-none opacity-40" : undefined}
+        />
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          icon={<LuShoppingBag />}
+          aria-disabled={soldOut || undefined}
+          onClick={soldOut ? undefined : onAdd}
+          data-testid="add-to-cart-button"
+          className="min-w-0 flex-1"
+        >
+          {soldOut ? (
+            "Hết hàng"
+          ) : (
+            <>
+              <span className="small:hidden">Thêm · </span>
+              <span className="hidden small:inline">Thêm vào giỏ · </span>
+              {formatVnd((variant?.price ?? 0) * qty)}
+            </>
+          )}
+        </Button>
+      </div>
+      {soldOut && <p className="text-sm text-sale-deep">Quy cách này đang hết hàng. Hãy chọn quy cách khác.</p>}
+    </div>
   )
 }

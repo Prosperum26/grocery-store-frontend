@@ -3,16 +3,13 @@ import { notFound } from "next/navigation"
 
 import { getCategoryByHandle, listCategories } from "@lib/data/categories"
 import { listRegions } from "@lib/data/regions"
+import { parseListingParams } from "@lib/util/catalog"
 import { StoreRegion } from "@medusajs/types"
-import CategoryTemplate from "@modules/categories/templates"
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import StoreTemplate from "@modules/store/templates"
 
 type Props = {
   params: Promise<{ category: string[]; countryCode: string }>
-  searchParams: Promise<{
-    sortBy?: SortOptions
-    page?: string
-  }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 export async function generateStaticParams() {
@@ -44,29 +41,26 @@ export async function generateStaticParams() {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params
-  try {
-    const productCategory = await getCategoryByHandle(params.category)
+  const productCategory = await getCategoryByHandle(params.category)
 
-    const title = productCategory.name + " | Medusa Store"
-
-    const description = productCategory.description ?? `${title} category.`
-
-    return {
-      title: `${title} | Medusa Store`,
-      description,
-      alternates: {
-        canonical: `${params.category.join("/")}`,
-      },
-    }
-  } catch (error) {
+  if (!productCategory) {
     notFound()
+  }
+
+  return {
+    title: `${productCategory.name} | Com4Fud`,
+    description:
+      productCategory.description ||
+      `Sản phẩm ${productCategory.name} tươi, giao trong ngày tại TP.HCM.`,
+    alternates: {
+      canonical: `/categories/${params.category.join("/")}`,
+    },
   }
 }
 
 export default async function CategoryPage(props: Props) {
   const searchParams = await props.searchParams
   const params = await props.params
-  const { sortBy, page } = searchParams
 
   const productCategory = await getCategoryByHandle(params.category)
 
@@ -75,11 +69,10 @@ export default async function CategoryPage(props: Props) {
   }
 
   return (
-    <CategoryTemplate
-      category={productCategory}
-      sortBy={sortBy}
-      page={page}
+    <StoreTemplate
       countryCode={params.countryCode}
+      category={{ handle: productCategory.handle, name: productCategory.name }}
+      params={parseListingParams(searchParams)}
     />
   )
 }

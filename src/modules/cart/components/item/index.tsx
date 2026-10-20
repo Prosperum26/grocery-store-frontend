@@ -1,144 +1,122 @@
 "use client"
 
-import { Table, Text, clx } from "@medusajs/ui"
-import { updateLineItem } from "@lib/data/cart"
-import { HttpTypes } from "@medusajs/types"
-import CartItemSelect from "@modules/cart/components/cart-item-select"
-import ErrorMessage from "@modules/checkout/components/error-message"
-import DeleteButton from "@modules/common/components/delete-button"
-import LineItemOptions from "@modules/common/components/line-item-options"
-import LineItemPrice from "@modules/common/components/line-item-price"
-import LineItemUnitPrice from "@modules/common/components/line-item-unit-price"
+import { useMockCart } from "@lib/context/mock-cart-context"
+import { useToast } from "@lib/context/toast-context"
+import { cx } from "@lib/util/cx"
+import { formatVnd } from "@lib/util/price"
+import Button from "@modules/common/components/button"
+import LiveStock from "@modules/common/components/live-stock"
+import Stepper from "@modules/common/components/stepper"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import Spinner from "@modules/common/icons/spinner"
-import Thumbnail from "@modules/products/components/thumbnail"
-import { useState } from "react"
+import ProductArt from "@modules/products/components/product-art"
+import { LuCircleAlert, LuTrendingUp, LuTrash2 } from "react-icons/lu"
+import type { CartLineView } from "@lib/mock/cart"
 
-type ItemProps = {
-  item: HttpTypes.StoreCartLineItem
-  type?: "full" | "preview"
-  currencyCode: string
-}
+/**
+ * One line of the cart (CartLine in the design). Sold-out lines keep their
+ * place with a red note and a delete button; they do not count in the total.
+ * A changed price shows the old price struck through.
+ */
+export default function CartLine({ line }: { line: CartLineView }) {
+  const { setQuantity, remove, restore } = useMockCart()
+  const { show } = useToast()
+  const name = line.variantLabel ? `${line.title} (${line.variantLabel})` : line.title
 
-const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
-  const [updating, setUpdating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const changeQuantity = async (quantity: number) => {
-    setError(null)
-    setUpdating(true)
-
-    await updateLineItem({
-      lineId: item.id,
-      quantity,
+  const onRemove = () => {
+    const removed = remove(line.key)
+    if (!removed) return
+    show({
+      tone: "ok",
+      title: `Đã xóa ${line.title} khỏi giỏ`,
+      action: { label: "Hoàn tác", onAction: () => restore(removed) },
     })
-      .catch((err) => {
-        setError(err.message)
-      })
-      .finally(() => {
-        setUpdating(false)
-      })
   }
 
-  // TODO: Update this to grab the actual max inventory
-  const maxQtyFromInventory = 10
-  const maxQuantity = item.variant?.manage_inventory ? 10 : maxQtyFromInventory
+  const note = !line.inStock ? (
+    <p className="flex items-center gap-1.5 text-sm font-semibold text-sale-deep">
+      <LuCircleAlert aria-hidden="true" />
+      Vừa hết hàng, không tính vào đơn
+    </p>
+  ) : line.previousPrice !== undefined ? (
+    <p className="flex items-center gap-1.5 text-sm font-semibold text-sale-deep">
+      <LuTrendingUp aria-hidden="true" />
+      Giá vừa đổi {formatVnd(line.previousPrice)} lên {formatVnd(line.unitPrice)}
+    </p>
+  ) : line.stockQty <= line.lowStock ? (
+    <LiveStock qty={line.stockQty} lowStock={line.lowStock} unit={line.stockUnit} />
+  ) : null
 
   return (
-    <Table.Row className="w-full" data-testid="product-row">
-      <Table.Cell className="!pl-0 p-4 w-24">
+    <li
+      className={cx(
+        "flex gap-4 py-4",
+        !line.inStock && "rounded-btn border border-sale-line bg-sale-bg p-3.5"
+      )}
+      data-testid="cart-line"
+    >
+      <LocalizedClientLink
+        href={`/products/${line.handle}`}
+        tabIndex={-1}
+        aria-hidden="true"
+        className={cx("relative h-20 w-20 shrink-0 overflow-hidden rounded-[14px]", !line.inStock && "opacity-50")}
+      >
+        <ProductArt product={line} decorative dots={false} scale={0.7} />
+      </LocalizedClientLink>
+
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <LocalizedClientLink
-          href={`/products/${item.product_handle}`}
-          className={clx("flex", {
-            "w-16": type === "preview",
-            "small:w-24 w-12": type === "full",
-          })}
+          href={`/products/${line.handle}`}
+          className={cx("truncate text-base font-semibold hover:underline", line.inStock ? "text-ink" : "text-ink-2")}
         >
-          <Thumbnail
-            thumbnail={item.thumbnail}
-            images={item.variant?.product?.images}
-            size="square"
-          />
+          {name}
         </LocalizedClientLink>
-      </Table.Cell>
+        {note}
 
-      <Table.Cell className="text-left">
-        <Text
-          className="txt-medium-plus text-ui-fg-base"
-          data-testid="product-title"
-        >
-          {item.product_title}
-        </Text>
-        <LineItemOptions variant={item.variant} data-testid="product-variant" />
-      </Table.Cell>
-
-      {type === "full" && (
-        <Table.Cell>
-          <div className="flex gap-2 items-center w-28">
-            <DeleteButton id={item.id} data-testid="product-delete-button" />
-            <CartItemSelect
-              value={item.quantity}
-              onChange={(value) => changeQuantity(parseInt(value.target.value))}
-              className="w-14 h-10 p-4"
-              data-testid="product-select-button"
-            >
-              {/* TODO: Update this with the v2 way of managing inventory */}
-              {Array.from(
-                {
-                  length: Math.min(maxQuantity, 10),
-                },
-                (_, i) => (
-                  <option value={i + 1} key={i}>
-                    {i + 1}
-                  </option>
-                )
-              )}
-
-              <option value={1} key={1}>
-                1
-              </option>
-            </CartItemSelect>
-            {updating && <Spinner />}
+        {line.inStock && (
+          <div className="mt-1 flex items-center gap-3">
+            <Stepper
+              size="sm"
+              value={line.quantity}
+              min={1}
+              max={line.stockQty}
+              label={`Số lượng ${line.title}`}
+              removeAtMin
+              onRemove={onRemove}
+              onChange={(next) => setQuantity(line.key, next)}
+            />
+            {line.quantity >= line.stockQty && (
+              <span className="text-xs text-ink-2">Đã lấy hết số còn trong kho</span>
+            )}
           </div>
-          <ErrorMessage error={error} data-testid="product-error-message" />
-        </Table.Cell>
-      )}
+        )}
+        {!line.inStock && (
+          <div className="mt-1">
+            <Button variant="danger" size="sm" icon={<LuTrash2 />} onClick={onRemove}>
+              Xóa khỏi giỏ
+            </Button>
+          </div>
+        )}
+      </div>
 
-      {type === "full" && (
-        <Table.Cell className="hidden small:table-cell">
-          <LineItemUnitPrice
-            item={item}
-            style="tight"
-            currencyCode={currencyCode}
-          />
-        </Table.Cell>
-      )}
-
-      <Table.Cell className="!pr-0">
-        <span
-          className={clx("!pr-0", {
-            "flex flex-col items-end h-full justify-center": type === "preview",
-          })}
-        >
-          {type === "preview" && (
-            <span className="flex gap-x-1 ">
-              <Text className="text-ui-fg-muted">{item.quantity}x </Text>
-              <LineItemUnitPrice
-                item={item}
-                style="tight"
-                currencyCode={currencyCode}
-              />
+      {line.inStock && (
+        <div className="flex shrink-0 flex-col items-end gap-0.5 text-right">
+          {line.previousPrice !== undefined && (
+            <span className="font-mono text-xs text-ink-3 line-through">
+              <span className="sr-only">Giá cũ </span>
+              {formatVnd(line.previousPrice * line.quantity)}
             </span>
           )}
-          <LineItemPrice
-            item={item}
-            style="tight"
-            currencyCode={currencyCode}
-          />
-        </span>
-      </Table.Cell>
-    </Table.Row>
+          <span className={cx("font-mono text-base font-bold", line.previousPrice !== undefined ? "text-sale" : "text-ink")}>
+            <span className="sr-only">Thành tiền </span>
+            {formatVnd(line.lineTotal)}
+          </span>
+          {line.quantity > 1 && (
+            <span className="font-mono text-xs text-ink-2">
+              {formatVnd(line.unitPrice)} × {line.quantity}
+            </span>
+          )}
+        </div>
+      )}
+    </li>
   )
 }
-
-export default Item

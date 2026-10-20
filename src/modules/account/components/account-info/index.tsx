@@ -22,7 +22,7 @@ const AccountInfo = ({
   isSuccess,
   isError,
   clearState,
-  errorMessage = "An error occurred, please try again",
+  errorMessage = "Có lỗi xảy ra, vui lòng thử lại",
   children,
   'data-testid': dataTestid
 }: AccountInfoProps) => {
@@ -63,7 +63,7 @@ const AccountInfo = ({
             data-testid="edit-button"
             data-active={state}
           >
-            {state ? "Cancel" : "Edit"}
+            {state ? "Hủy" : "Sửa"}
           </Button>
         </div>
       </div>
@@ -82,7 +82,7 @@ const AccountInfo = ({
           data-testid="success-message"
         >
           <Badge className="p-2 my-4" color="green">
-            <span>{label} updated succesfully</span>
+            <span>Đã cập nhật thành công</span>
           </Badge>
         </Disclosure.Panel>
       </Disclosure>
@@ -126,7 +126,7 @@ const AccountInfo = ({
                 type="submit"
                 data-testid="save-button"
               >
-                Save changes
+                Lưu thay đổi
               </Button>
             </div>
           </div>
