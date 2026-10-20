@@ -9,7 +9,6 @@ import {
   LuEgg,
   LuFish,
   LuLeaf,
-  LuMenu,
   LuMilk,
   LuWheat,
 } from "react-icons/lu"
@@ -37,15 +36,6 @@ export default function CategoryNav() {
   return (
     <nav aria-label="Danh mục sản phẩm" className="flex h-[52px] items-center justify-between gap-4">
       <ul className="flex min-w-0 items-center gap-1">
-        <li>
-          <LocalizedClientLink
-            href="/store"
-            className="flex h-9 items-center gap-2 rounded-[10px] bg-ink px-3 text-sm font-semibold text-white"
-          >
-            <LuMenu size={16} aria-hidden="true" className="text-accent" />
-            Danh mục
-          </LocalizedClientLink>
-        </li>
         {CATEGORY_LINKS.map(({ handle, name, icon: Icon }) => {
           const active = current === `categories/${handle}`
           return (

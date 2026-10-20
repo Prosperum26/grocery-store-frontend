@@ -46,7 +46,9 @@ export default function VoucherInput() {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex items-end gap-2">
+    // items-start + mt-[26px] (label 20px + gap 6px): the button stays level with
+    // the input even when the error line makes the field taller.
+    <form onSubmit={onSubmit} noValidate className="flex items-start gap-2">
       <Field
         label="Mã giảm giá"
         name="voucher"
@@ -58,9 +60,9 @@ export default function VoucherInput() {
           setCode(e.target.value)
           if (error) setError(undefined)
         }}
-        className="flex-1"
+        className="min-w-0 flex-1"
       />
-      <Button type="submit" variant="secondary" size="md">
+      <Button type="submit" variant="secondary" size="md" className="mt-[26px] h-12 shrink-0">
         Áp dụng
       </Button>
     </form>

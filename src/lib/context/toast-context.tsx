@@ -91,7 +91,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         type="button"
         onClick={() => dismiss(toast.id)}
         aria-label="Đóng thông báo"
-        className="touch-target mt-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-btn text-ink-2 hover:bg-page-2"
+        className="touch-target relative mt-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-btn text-ink-2 hover:bg-page-2"
       >
         <LuX aria-hidden="true" />
       </button>

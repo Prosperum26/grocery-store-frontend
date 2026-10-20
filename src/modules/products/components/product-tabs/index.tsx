@@ -64,7 +64,7 @@ export default function ProductTabs({
               onClick={() => setActive(tab.key)}
               onKeyDown={(e) => onKeyDown(e, i)}
               className={cx(
-                "touch-target -mb-px border-b-2 pb-3 text-sm font-semibold transition-colors",
+                "touch-target relative -mb-px border-b-2 pb-3 text-sm font-semibold transition-colors",
                 selected ? "border-brand text-brand" : "border-transparent text-ink-2 hover:text-ink"
               )}
             >

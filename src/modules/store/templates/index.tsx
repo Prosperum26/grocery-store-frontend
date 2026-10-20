@@ -176,7 +176,7 @@ export default async function StoreTemplate({
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="flex flex-col gap-1">
               <p className="font-mono text-xs font-semibold uppercase tracking-wide text-ink-2">
-                {catalog.length} món
+                {category ? countIn(category.handle) : catalog.length} món
               </p>
               <h1 className="font-display text-2xl font-bold text-ink small:text-[32px] small:leading-tight">
                 {title}

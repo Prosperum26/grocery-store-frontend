@@ -18,7 +18,7 @@ export default function ListingPagination({
 
   const href = (p: number) => listingHref(basePath, { ...params, page: p })
   const itemClass =
-    "inline-flex h-10 min-w-[40px]items-center justify-center rounded-btn border border-line-2 bg-surface px-3 font-mono text-sm font-semibold text-ink hover:bg-page"
+    "inline-flex h-10 min-w-[40px] items-center justify-center rounded-btn border border-line-2 bg-surface px-3 font-mono text-sm font-semibold text-ink hover:bg-page"
 
   return (
     <nav aria-label="Phân trang" className="flex items-center justify-center gap-2 pt-2">

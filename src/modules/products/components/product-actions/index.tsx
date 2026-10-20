@@ -95,7 +95,7 @@ export default function ProductActions({ product }: { product: ProductVM }) {
                   aria-pressed={on}
                   onClick={() => setPrep(option)}
                   className={cx(
-                    "touch-target inline-flex h-9 items-center rounded-full border px-3.5 text-sm font-medium transition-colors",
+                    "touch-target relative inline-flex h-9 items-center rounded-full border px-3.5 text-sm font-medium transition-colors",
                     on ? "border-ink bg-ink text-white" : "border-line-2 bg-surface text-ink hover:bg-page"
                   )}
                 >
