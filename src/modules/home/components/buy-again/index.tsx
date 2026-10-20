@@ -54,7 +54,7 @@ export default function BuyAgain({
 
       {/* Sample items, dimmed and hidden from screen readers: they are not real
           suggestions for this shopper. */}
-      <div aria-hidden="true" className="opacity-60">
+      <div aria-hidden="true" className="opacity-80">
         <ul className="hidden grid-cols-5 gap-3.5 small:grid">
           {items.map(({ line, product }) => (
             <li key={product.id} className="flex flex-col gap-2.5 rounded-2xl border border-line p-2.5">
@@ -63,21 +63,21 @@ export default function BuyAgain({
               </div>
               <div className="px-0.5">
                 <p className="truncate text-sm font-semibold">{product.title}</p>
-                <p className="truncate text-xs text-ink-2">{qtyLabel(product, line.quantity)}</p>
+                <p className="truncate text-xs text-ink">{qtyLabel(product, line.quantity)}</p>
               </div>
               <p className="px-0.5 font-mono text-base font-bold">{formatVnd(product.price * line.quantity)}</p>
             </li>
           ))}
         </ul>
         <ul className="flex flex-col divide-y divide-line small:hidden">
-          {items.slice(0, 3).map(({ line, product }) => (
+          {items.map(({ line, product }) => (
             <li key={product.id} className="flex items-center gap-2.5 py-2.5">
               <div className="h-12 w-12 shrink-0 overflow-hidden rounded-[10px]">
                 <ProductArt product={product} decorative dots={false} scale={0.75} />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{product.title}</p>
-                <p className="truncate text-xs text-ink-2">{qtyLabel(product, line.quantity)}</p>
+                <p className="truncate text-xs text-ink">{qtyLabel(product, line.quantity)}</p>
               </div>
               <p className="font-mono text-xs font-bold">{formatVnd(product.price * line.quantity)}</p>
             </li>
