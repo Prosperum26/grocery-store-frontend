@@ -23,11 +23,11 @@
 | FE-7 | Chi tiết sản phẩm (PDP) | 2 | [x] 54716b4 |
 | FE-8 | Giỏ hàng | 2 | [x] 903353f |
 | FE-9 | Thanh toán + Đặt hàng thành công | 2 | [x] fbdb75a |
-| FE-10 | Tài khoản: đăng nhập/đăng ký, Đơn hàng của tôi, Theo dõi đơn, Hồ sơ | 2, 3 | [x] 35786f8; Hồ sơ/Địa chỉ đã Việt hóa (2026-10-20, chưa commit) |
+| FE-10 | Tài khoản: đăng nhập/đăng ký, Đơn hàng của tôi, Theo dõi đơn, Hồ sơ | 2, 3 | [x] 35786f8; Hồ sơ/Địa chỉ đã Việt hóa (2026-10-20) |
 | FE-11 | Trợ lý Bếp (trang giữ chỗ) | 3 | [x] 7b113e0 |
-| FE-12 | Trạng thái giao diện: trống, tải, lỗi, 404, mất mạng | 2 | [x] 126d193; skeleton v2 + `loading.tsx` (2026-10-20, chưa commit) |
+| FE-12 | Trạng thái giao diện: trống, tải, lỗi, 404, mất mạng | 2 | [x] 126d193; skeleton v2 + `loading.tsx` (2026-10-20) |
 | FE-13 | Rà soát accessibility | cả issue | [x] Lighthouse a11y 100 trên 9 trang (2026-10-20); chưa thử NVDA |
-| FE-14 | Kiểm tra liên kết, build, responsive, dọn dẹp, README | nghiệm thu | [x] e7999ee; lint sạch, bỏ alias Montra (2026-10-20, chưa commit) |
+| FE-14 | Kiểm tra liên kết, build, responsive, dọn dẹp, README | nghiệm thu | [x] e7999ee; lint sạch, bỏ alias Montra (2026-10-20) |
 
 ## 1. Bối cảnh và những gì đã chốt
 
@@ -374,7 +374,7 @@ Khi nhóm đấu dữ liệu thật: làm các task BE trong file backend, rồi
 
 | Ngày | Người | Đã xong | Dở dang / lưu ý |
 | :--- | :--- | :--- | :--- |
-| 2026-10-20 | Claude | Cài deps, `eslint` nâng 8.10 → 8.57.1 nên `yarn lint` sạch; `tsc` 0 lỗi, 76 test, `yarn build`, `check-links` 44 URL sạch. Sửa: `id` ô tìm kiếm trùng (`useId`), `h1` Trợ lý Bếp, Stepper giữ focus (`aria-disabled`), nav mobile trả focus, tương phản PriceTag, "Thêm cả N món" khớp danh sách, `label-content-name-mismatch` ô khung giờ, thứ tự heading ở `/store`; Việt hóa form Hồ sơ/Địa chỉ/giỏ trống; skeleton v2 + `loading.tsx` (store, PDP, giỏ, tài khoản); `/collections/*` trả 404 ở chế độ mock; xóa alias Montra khỏi Tailwind. Lighthouse Accessibility 100 trên `/vn`, `/store`, PDP, `/cart`, `/checkout`, `/account/orders`, `/tro-ly-bep`, `/account/profile`, `/account/addresses`. | Chưa làm: thử NVDA; xóa 4 file Starter không còn được import (`modules/shipping/`, `layout/components/cart-mismatch-banner/`, `product-actions/mobile-actions.tsx`, `product-preview/{price,quick-add}.tsx`, `common/components/section-title/`); PDP lạ trả HTTP 200 (có `noindex`, nội dung 404) vì `loading.tsx` bắt đầu stream trước `notFound()`; đang chờ commit. |
+| 2026-10-20 | Claude | Cài deps, `eslint` nâng 8.10 → 8.57.1 nên `yarn lint` sạch; `tsc` 0 lỗi, 76 test, `yarn build`, `check-links` 44 URL sạch. Sửa: `id` ô tìm kiếm trùng (`useId`), `h1` Trợ lý Bếp, Stepper giữ focus (`aria-disabled`), nav mobile trả focus, tương phản PriceTag, "Thêm cả N món" khớp danh sách, `label-content-name-mismatch` ô khung giờ, thứ tự heading ở `/store`; Việt hóa form Hồ sơ/Địa chỉ/giỏ trống; skeleton v2 + `loading.tsx` (store, PDP, giỏ, tài khoản); `/collections/*` trả 404 ở chế độ mock; xóa alias Montra khỏi Tailwind. Lighthouse Accessibility 100 trên `/vn`, `/store`, PDP, `/cart`, `/checkout`, `/account/orders`, `/tro-ly-bep`, `/account/profile`, `/account/addresses`. | Chưa làm: thử NVDA; PDP lạ trả HTTP 200 (có `noindex`, nội dung 404) vì `loading.tsx` bắt đầu stream trước `notFound()`. Đã xóa 39 file Starter không còn import (commit 9df4324). |
 | 2026-10-19 | Claude | FE-6, 7, 8, 9, 10, 12, 14 (chưa commit). Giỏ giả + toast ở `app/[countryCode]/layout.tsx`; bỏ Stripe, luồng transfer đơn, module checkout/order cũ; `tsc` 0 lỗi (trước 18), 76 test qua, `yarn build` qua, `check-links` 44 URL sạch. | Chưa làm: FE-13 (Lighthouse, NVDA); skeleton theo thiết kế; nối `fromMedusa`/giỏ thật; trang `/collections/*` vẫn là code Starter; vài câu tiếng Anh trong form Hồ sơ/Địa chỉ của Starter; `yarn lint` hỏng sẵn (`@next/next/no-html-link-for-pages`). |
 | 2026-10-18 | Claude (theo yêu cầu Hưng) | FE-0 … FE-5 + trang giữ chỗ `/tro-ly-bep` (FE-11). Đã review toàn nhánh, sửa 5 lỗi Important (5521dac). | Chưa làm: FE-6 trở đi. Tồn đọng nhỏ từ review: trùng `id="header-search"` giữa bản desktop/điện thoại; `/tro-ly-bep` thiếu h1; Stepper mất focus khi chạm giới hạn; nav điện thoại mất focus sau khi chuyển trang; `/store?q=` chưa lọc và danh mục rỗng chưa có trạng thái trống (FE-6/FE-12); 500 ở handle sản phẩm lạ và `/collections/*` (code Starter); PriceTag sale+unit tương phản 2,96:1; `yarn lint` hỏng sẵn do lệch phiên bản ESLint (FE-13); nút "Thêm cả 5 món" trên điện thoại chỉ hiện 3 món. Bản ghi chi tiết: `.superpowers/sdd/…/progress.md` (không commit). |
 | 2026-10-18 | | Chưa bắt đầu, mới có kế hoạch | |
