@@ -49,15 +49,6 @@ module.exports = {
         "dark-line": "#2C5A45",
         sky: { DEFAULT: "#2563A8", bg: "#DFEAF7" },
         plum: { DEFAULT: "#6B3FA0", bg: "#EDE4F7" },
-        // TODO FE-14: remove these Montra aliases once no file uses them.
-        primary: "#F2F4EC",
-        headingColor: "#10241B",
-        textColor: "#4E5D55",
-        lightGray: "#626E67",
-        cartNumBg: "#1F6B3A",
-        cardOverlay: "rgba(255, 255, 255, 0.6)",
-        btnOverlay: "rgba(255, 255, 255, 0.8)",
-        containerbg: "#E8ECDF",
         grey: {
           0: "#FFFFFF",
           5: "#F9FAFB",
