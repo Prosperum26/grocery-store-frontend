@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 
 import { getCollectionByHandle, listCollections } from "@lib/data/collections"
 import { listRegions } from "@lib/data/regions"
+import { isMockMode } from "@lib/mock/mode"
 import { StoreCollection, StoreRegion } from "@medusajs/types"
 import CollectionTemplate from "@modules/collections/templates"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -51,6 +52,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
+  // The mock catalog has no collections (it groups by category only).
+  if (isMockMode()) notFound()
   const params = await props.params
   const collection = await getCollectionByHandle(params.handle)
 
@@ -60,13 +63,14 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
   const metadata = {
     title: `${collection.title} | Com4Fud`,
-    description: `${collection.title} collection`,
+    description: `${collection.title}, tươi mỗi ngày tại Com4Fud.`,
   } as Metadata
 
   return metadata
 }
 
 export default async function CollectionPage(props: Props) {
+  if (isMockMode()) notFound()
   const searchParams = await props.searchParams
   const params = await props.params
   const { sortBy, page } = searchParams

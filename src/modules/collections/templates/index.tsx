@@ -6,6 +6,8 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 import { HttpTypes } from "@medusajs/types"
 
+// Collections only exist with a real catalog (the mock catalog groups by
+// category), so this page is reached only after NEXT_PUBLIC_UI_MOCK=false.
 export default function CollectionTemplate({
   sortBy,
   collection,
@@ -21,12 +23,12 @@ export default function CollectionTemplate({
   const sort = sortBy || "created_at"
 
   return (
-    <div className="flex flex-col small:flex-row small:items-start py-6 content-container">
+    <div className="content-container flex flex-col gap-6 py-6 small:flex-row small:items-start">
       <RefinementList sortBy={sort} />
       <div className="w-full">
-        <div className="mb-8 text-2xl-semi">
-          <h1>{collection.title}</h1>
-        </div>
+        <h1 className="mb-6 font-display text-[28px] font-bold leading-[34px] text-ink">
+          {collection.title}
+        </h1>
         <Suspense
           fallback={
             <SkeletonProductGrid

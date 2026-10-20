@@ -192,6 +192,9 @@ export default async function StoreTemplate({
           </p>
 
           {page.items.length > 0 ? (
+            <>
+            {/* Cards use h3; this keeps the heading order h1 → h2 → h3. */}
+            <h2 className="sr-only">Danh sách sản phẩm</h2>
             <ul className="grid grid-cols-2 gap-3 small:grid-cols-3 small:gap-5" data-testid="products-list">
               {page.items.map((p) => (
                 <li key={p.id} className="flex">
@@ -199,6 +202,7 @@ export default async function StoreTemplate({
                 </li>
               ))}
             </ul>
+            </>
           ) : (
             <section
               aria-labelledby="listing-empty"
