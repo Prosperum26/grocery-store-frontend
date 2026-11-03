@@ -1,13 +1,10 @@
 import { Metadata } from "next"
 
+import { listDeals } from "@lib/data/catalog"
 import { listProducts } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
-import {
-  HOME_DEAL_HANDLES,
-  HOME_PROMO_HANDLE,
-  MOCK_BUY_AGAIN,
-  pickProducts,
-} from "@lib/mock/home"
+import { MOCK_BUY_AGAIN, pickProducts } from "@lib/mock/home"
+import { isMockMode } from "@lib/mock/mode"
 import { toProductVM } from "@lib/viewmodels/product"
 import BuyAgain from "@modules/home/components/buy-again"
 import CategoryGrid from "@modules/home/components/category-grid"
@@ -37,14 +34,23 @@ export default async function Home(props: {
     return null
   }
 
-  const { response } = await listProducts({
-    regionId: region.id,
-    queryParams: { limit: 100 },
-  })
-  const catalog = response.products.map(toProductVM)
-  const [promo] = pickProducts(catalog, [HOME_PROMO_HANDLE])
+  // The biggest discount is the big banner, the rest fill "Ưu đãi hôm nay".
+  const deals = await listDeals(countryCode)
+  const [promo] = deals
+
+  // "Mua lại" and the recipe banner are placeholders made of sample products
+  // that only exist in the mock catalog. With the real backend they stay
+  // hidden until the predictive and recipe features replace them.
+  const catalog = isMockMode()
+    ? (
+        await listProducts({
+          regionId: region.id,
+          queryParams: { limit: 100 },
+        })
+      ).response.products.map(toProductVM)
+    : []
+  // The "Rau sáng nay" card names a bunch of spinach; no real product fits.
   const [spinach] = pickProducts(catalog, ["rau-muong"])
-  const deals = pickProducts(catalog, HOME_DEAL_HANDLES)
 
   return (
     <>

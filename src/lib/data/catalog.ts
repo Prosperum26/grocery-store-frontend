@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { HOME_DEAL_HANDLES, pickProducts } from "@lib/mock/home"
 import { isMockMode } from "@lib/mock/mode"
 import {
   filterCatalog,
@@ -11,6 +12,7 @@ import {
   sortCatalog,
   toPage,
 } from "@lib/util/catalog"
+import { salePercent } from "@lib/util/price"
 import { toProductVM } from "@lib/viewmodels/product"
 import { HttpTypes } from "@medusajs/types"
 import type { ProductVM } from "types/viewmodels"
@@ -152,6 +154,43 @@ export async function getListing({
       countedCategories.map((c, i) => [c.handle, counts[i + 1].metadata.count])
     ),
   }
+}
+
+/**
+ * "Ưu đãi hôm nay" on the home page: products on sale, biggest discount
+ * first. Mock mode keeps the fixed sample list of the design.
+ */
+export async function listDeals(countryCode: string): Promise<ProductVM[]> {
+  if (isMockMode()) {
+    const { response } = await listProducts({
+      countryCode,
+      queryParams: { limit: 100 },
+    })
+    return pickProducts(response.products.map(toProductVM), HOME_DEAL_HANDLES)
+  }
+
+  const region = await getRegion(countryCode)
+  if (!region) {
+    return []
+  }
+
+  // The search has no "discount percent" field, so read every product on
+  // sale (a few dozen) and sort them here.
+  const { results } = await search({
+    queries: [
+      {
+        entity: "product",
+        filters: { on_sale_vnd: true, in_stock: true },
+        pagination: { take: 50 },
+      },
+    ],
+  })
+  const products = await readProducts(
+    results[0].hits.map((hit) => hit.id),
+    region.id
+  )
+  const percent = (p: ProductVM) => salePercent(p.originalPrice, p.price) ?? 0
+  return products.map(toProductVM).sort((a, b) => percent(b) - percent(a))
 }
 
 // no-store: stock and the "in stock" filter must agree, so neither is cached.
