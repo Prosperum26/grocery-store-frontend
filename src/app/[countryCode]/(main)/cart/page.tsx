@@ -2,6 +2,7 @@ import { Metadata } from "next"
 
 import { listProducts } from "@lib/data/products"
 import { MOCK_BUY_AGAIN } from "@lib/mock/home"
+import { isMockMode } from "@lib/mock/mode"
 import { toProductVM } from "@lib/viewmodels/product"
 import BuyAgain from "@modules/home/components/buy-again"
 import CartTemplate from "@modules/cart/templates"
@@ -15,11 +16,12 @@ export default async function CartPage(props: {
   params: Promise<{ countryCode: string }>
 }) {
   const { countryCode } = await props.params
-  const { response } = await listProducts({
-    countryCode,
-    queryParams: { limit: 100 },
-  })
-  const catalog = response.products.map(toProductVM)
+  // The "Mua lại" block is a placeholder of sample products (mock catalog only).
+  const catalog = isMockMode()
+    ? (
+        await listProducts({ countryCode, queryParams: { limit: 100 } })
+      ).response.products.map(toProductVM)
+    : []
 
   return (
     <CartTemplate

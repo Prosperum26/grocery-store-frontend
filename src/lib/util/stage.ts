@@ -22,3 +22,31 @@ const LABELS: Record<OrderStage, string> = {
 export function stageLabel(stage: OrderStage): string {
   return LABELS[stage]
 }
+
+/**
+ * Steps of the order tracking page. An order only exists once VNPAY has
+ * taken the money (the cart is completed after payment), so the first two
+ * steps are done for every order. A new order waits at "Cửa hàng xác nhận".
+ */
+export const TRACKING_STEPS: { label: string; stage: OrderStage | null }[] = [
+  { label: "Đã đặt hàng", stage: null },
+  { label: "Đã thanh toán", stage: null },
+  { label: "Cửa hàng xác nhận", stage: "CONFIRMED" },
+  { label: "Đang chuẩn bị", stage: "PREPARING" },
+  { label: "Đang giao", stage: "SHIPPING" },
+  { label: "Đã giao", stage: "DELIVERED" },
+]
+
+/**
+ * The step an order is waiting at or working on; -1 for a cancelled order
+ * (it has no timeline). Steps before it are done.
+ * PENDING waits for the shop to confirm; once confirmed (CONFIRMED) the
+ * confirmation step is done and the order waits to be prepared.
+ */
+export function trackingIndex(stage: OrderStage): number {
+  if (stage === "CANCELLED") return -1
+  const at = (target: OrderStage) => TRACKING_STEPS.findIndex((s) => s.stage === target)
+  if (stage === "PENDING") return at("CONFIRMED")
+  if (stage === "CONFIRMED") return at("PREPARING")
+  return at(stage)
+}

@@ -1,34 +1,23 @@
-import { DEMO_ORDER } from "@lib/mock/checkout"
-import type { MockOrder } from "@lib/mock/orders"
+import type { OrderView } from "@lib/util/order-view"
+import { TRACKING_STEPS, trackingIndex } from "@lib/util/stage"
 import { formatVnd } from "@lib/util/price"
 import { ComingSoonBadge } from "@modules/common/components/coming-soon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import OrderStatusChip from "@modules/common/components/order-status-chip"
+import CancelOrderButton from "@modules/account/components/order-actions/cancel-button"
+import ReorderButton from "@modules/account/components/order-actions/reorder-button"
 import ProductArt from "@modules/products/components/product-art"
-import type { OrderStage } from "types/viewmodels"
 import { LuCheck, LuChevronLeft, LuTruck } from "react-icons/lu"
-
-// The steps of a delivery, in order. Each stage maps to one step.
-const STEPS: { label: string; stage: OrderStage }[] = [
-  { label: "Đã đặt hàng", stage: "PENDING" },
-  { label: "Đã thanh toán", stage: "CONFIRMED" },
-  { label: "Đang chuẩn bị", stage: "PREPARING" },
-  { label: "Đang giao", stage: "SHIPPING" },
-  { label: "Đã giao", stage: "DELIVERED" },
-]
-
-/** Driver of the sample order (shared.js ORDER). Other orders have none. */
-const SAMPLE_DRIVER = { name: "Nguyễn Văn Đức", plate: "59-X3 482.17" }
 
 /**
  * Order tracking (08_Theo_Doi_Don_Hang). The timeline is static: it shows
  * the stage the order is in, not a live position (no map, phase 2). The
  * arrival time is a placeholder until live tracking exists.
  */
-export default function OrderTrackingTemplate({ order }: { order: MockOrder }) {
-  const currentIndex = STEPS.findIndex((s) => s.stage === order.stage)
+export default function OrderTrackingTemplate({ order }: { order: OrderView }) {
+  const currentIndex = trackingIndex(order.stage)
   const cancelled = order.stage === "CANCELLED"
-  const driver = order.code === DEMO_ORDER.code && order.stage === "SHIPPING" ? SAMPLE_DRIVER : null
+  const driver = order.delivery
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,6 +37,13 @@ export default function OrderTrackingTemplate({ order }: { order: MockOrder }) {
         <OrderStatusChip stage={order.stage} large />
       </div>
 
+      {(order.stage === "PENDING" || order.stage === "DELIVERED") && (
+        <div className="flex flex-wrap gap-2">
+          {order.stage === "PENDING" && <CancelOrderButton orderId={order.id} />}
+          {order.stage === "DELIVERED" && <ReorderButton orderId={order.id} />}
+        </div>
+      )}
+
       {cancelled ? (
         <p className="rounded-btn border-[1.2px] border-l-8 border-sale bg-sale-bg px-4 py-3 text-sm text-sale-deep">
           Đơn này đã được hủy. Không có bước giao nào được thực hiện.
@@ -59,11 +55,11 @@ export default function OrderTrackingTemplate({ order }: { order: MockOrder }) {
               Tiến trình đơn
             </h2>
             <ol className="flex flex-col">
-              {STEPS.map((step, i) => {
+              {TRACKING_STEPS.map((step, i) => {
                 const done = i < currentIndex
                 const current = i === currentIndex
                 return (
-                  <li key={step.stage} aria-current={current ? "step" : undefined} className="flex gap-4 pb-5 last:pb-0">
+                  <li key={step.label} aria-current={current ? "step" : undefined} className="flex gap-4 pb-5 last:pb-0">
                     <span className="flex flex-col items-center">
                       <span
                         aria-hidden="true"
@@ -77,7 +73,7 @@ export default function OrderTrackingTemplate({ order }: { order: MockOrder }) {
                       >
                         {done ? <LuCheck size={16} /> : i + 1}
                       </span>
-                      {i < STEPS.length - 1 && (
+                      {i < TRACKING_STEPS.length - 1 && (
                         <span aria-hidden="true" className={done ? "mt-1 h-full w-0.5 bg-brand" : "mt-1 h-full w-0.5 bg-line-2"} />
                       )}
                     </span>
@@ -98,8 +94,19 @@ export default function OrderTrackingTemplate({ order }: { order: MockOrder }) {
               <h2 id="tracking-eta" className="text-sm font-semibold text-ink">
                 Dự kiến tới lúc
               </h2>
-              <ComingSoonBadge className="self-start" />
-              <p className="text-sm text-ink-2">Thời gian tới dự kiến sẽ hiện ở đây khi có theo dõi trực tiếp.</p>
+              {driver?.etaTime ? (
+                <p className="font-mono text-2xl font-bold text-ink">
+                  {driver.etaTime}
+                  {driver.distanceKm !== null && (
+                    <span className="ml-2 text-sm font-normal text-ink-2">còn {driver.distanceKm} km</span>
+                  )}
+                </p>
+              ) : (
+                <>
+                  <ComingSoonBadge className="self-start" />
+                  <p className="text-sm text-ink-2">Thời gian tới dự kiến sẽ hiện ở đây khi có theo dõi trực tiếp.</p>
+                </>
+              )}
             </section>
 
             {driver && (
@@ -109,7 +116,7 @@ export default function OrderTrackingTemplate({ order }: { order: MockOrder }) {
                 </span>
                 <div className="flex min-w-0 flex-col">
                   <h2 id="tracking-driver" className="text-sm font-semibold text-ink">
-                    Người giao: {driver.name}
+                    Người giao: {driver.driverName}
                   </h2>
                   <p className="font-mono text-xs text-ink-2">Biển số {driver.plate}</p>
                 </div>
@@ -128,14 +135,46 @@ export default function OrderTrackingTemplate({ order }: { order: MockOrder }) {
             Thanh toán VNPAY · <span className="font-mono font-semibold text-ink">{formatVnd(order.total)}</span>
           </p>
         </div>
-        <ul aria-label="Các món trong đơn" className="flex flex-wrap gap-2">
-          {order.arts.map((art, i) => (
-            <li key={`${art}-${i}`} className="flex h-14 w-14 overflow-hidden rounded-btn border border-line bg-page-2">
-              <ProductArt product={{ title: art, art, tint: "cream" }} decorative dots={false} scale={0.8} />
-            </li>
-          ))}
-        </ul>
+        {order.items.length > 0 ? (
+          <ul aria-label="Các món trong đơn" className="flex flex-col divide-y divide-line text-sm">
+            {order.items.map((item) => (
+              <li key={item.key} className="flex items-start justify-between gap-3 py-2">
+                <span className="min-w-0">
+                  <span className="block text-ink">{item.title}</span>
+                  <span className="text-xs text-ink-2">
+                    {item.variantLabel} × {item.quantity}
+                  </span>
+                </span>
+                <span className="font-mono font-semibold text-ink">{formatVnd(item.lineTotal)}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <ul aria-label="Các món trong đơn" className="flex flex-wrap gap-2">
+            {order.arts.map((art, i) => (
+              <li key={`${art}-${i}`} className="flex h-14 w-14 overflow-hidden rounded-btn border border-line bg-page-2">
+                <ProductArt product={{ title: art, art, tint: "cream" }} decorative dots={false} scale={0.8} />
+              </li>
+            ))}
+          </ul>
+        )}
+        {(order.slot || order.address || order.note) && (
+          <dl className="flex flex-col gap-1.5 border-t border-dashed border-line-2 pt-4 text-sm">
+            {order.slot && <TrackingRow label="Giao" value={order.slot} />}
+            {order.address && <TrackingRow label="Nhận tại" value={order.address} />}
+            {order.note && <TrackingRow label="Ghi chú" value={order.note} />}
+          </dl>
+        )}
       </section>
+    </div>
+  )
+}
+
+function TrackingRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex gap-3">
+      <dt className="w-20 shrink-0 text-ink-2">{label}</dt>
+      <dd className="min-w-0 text-ink">{value}</dd>
     </div>
   )
 }

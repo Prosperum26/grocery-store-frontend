@@ -1,20 +1,20 @@
 "use client"
 
-import { useMockCart } from "@lib/context/mock-cart-context"
+import { useCart } from "@lib/context/cart-context"
 
 import { CartButtonDesktop, CartButtonMobile } from "./index"
 
 /** The header cart buttons, reading the live browser cart. */
 export function LiveCartDesktop() {
-  const { view } = useMockCart()
+  const { view } = useCart()
   return <CartButtonDesktop count={view.count} subtotal={view.subtotal} />
 }
 
 export function LiveCartMobile() {
-  const { view } = useMockCart()
+  const { view } = useCart()
   return <CartButtonMobile count={view.count} />
 }
 
 export function useLiveCartCount(): number {
-  return useMockCart().view.count
+  return useCart().view.count
 }

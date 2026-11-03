@@ -78,12 +78,7 @@ export default function ProductCard({
           </span>
         </p>
         <div className="relative z-10">
-          <AddButton
-            handle={product.handle}
-            title={product.title}
-            variantCount={product.variants.length}
-            inStock={!outOfStock}
-          />
+          <AddButton product={product} inStock={!outOfStock} />
         </div>
       </div>
     </article>

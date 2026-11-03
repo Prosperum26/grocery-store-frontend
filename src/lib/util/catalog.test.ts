@@ -10,6 +10,7 @@ import {
   parseListingParams,
   parseSort,
   sortCatalog,
+  toPage,
 } from "./catalog"
 
 function product(over: Partial<ProductVM> & { handle: string }): ProductVM {
@@ -165,5 +166,17 @@ describe("paginate", () => {
   it("handles an empty list as one empty page", () => {
     const p = paginate([], 1, 9)
     expect(p).toMatchObject({ items: [], page: 1, totalPages: 1, from: 0, to: 0, total: 0 })
+  })
+})
+
+describe("toPage", () => {
+  it("describes a slice the server already cut", () => {
+    // Page 2 of 23 items, 9 per page: items 10..18.
+    const p = toPage(["a", "b", "c"], 23, 2, 9)
+    expect(p).toMatchObject({ page: 2, totalPages: 3, from: 10, to: 12, total: 23 })
+  })
+
+  it("reports an empty result as one empty page", () => {
+    expect(toPage([], 0, 1, 9)).toMatchObject({ page: 1, totalPages: 1, from: 0, to: 0, total: 0 })
   })
 })

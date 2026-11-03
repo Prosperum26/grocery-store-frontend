@@ -1,13 +1,7 @@
 import { listCategories } from "@lib/data/categories"
-import { listProducts } from "@lib/data/products"
+import { getListing } from "@lib/data/catalog"
 import { getRegion } from "@lib/data/regions"
-import {
-  filterCatalog,
-  ListingParams,
-  paginate,
-  sortCatalog,
-} from "@lib/util/catalog"
-import { toProductVM } from "@lib/viewmodels/product"
+import { ListingParams } from "@lib/util/catalog"
 import Button from "@modules/common/components/button"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductCard from "@modules/products/components/product-card"
@@ -25,9 +19,10 @@ type StoreTemplateProps = {
 }
 
 /**
- * Product list of the v2 design (02_San_Pham_*). Server component: it reads
- * the catalog (mock or Medusa), applies the URL state, and renders. The
- * filter controls are small client components that only change the URL.
+ * Product list of the v2 design (02_San_Pham_*). Server component: it asks
+ * getListing for the page the URL describes (mock data or the Medusa search)
+ * and renders it. The filter controls are small client components that only
+ * change the URL.
  */
 export default async function StoreTemplate({
   countryCode,
@@ -39,29 +34,19 @@ export default async function StoreTemplate({
     return null
   }
 
-  const { response } = await listProducts({
-    countryCode,
-    queryParams: { limit: 100 },
-  })
-  const catalog = response.products.map(toProductVM)
   const categories = (await listCategories()) ?? []
-
-  const matched = sortCatalog(
-    filterCatalog(catalog, {
-      category: category?.handle,
-      q: params.q,
-      inStock: params.inStock,
-      onSale: params.onSale,
-    }),
-    params.sort
-  )
-  const page = paginate(matched, params.page, PAGE_SIZE)
+  const { page, totalAll, categoryCounts } = await getListing({
+    countryCode,
+    params,
+    category,
+    categories,
+    pageSize: PAGE_SIZE,
+  })
 
   const basePath = category ? `/categories/${category.handle}` : "/store"
   const title = category?.name ?? (params.q ? `Kết quả cho “${params.q}”` : "Tất cả sản phẩm")
   const hasFilters = Boolean(params.q || params.inStock || params.onSale)
-  const countIn = (handle: string) =>
-    catalog.filter((p) => p.categoryHandle === handle).length
+  const countIn = (handle: string) => categoryCounts[handle] ?? 0
 
   const categoryLinkClass = (active: boolean) =>
     `flex items-center justify-between gap-3 rounded-[10px] px-3 py-2.5 text-sm ${
@@ -115,7 +100,7 @@ export default async function StoreTemplate({
                   className={categoryLinkClass(!category)}
                 >
                   <span>Tất cả sản phẩm</span>
-                  <span className="font-mono text-xs text-ink-3">{catalog.length}</span>
+                  <span className="font-mono text-xs text-ink-3">{totalAll}</span>
                 </LocalizedClientLink>
               </li>
               {categories.map((c) => (
@@ -176,7 +161,7 @@ export default async function StoreTemplate({
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="flex flex-col gap-1">
               <p className="font-mono text-xs font-semibold uppercase tracking-wide text-ink-2">
-                {category ? countIn(category.handle) : catalog.length} món
+                {category ? countIn(category.handle) : totalAll} món
               </p>
               <h1 className="font-display text-2xl font-bold text-ink small:text-[32px] small:leading-tight">
                 {title}

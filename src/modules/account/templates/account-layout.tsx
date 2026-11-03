@@ -19,7 +19,8 @@ export default function AccountLayout({
     return <div className="content-container py-8 small:py-12">{children}</div>
   }
 
-  const name = [customer.first_name, customer.last_name].filter(Boolean).join(" ")
+  // Vietnamese order: family name first, given name last.
+  const name = [customer.last_name, customer.first_name].filter(Boolean).join(" ")
 
   return (
     <div className="content-container flex flex-col gap-6 py-6 small:flex-row small:items-start small:gap-8 small:py-10" data-testid="account-page">

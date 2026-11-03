@@ -21,6 +21,7 @@ export default function RecipeBanner({ catalog }: { catalog: ProductVM[] }) {
   const ingredients = recipe.ingredients
     .map((i) => ({ ...i, product: catalog.find((p) => p.handle === i.handle) }))
     .filter((i): i is typeof i & { product: ProductVM } => Boolean(i.product))
+  if (!ingredients.length) return null
   const total = formatVnd(basketTotal(recipe.ingredients, catalog))
 
   return (

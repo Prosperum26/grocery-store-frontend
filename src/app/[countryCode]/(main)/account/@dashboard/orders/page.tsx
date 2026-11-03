@@ -1,7 +1,8 @@
 import { Metadata } from "next"
-import { notFound, redirect } from "next/navigation"
+import { redirect } from "next/navigation"
 
 import { retrieveCustomer } from "@lib/data/customer"
+import { loadOrders } from "@lib/data/order-list"
 import OrdersTemplate from "@modules/account/templates/orders-template"
 
 export const metadata: Metadata = {
@@ -15,5 +16,5 @@ export default async function OrdersPage(props: { params: Promise<{ countryCode:
   if (!customer) {
     redirect(`/${countryCode}/account`)
   }
-  return <OrdersTemplate />
+  return <OrdersTemplate orders={await loadOrders()} />
 }

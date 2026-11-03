@@ -1,53 +1,31 @@
 import { Metadata } from "next"
+import { redirect } from "next/navigation"
 
-import ProfilePhone from "@modules/account//components/profile-phone"
-import ProfileBillingAddress from "@modules/account/components/profile-billing-address"
-import ProfileEmail from "@modules/account/components/profile-email"
-import ProfileName from "@modules/account/components/profile-name"
-import ProfilePassword from "@modules/account/components/profile-password"
-
-import { notFound } from "next/navigation"
-import { listRegions } from "@lib/data/regions"
 import { retrieveCustomer } from "@lib/data/customer"
+import ProfileCard from "@modules/account/components/profile-card"
 
 export const metadata: Metadata = {
-  title: "Hồ sơ",
+  title: "Hồ sơ | Com4Fud",
   description: "Xem và sửa hồ sơ của bạn.",
 }
 
-export default async function Profile() {
-  const customer = await retrieveCustomer()
-  const regions = await listRegions()
-
-  if (!customer || !regions) {
-    notFound()
+export default async function Profile(props: { params: Promise<{ countryCode: string }> }) {
+  const { countryCode } = await props.params
+  const customer = await retrieveCustomer().catch(() => null)
+  if (!customer) {
+    redirect(`/${countryCode}/account`)
   }
 
   return (
-    <div className="w-full" data-testid="profile-page-wrapper">
-      <div className="mb-8 flex flex-col gap-y-4">
-        <h1 className="text-2xl-semi">Hồ sơ</h1>
-        <p className="text-base-regular">
-          Xem và cập nhật thông tin của bạn: họ tên, email, số điện thoại và
-          địa chỉ thanh toán.
-        </p>
-      </div>
-      <div className="flex flex-col gap-y-8 w-full">
-        <ProfileName customer={customer} />
-        <Divider />
-        <ProfileEmail customer={customer} />
-        <Divider />
-        <ProfilePhone customer={customer} />
-        <Divider />
-        {/* <ProfilePassword customer={customer} />
-        <Divider /> */}
-        <ProfileBillingAddress customer={customer} regions={regions} />
-      </div>
+    <div className="flex flex-col gap-4" data-testid="profile-page-wrapper">
+      <h1 className="font-display text-2xl font-bold text-ink small:text-[32px]">Hồ sơ</h1>
+      <p className="text-ink-2">Họ tên và số điện thoại dùng để giao hàng và liên hệ khi cần.</p>
+      <ProfileCard
+        // Vietnamese order: family name first, given name last.
+        name={[customer.last_name, customer.first_name].filter(Boolean).join(" ")}
+        email={customer.email}
+        phone={customer.phone ?? ""}
+      />
     </div>
   )
 }
-
-const Divider = () => {
-  return <div className="w-full h-px bg-gray-200" />
-}
-;``
