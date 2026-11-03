@@ -5,7 +5,7 @@ import { DEMO_ADDRESSES, type DemoAddress } from "@lib/mock/customer"
 import { isMockMode } from "@lib/mock/mode"
 import { DEFAULT_SLOT_ID, DELIVERY_SLOTS, isVietnamesePhone, NOTE_MAX_LENGTH } from "@lib/mock/checkout"
 import { listDeliverySlots, startPayment } from "@lib/data/checkout"
-import { isEmail, type SlotOption } from "@lib/util/checkout"
+import { isEmail, type SavedAddress, type SlotOption } from "@lib/util/checkout"
 import { cx } from "@lib/util/cx"
 import { formatVnd } from "@lib/util/price"
 import Button from "@modules/common/components/button"
@@ -32,13 +32,23 @@ const STEPS = ["Giỏ hàng", "Thanh toán", "Hoàn tất"]
  * The real checkout has no saved addresses yet (they need an account), so the
  * shopper types the address and an email.
  */
-export default function CheckoutTemplate() {
+export default function CheckoutTemplate({
+  customerEmail,
+  savedAddresses,
+}: {
+  /** Real mode, signed in: the email of the account (no need to ask). */
+  customerEmail?: string
+  /** Real mode, signed in: the addresses saved in the account. */
+  savedAddresses?: SavedAddress[]
+}) {
   const { view, clear } = useCart()
   const router = useRouter()
   const { countryCode } = useParams<{ countryCode: string }>()
   const mock = isMockMode()
-  const addresses = mock ? DEMO_ADDRESSES : []
-  const [addressId, setAddressId] = useState<string>(mock ? DEMO_ADDRESSES[0].id : NEW_ADDRESS)
+  const addresses: DemoAddress[] = mock ? DEMO_ADDRESSES : (savedAddresses ?? [])
+  const [addressId, setAddressId] = useState<string>(
+    (addresses.find((a) => a.isDefault) ?? addresses[0])?.id ?? NEW_ADDRESS
+  )
   const [draft, setDraft] = useState<Draft>({ email: "", name: "", phone: "", line: "", ward: "" })
   const [slots, setSlots] = useState<SlotOption[]>(mock ? DELIVERY_SLOTS : [])
   const [slotId, setSlotId] = useState(mock ? DEFAULT_SLOT_ID : "")
@@ -81,13 +91,13 @@ export default function CheckoutTemplate() {
     if (hasOutOfStock) {
       next.cart = "Giỏ có món hết hàng. Quay lại giỏ để xóa trước khi đặt."
     }
-    if (!mock && !isEmail(draft.email)) next.email = "Nhập email để nhận thông tin đơn hàng"
+    if (!mock && !customerEmail && !isEmail(draft.email)) next.email = "Nhập email để nhận thông tin đơn hàng"
     if (usingNewAddress) {
       if (!draft.name.trim()) next.name = "Nhập họ tên người nhận"
       if (!isVietnamesePhone(draft.phone)) next.phone = "Số điện thoại chưa đúng, ví dụ 0903 412 588"
       if (!draft.line.trim()) next.line = "Nhập số nhà, tên đường hoặc tòa nhà"
       if (!draft.ward.trim()) next.ward = "Nhập phường, quận, tỉnh/thành"
-    } else if (!DEMO_ADDRESSES.some((a) => a.id === addressId)) {
+    } else if (!addresses.some((a) => a.id === addressId)) {
       next.address = "Chọn địa chỉ nhận hàng"
     }
     const slot = slots.find((s) => s.id === slotId)
@@ -108,12 +118,13 @@ export default function CheckoutTemplate() {
     // Real: save the cart on the backend, then go to VNPAY. The cart stays
     // until VNPAY confirms the payment (the return page empties it).
     setSubmitting(true)
+    const chosen = usingNewAddress ? draft : addresses.find((a) => a.id === addressId)!
     const result = await startPayment({
-      email: draft.email,
-      name: draft.name,
-      phone: draft.phone,
-      line: draft.line,
-      ward: draft.ward,
+      email: customerEmail ?? draft.email,
+      name: chosen.name,
+      phone: chosen.phone,
+      line: chosen.line,
+      ward: chosen.ward,
       slotId,
       note,
     })
@@ -207,7 +218,7 @@ export default function CheckoutTemplate() {
                   onChange={() => setAddressId(address.id)}
                 />
               ))}
-              {mock && (
+              {addresses.length > 0 && (
                 <label
                   className={cx(
                     "flex cursor-pointer items-center gap-3 rounded-btn border-[1.5px] p-4",
@@ -234,7 +245,7 @@ export default function CheckoutTemplate() {
 
             {usingNewAddress && (
               <div className="grid gap-4 small:grid-cols-2">
-                {!mock && (
+                {!mock && !customerEmail && (
                   <div id="checkout-email" className="small:col-span-2">
                     <Field
                       label="Email nhận thông tin đơn hàng"

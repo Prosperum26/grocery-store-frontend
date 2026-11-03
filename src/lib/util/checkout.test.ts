@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isEmail, slotDayLabel, splitName, toSlotOptions } from "./checkout"
+import { isEmail, slotDayLabel, splitName, toSavedAddress, toSlotOptions } from "./checkout"
 
 // 2026-11-03 12:30 in Vietnam = 05:30 UTC
 const NOW = Date.parse("2026-11-03T05:30:00Z")
@@ -30,6 +30,38 @@ describe("splitName", () => {
   it("puts the last word in first_name, as Vietnamese names go", () => {
     expect(splitName("Trần Minh Thư")).toEqual({ first_name: "Thư", last_name: "Trần Minh" })
     expect(splitName("  Thư ")).toEqual({ first_name: "Thư", last_name: "" })
+  })
+})
+
+describe("toSavedAddress", () => {
+  it("joins the pieces of a Medusa address the way the checkout shows them", () => {
+    expect(
+      toSavedAddress({
+        id: "caddr_1",
+        address_name: "Nhà riêng",
+        first_name: "Thư",
+        last_name: "Trần Minh",
+        phone: "0903412588",
+        address_1: "12 Nguyễn Văn Linh",
+        address_2: "Tháp B",
+        city: "P. Tân Phong",
+        province: "TP.HCM",
+        is_default_shipping: true,
+      })
+    ).toEqual({
+      id: "caddr_1",
+      label: "Nhà riêng",
+      name: "Trần Minh Thư",
+      phone: "0903412588",
+      line: "12 Nguyễn Văn Linh, Tháp B",
+      ward: "P. Tân Phong, TP.HCM",
+      isDefault: true,
+    })
+  })
+
+  it("names an unnamed address by whether it is the default", () => {
+    expect(toSavedAddress({ id: "a", is_default_shipping: true }).label).toBe("Mặc định")
+    expect(toSavedAddress({ id: "b" }).label).toBe("Đã lưu")
   })
 })
 

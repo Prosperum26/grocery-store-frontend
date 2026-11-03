@@ -49,6 +49,45 @@ export function toSlotOptions(slots: RawSlot[], nowMs: number): SlotOption[] {
   }))
 }
 
+/** The part of a saved Medusa customer address the checkout reads. */
+export type RawCustomerAddress = {
+  id: string
+  address_name?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  phone?: string | null
+  address_1?: string | null
+  address_2?: string | null
+  city?: string | null
+  province?: string | null
+  is_default_shipping?: boolean | null
+}
+
+/** A saved address as the checkout lists it (same shape as the mock addresses). */
+export type SavedAddress = {
+  id: string
+  label: string
+  name: string
+  phone: string
+  line: string
+  ward: string
+  isDefault: boolean
+}
+
+export function toSavedAddress(a: RawCustomerAddress): SavedAddress {
+  const isDefault = !!a.is_default_shipping
+  return {
+    id: a.id,
+    label: a.address_name || (isDefault ? "Mặc định" : "Đã lưu"),
+    // Vietnamese order: family name first, given name last.
+    name: [a.last_name, a.first_name].filter(Boolean).join(" "),
+    phone: a.phone ?? "",
+    line: [a.address_1, a.address_2].filter(Boolean).join(", "),
+    ward: [a.city, a.province].filter(Boolean).join(", "),
+    isDefault,
+  }
+}
+
 /**
  * Medusa wants first and last name. A Vietnamese name ends with the given
  * name ("Trần Minh Thư" → first "Thư", last "Trần Minh"), the same split the
