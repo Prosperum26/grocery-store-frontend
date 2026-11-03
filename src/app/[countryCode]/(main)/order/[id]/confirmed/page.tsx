@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { getOrderReceipt } from "@lib/data/checkout"
 import { DEMO_ORDER_ID } from "@lib/mock/checkout"
 import { isMockMode } from "@lib/mock/mode"
 import OrderCompletedTemplate from "@modules/order/templates/order-completed-template"
@@ -15,15 +16,18 @@ export const metadata: Metadata = {
 }
 
 /**
- * Confirmation page. In mock mode only the sample order exists; real orders
- * come with the backend (backend plan BE-6).
+ * Confirmation page. Mock mode shows the sample order; real mode shows the
+ * order that VNPAY's payment created.
  */
 export default async function OrderConfirmedPage(props: Props) {
   const { id } = await props.params
 
-  if (!isMockMode() || id !== DEMO_ORDER_ID) {
-    notFound()
+  if (isMockMode()) {
+    if (id !== DEMO_ORDER_ID) notFound()
+    return <OrderCompletedTemplate />
   }
 
-  return <OrderCompletedTemplate />
+  const receipt = await getOrderReceipt(id)
+  if (!receipt) notFound()
+  return <OrderCompletedTemplate receipt={receipt} />
 }

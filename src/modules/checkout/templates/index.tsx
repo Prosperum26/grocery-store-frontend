@@ -1,10 +1,11 @@
 "use client"
 
 import { useCart } from "@lib/context/cart-context"
-import { useToast } from "@lib/context/toast-context"
 import { DEMO_ADDRESSES, type DemoAddress } from "@lib/mock/customer"
 import { isMockMode } from "@lib/mock/mode"
 import { DEFAULT_SLOT_ID, DELIVERY_SLOTS, isVietnamesePhone, NOTE_MAX_LENGTH } from "@lib/mock/checkout"
+import { listDeliverySlots, startPayment } from "@lib/data/checkout"
+import { isEmail, type SlotOption } from "@lib/util/checkout"
 import { cx } from "@lib/util/cx"
 import { formatVnd } from "@lib/util/price"
 import Button from "@modules/common/components/button"
@@ -12,33 +13,54 @@ import Field from "@modules/common/components/field"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import EmptyCartMessage from "@modules/cart/components/empty-cart-message"
 import { useParams, useRouter } from "next/navigation"
-import { useRef, useState, type FormEvent } from "react"
+import { useEffect, useRef, useState, type FormEvent } from "react"
 import { LuCheck, LuLock, LuMapPin } from "react-icons/lu"
 
 const FORM_ID = "checkout-form"
 const NEW_ADDRESS = "new"
 
-type Draft = { name: string; phone: string; line: string; ward: string }
-type Errors = Partial<Record<"address" | "name" | "phone" | "line" | "ward" | "slot" | "note" | "cart", string>>
+type Draft = { email: string; name: string; phone: string; line: string; ward: string }
+type Errors = Partial<Record<"address" | "email" | "name" | "phone" | "line" | "ward" | "slot" | "note" | "cart", string>>
 
 const STEPS = ["Giỏ hàng", "Thanh toán", "Hoàn tất"]
 
 /**
- * Checkout of the v2 design (05_Thanh_Toan_*), mock mode: no payment is
- * taken and no order is stored. Three numbered parts and the summary. A
- * single submit button validates the form, then leads to the confirmation.
+ * Checkout of the v2 design (05_Thanh_Toan_*): three numbered parts and the
+ * summary. A single submit button validates the form. Mock mode then leads to
+ * the sample confirmation. Real mode saves the cart on the backend and sends
+ * the shopper to VNPAY; the order is created when VNPAY confirms the payment.
+ * The real checkout has no saved addresses yet (they need an account), so the
+ * shopper types the address and an email.
  */
 export default function CheckoutTemplate() {
   const { view, clear } = useCart()
-  const { show } = useToast()
   const router = useRouter()
   const { countryCode } = useParams<{ countryCode: string }>()
-  const [addressId, setAddressId] = useState<string>(DEMO_ADDRESSES[0].id)
-  const [draft, setDraft] = useState<Draft>({ name: "", phone: "", line: "", ward: "" })
-  const [slotId, setSlotId] = useState(DEFAULT_SLOT_ID)
+  const mock = isMockMode()
+  const addresses = mock ? DEMO_ADDRESSES : []
+  const [addressId, setAddressId] = useState<string>(mock ? DEMO_ADDRESSES[0].id : NEW_ADDRESS)
+  const [draft, setDraft] = useState<Draft>({ email: "", name: "", phone: "", line: "", ward: "" })
+  const [slots, setSlots] = useState<SlotOption[]>(mock ? DELIVERY_SLOTS : [])
+  const [slotId, setSlotId] = useState(mock ? DEFAULT_SLOT_ID : "")
   const [note, setNote] = useState("")
   const [errors, setErrors] = useState<Errors>({})
+  const [submitting, setSubmitting] = useState(false)
   const summaryRef = useRef<HTMLDivElement>(null)
+
+  // Real mode: the slots come from the backend. Pick the first one still open.
+  const loadSlots = () =>
+    listDeliverySlots()
+      .then((list) => {
+        setSlots(list)
+        setSlotId((current) =>
+          list.some((s) => s.id === current && s.open) ? current : (list.find((s) => s.open)?.id ?? "")
+        )
+      })
+      .catch(() => setErrors((e) => ({ ...e, slot: "Không tải được khung giờ giao. Tải lại trang để thử lại." })))
+  useEffect(() => {
+    if (!mock) loadSlots()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (view.lines.length === 0) {
     return (
@@ -51,13 +73,15 @@ export default function CheckoutTemplate() {
   const usingNewAddress = addressId === NEW_ADDRESS
   const hasOutOfStock = view.outOfStockCount > 0
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (submitting) return
     const next: Errors = {}
 
     if (hasOutOfStock) {
       next.cart = "Giỏ có món hết hàng. Quay lại giỏ để xóa trước khi đặt."
     }
+    if (!mock && !isEmail(draft.email)) next.email = "Nhập email để nhận thông tin đơn hàng"
     if (usingNewAddress) {
       if (!draft.name.trim()) next.name = "Nhập họ tên người nhận"
       if (!isVietnamesePhone(draft.phone)) next.phone = "Số điện thoại chưa đúng, ví dụ 0903 412 588"
@@ -66,7 +90,7 @@ export default function CheckoutTemplate() {
     } else if (!DEMO_ADDRESSES.some((a) => a.id === addressId)) {
       next.address = "Chọn địa chỉ nhận hàng"
     }
-    const slot = DELIVERY_SLOTS.find((s) => s.id === slotId)
+    const slot = slots.find((s) => s.id === slotId)
     if (!slot || !slot.open) next.slot = "Chọn khung giờ còn mở"
     if (note.length > NOTE_MAX_LENGTH) next.note = `Ghi chú tối đa ${NOTE_MAX_LENGTH} ký tự`
 
@@ -75,18 +99,36 @@ export default function CheckoutTemplate() {
       summaryRef.current?.focus()
       return
     }
-    // Paying with VNPAY and creating the order are not wired yet. Do not empty
-    // the real cart and show a sample order as if it were the shopper's.
-    if (!isMockMode()) {
-      show({
-        tone: "warn",
-        title: "Thanh toán VNPAY đang được phát triển",
-        description: "Giỏ hàng của bạn được giữ nguyên.",
-      })
+    if (mock) {
+      clear()
+      router.push(`/${countryCode}/order/demo/confirmed`)
       return
     }
-    clear()
-    router.push(`/${countryCode}/order/demo/confirmed`)
+
+    // Real: save the cart on the backend, then go to VNPAY. The cart stays
+    // until VNPAY confirms the payment (the return page empties it).
+    setSubmitting(true)
+    const result = await startPayment({
+      email: draft.email,
+      name: draft.name,
+      phone: draft.phone,
+      line: draft.line,
+      ward: draft.ward,
+      slotId,
+      note,
+    })
+    if (result.ok) {
+      window.location.assign(result.paymentUrl)
+      return // keep the button disabled while the browser leaves the page
+    }
+    setSubmitting(false)
+    if (result.reason === "slot_unavailable") {
+      setErrors({ slot: result.message })
+      loadSlots()
+    } else {
+      setErrors({ cart: result.message })
+    }
+    summaryRef.current?.focus()
   }
 
   const errorList = Object.entries(errors).filter(([, v]) => v) as [keyof Errors, string][]
@@ -157,7 +199,7 @@ export default function CheckoutTemplate() {
             </h2>
             <fieldset id="checkout-address" className="flex flex-col gap-2.5" aria-describedby={errors.address ? "checkout-address-error" : undefined}>
               <legend className="sr-only">Chọn địa chỉ</legend>
-              {DEMO_ADDRESSES.map((address) => (
+              {addresses.map((address) => (
                 <AddressOption
                   key={address.id}
                   address={address}
@@ -165,22 +207,24 @@ export default function CheckoutTemplate() {
                   onChange={() => setAddressId(address.id)}
                 />
               ))}
-              <label
-                className={cx(
-                  "flex cursor-pointer items-center gap-3 rounded-btn border-[1.5px] p-4",
-                  usingNewAddress ? "border-brand bg-brand-bg" : "border-line-2 bg-surface"
-                )}
-              >
-                <input
-                  type="radio"
-                  name="address"
-                  value={NEW_ADDRESS}
-                  checked={usingNewAddress}
-                  onChange={() => setAddressId(NEW_ADDRESS)}
-                  className="h-4 w-4 accent-brand"
-                />
-                <span className="text-sm font-semibold text-ink">Thêm địa chỉ mới</span>
-              </label>
+              {mock && (
+                <label
+                  className={cx(
+                    "flex cursor-pointer items-center gap-3 rounded-btn border-[1.5px] p-4",
+                    usingNewAddress ? "border-brand bg-brand-bg" : "border-line-2 bg-surface"
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="address"
+                    value={NEW_ADDRESS}
+                    checked={usingNewAddress}
+                    onChange={() => setAddressId(NEW_ADDRESS)}
+                    className="h-4 w-4 accent-brand"
+                  />
+                  <span className="text-sm font-semibold text-ink">Thêm địa chỉ mới</span>
+                </label>
+              )}
             </fieldset>
             {errors.address && (
               <p id="checkout-address-error" className="text-sm text-sale-deep">
@@ -190,6 +234,19 @@ export default function CheckoutTemplate() {
 
             {usingNewAddress && (
               <div className="grid gap-4 small:grid-cols-2">
+                {!mock && (
+                  <div id="checkout-email" className="small:col-span-2">
+                    <Field
+                      label="Email nhận thông tin đơn hàng"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      value={draft.email}
+                      error={errors.email}
+                      onChange={(e) => setDraft({ ...draft, email: e.target.value })}
+                    />
+                  </div>
+                )}
                 <div id="checkout-name" className="small:col-span-1">
                   <Field
                     label="Họ và tên người nhận"
@@ -243,7 +300,10 @@ export default function CheckoutTemplate() {
             </h2>
             <fieldset id="checkout-slot" className="grid grid-cols-2 gap-2.5 small:grid-cols-4" aria-describedby={errors.slot ? "checkout-slot-error" : undefined}>
               <legend className="sr-only">Khung giờ giao</legend>
-              {DELIVERY_SLOTS.map((slot) => {
+              {slots.length === 0 && !mock && (
+                <p className="col-span-full text-sm text-ink-2">Đang tải khung giờ giao…</p>
+              )}
+              {slots.map((slot) => {
                 const checked = slotId === slot.id
                 return (
                   <label
@@ -370,8 +430,8 @@ export default function CheckoutTemplate() {
               {errors.cart}
             </p>
           )}
-          <Button type="submit" form={FORM_ID} variant="primary" size="lg" fullWidth icon={<LuLock />} aria-disabled={hasOutOfStock || undefined} data-testid="place-order-button">
-            Xác nhận đặt hàng
+          <Button type="submit" form={FORM_ID} variant="primary" size="lg" fullWidth icon={<LuLock />} aria-disabled={hasOutOfStock || submitting || undefined} data-testid="place-order-button">
+            {submitting ? "Đang chuyển sang VNPAY…" : "Xác nhận đặt hàng"}
           </Button>
           <p className="flex gap-2 text-xs text-ink-2">
             <LuMapPin aria-hidden="true" className="mt-0.5 shrink-0 text-brand" size={14} />
@@ -386,8 +446,8 @@ export default function CheckoutTemplate() {
           <span className="text-xs text-ink-2">Tổng thanh toán</span>
           <span className="font-mono text-lg font-bold text-ink">{formatVnd(view.total)}</span>
         </div>
-        <Button type="submit" form={FORM_ID} variant="primary" size="md" className="flex-1" aria-disabled={hasOutOfStock || undefined}>
-          Đặt hàng
+        <Button type="submit" form={FORM_ID} variant="primary" size="md" className="flex-1" aria-disabled={hasOutOfStock || submitting || undefined}>
+          {submitting ? "Đang chuyển…" : "Đặt hàng"}
         </Button>
       </div>
     </div>
