@@ -37,10 +37,16 @@ export const TRACKING_STEPS: { label: string; stage: OrderStage | null }[] = [
   { label: "Đã giao", stage: "DELIVERED" },
 ]
 
-/** The step an order is at; -1 for a cancelled order (it has no timeline). */
+/**
+ * The step an order is waiting at or working on; -1 for a cancelled order
+ * (it has no timeline). Steps before it are done.
+ * PENDING waits for the shop to confirm; once confirmed (CONFIRMED) the
+ * confirmation step is done and the order waits to be prepared.
+ */
 export function trackingIndex(stage: OrderStage): number {
   if (stage === "CANCELLED") return -1
-  // PENDING: ordered and paid, waiting for the shop to confirm.
-  if (stage === "PENDING") return TRACKING_STEPS.findIndex((s) => s.stage === "CONFIRMED")
-  return TRACKING_STEPS.findIndex((s) => s.stage === stage)
+  const at = (target: OrderStage) => TRACKING_STEPS.findIndex((s) => s.stage === target)
+  if (stage === "PENDING") return at("CONFIRMED")
+  if (stage === "CONFIRMED") return at("PREPARING")
+  return at(stage)
 }

@@ -20,7 +20,8 @@ describe("stageLabel", () => {
     ])
   })
   it("moves along the steps and has no step for a cancelled order", () => {
-    expect(["CONFIRMED", "PREPARING", "SHIPPING", "DELIVERED"].map((s) => trackingIndex(s as never))).toEqual([2, 3, 4, 5])
+    // Once confirmed, the confirmation step is done and the order waits to be prepared.
+    expect(["CONFIRMED", "PREPARING", "SHIPPING", "DELIVERED"].map((s) => trackingIndex(s as never))).toEqual([3, 3, 4, 5])
     expect(trackingIndex("CANCELLED")).toBe(-1)
   })
   it("labels SHIPPING as Đang giao", () => {
