@@ -18,8 +18,8 @@ export const listCategories = async (query?: Record<string, any>) => {
       "/store/product-categories",
       {
         query: {
-          fields:
-            "*category_children, *products, *parent_category, *parent_category.parent_category",
+          // No `*products`: it would send every product of every category.
+          fields: "id,name,handle,description",
           limit,
           ...query,
         },
@@ -49,7 +49,7 @@ export const getCategoryByHandle = async (categoryHandle: string[]) => {
       `/store/product-categories`,
       {
         query: {
-          fields: "*category_children, *products",
+          fields: "id,name,handle,description",
           handle,
         },
         next,

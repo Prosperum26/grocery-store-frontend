@@ -143,17 +143,26 @@ export type Page<T> = {
   total: number
 }
 
-export function paginate<T>(items: T[], page: number, pageSize: number): Page<T> {
-  const totalPages = Math.max(1, Math.ceil(items.length / pageSize))
+/**
+ * Describes one page when `items` is already that page's slice and `total` is
+ * the size of the whole result (the backend search pages on the server).
+ */
+export function toPage<T>(items: T[], total: number, page: number, pageSize: number): Page<T> {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const current = Math.min(Math.max(1, Math.floor(page) || 1), totalPages)
   const start = (current - 1) * pageSize
-  const slice = items.slice(start, start + pageSize)
   return {
-    items: slice,
+    items,
     page: current,
     totalPages,
-    from: slice.length ? start + 1 : 0,
-    to: start + slice.length,
-    total: items.length,
+    from: items.length ? start + 1 : 0,
+    to: start + items.length,
+    total,
   }
+}
+
+export function paginate<T>(items: T[], page: number, pageSize: number): Page<T> {
+  const { page: current } = toPage([], items.length, page, pageSize)
+  const start = (current - 1) * pageSize
+  return toPage(items.slice(start, start + pageSize), items.length, current, pageSize)
 }
