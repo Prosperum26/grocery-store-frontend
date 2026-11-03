@@ -13,7 +13,7 @@ import { addLine } from "./shopping-cart"
  */
 
 const ORDER_FIELDS =
-  "id,display_id,created_at,total,subtotal,shipping_total,discount_total,+metadata,*items,*shipping_address"
+  "id,display_id,created_at,total,item_subtotal,shipping_total,discount_total,+metadata,*items,*shipping_address"
 
 async function fetchOrders(query: Record<string, unknown>): Promise<RawMyOrder[]> {
   const authHeaders = await getAuthHeaders()

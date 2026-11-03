@@ -182,7 +182,7 @@ export async function getOrderReceipt(orderId: string): Promise<OrderReceipt | n
     const { order } = await sdk.client.fetch<{ order: RawOrder }>(`/store/orders/${orderId}`, {
       method: "GET",
       // metadata comes through the backend's allowFields (slot, note, stage).
-      query: { fields: "id,display_id,created_at,subtotal,shipping_total,discount_total,total,+metadata,*items" },
+      query: { fields: "id,display_id,created_at,item_subtotal,shipping_total,discount_total,total,+metadata,*items" },
       headers: { ...(await getAuthHeaders()) },
       cache: "no-store",
     })

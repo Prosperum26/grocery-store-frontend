@@ -7,7 +7,7 @@ const order: RawMyOrder = {
   display_id: 8,
   created_at: "2026-11-03T05:26:59.803Z",
   total: 105000,
-  subtotal: 90000,
+  item_subtotal: 90000,
   shipping_total: 15000,
   discount_total: 0,
   items: [

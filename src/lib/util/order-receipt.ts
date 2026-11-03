@@ -20,7 +20,8 @@ export type OrderReceipt = {
 export type RawOrder = {
   display_id?: number | null
   created_at?: string | null
-  subtotal?: number | null
+  // Items only. Medusa's order `subtotal` also counts shipping.
+  item_subtotal?: number | null
   shipping_total?: number | null
   discount_total?: number | null
   total?: number | null
@@ -75,7 +76,7 @@ export function buildOrderReceipt(order: RawOrder): OrderReceipt {
     slot: slotText(meta.slot),
     note: typeof meta.delivery_note === "string" ? meta.delivery_note : "",
     count: (order.items ?? []).reduce((sum, item) => sum + item.quantity, 0),
-    subtotal: order.subtotal ?? 0,
+    subtotal: order.item_subtotal ?? 0,
     shipping: order.shipping_total ?? 0,
     discount: order.discount_total ?? 0,
     total: order.total ?? 0,

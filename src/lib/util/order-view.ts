@@ -54,7 +54,8 @@ export type RawMyOrder = {
   display_id?: number | null
   created_at?: string | null
   total?: number | null
-  subtotal?: number | null
+  // Items only. Medusa's order `subtotal` also counts shipping.
+  item_subtotal?: number | null
   shipping_total?: number | null
   discount_total?: number | null
   items?:
@@ -131,7 +132,7 @@ export function buildOrderView(order: RawMyOrder): OrderView {
     date: formatVnDate(order.created_at),
     itemCount: items.reduce((sum, i) => sum + i.quantity, 0),
     total: order.total ?? 0,
-    subtotal: order.subtotal ?? 0,
+    subtotal: order.item_subtotal ?? 0,
     shipping: order.shipping_total ?? 0,
     discount: order.discount_total ?? 0,
     stage: readStage(meta.stage),
