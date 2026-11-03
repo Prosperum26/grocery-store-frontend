@@ -4,9 +4,9 @@ import { sdk } from "@lib/config"
 import { DEMO_STORE_CUSTOMER } from "@lib/mock/customer"
 import { isMockMode } from "@lib/mock/mode"
 import { isDemoSignedIn } from "./demo-session"
+import { toAddressBody, type AddressInput } from "@lib/util/address-form"
 import { COMING_SOON_TEXT, COMING_SOON_TITLE } from "@lib/util/coming-soon-copy"
 import { warmReorderBasket } from "./predictive"
-import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
@@ -53,22 +53,6 @@ export const retrieveCustomer =
       .then(({ customer }) => customer)
       .catch(() => null)
   }
-
-export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
-  const updateRes = await sdk.store.customer
-    .update(body, {}, headers)
-    .then(({ customer }) => customer)
-    .catch(medusaError)
-
-  const cacheTag = await getCacheTag("customers")
-  revalidateTag(cacheTag)
-
-  return updateRes
-}
 
 // Accounts need the backend; in mock mode the forms say so instead of
 // failing with a network error (issue #11: placeholder, never a crash).
@@ -180,104 +164,52 @@ export async function transferCart() {
   revalidateTag(cartCacheTag)
 }
 
-export const addCustomerAddress = async (
-  currentState: Record<string, unknown>,
-  formData: FormData
-): Promise<any> => {
-  const isDefaultBilling = (currentState.isDefaultBilling as boolean) || false
-  const isDefaultShipping = (currentState.isDefaultShipping as boolean) || false
+export type SaveResult = { ok: true } | { ok: false; message: string }
 
-  const address = {
-    first_name: formData.get("first_name") as string,
-    last_name: formData.get("last_name") as string,
-    company: formData.get("company") as string,
-    address_1: formData.get("address_1") as string,
-    address_2: formData.get("address_2") as string,
-    city: formData.get("city") as string,
-    postal_code: formData.get("postal_code") as string,
-    province: formData.get("province") as string,
-    country_code: formData.get("country_code") as string,
-    phone: formData.get("phone") as string,
-    is_default_billing: isDefaultBilling,
-    is_default_shipping: isDefaultShipping,
+const SAVE_FAILED = "Chưa lưu được. Bạn thử lại sau nhé."
+
+/** Name or phone of the signed-in customer (the profile page). */
+export async function saveCustomerProfile(body: HttpTypes.StoreUpdateCustomer): Promise<SaveResult> {
+  if (isMockMode()) return { ok: false, message: MOCK_AUTH_MESSAGE }
+
+  const headers = { ...(await getAuthHeaders()) }
+  try {
+    await sdk.store.customer.update(body, {}, headers)
+  } catch {
+    return { ok: false, message: SAVE_FAILED }
   }
-
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
-  return sdk.store.customer
-    .createAddress(address, {}, headers)
-    .then(async ({ customer }) => {
-      const customerCacheTag = await getCacheTag("customers")
-      revalidateTag(customerCacheTag)
-      return { success: true, error: null }
-    })
-    .catch((err) => {
-      return { success: false, error: err.toString() }
-    })
+  revalidateTag(await getCacheTag("customers"))
+  return { ok: true }
 }
 
-export const deleteCustomerAddress = async (
-  addressId: string
-): Promise<void> => {
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
+/** Adds an address, or changes the one with `addressId` (the address book page). */
+export async function saveCustomerAddress(input: AddressInput, addressId?: string): Promise<SaveResult> {
+  if (isMockMode()) return { ok: false, message: MOCK_AUTH_MESSAGE }
 
-  await sdk.store.customer
-    .deleteAddress(addressId, headers)
-    .then(async () => {
-      const customerCacheTag = await getCacheTag("customers")
-      revalidateTag(customerCacheTag)
-      return { success: true, error: null }
-    })
-    .catch((err) => {
-      return { success: false, error: err.toString() }
-    })
+  const headers = { ...(await getAuthHeaders()) }
+  const body = toAddressBody(input)
+  try {
+    if (addressId) {
+      await sdk.store.customer.updateAddress(addressId, body, {}, headers)
+    } else {
+      await sdk.store.customer.createAddress(body, {}, headers)
+    }
+  } catch {
+    return { ok: false, message: SAVE_FAILED }
+  }
+  revalidateTag(await getCacheTag("customers"))
+  return { ok: true }
 }
 
-export const updateCustomerAddress = async (
-  currentState: Record<string, unknown>,
-  formData: FormData
-): Promise<any> => {
-  const addressId =
-    (currentState.addressId as string) || (formData.get("addressId") as string)
+export async function deleteCustomerAddress(addressId: string): Promise<SaveResult> {
+  if (isMockMode()) return { ok: false, message: MOCK_AUTH_MESSAGE }
 
-  if (!addressId) {
-    return { success: false, error: "Address ID is required" }
+  const headers = { ...(await getAuthHeaders()) }
+  try {
+    await sdk.store.customer.deleteAddress(addressId, headers)
+  } catch {
+    return { ok: false, message: "Chưa xóa được địa chỉ. Bạn thử lại sau nhé." }
   }
-
-  const address = {
-    first_name: formData.get("first_name") as string,
-    last_name: formData.get("last_name") as string,
-    company: formData.get("company") as string,
-    address_1: formData.get("address_1") as string,
-    address_2: formData.get("address_2") as string,
-    city: formData.get("city") as string,
-    postal_code: formData.get("postal_code") as string,
-    province: formData.get("province") as string,
-    country_code: formData.get("country_code") as string,
-  } as HttpTypes.StoreUpdateCustomerAddress
-
-  const phone = formData.get("phone") as string
-
-  if (phone) {
-    address.phone = phone
-  }
-
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
-  return sdk.store.customer
-    .updateAddress(addressId, address, {}, headers)
-    .then(async () => {
-      const customerCacheTag = await getCacheTag("customers")
-      revalidateTag(customerCacheTag)
-      return { success: true, error: null }
-    })
-    .catch((err) => {
-      return { success: false, error: err.toString() }
-    })
+  revalidateTag(await getCacheTag("customers"))
+  return { ok: true }
 }
