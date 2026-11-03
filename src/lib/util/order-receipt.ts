@@ -32,18 +32,34 @@ export type RawOrder = {
   } | null
 }
 
-/** "03.11.2026 · 12:27" in Vietnam time. */
-export function formatPlacedAt(iso: string | null | undefined): string {
-  if (!iso) return ""
+/** Date and time of a moment in Vietnam time: { date: "03.11.2026", time: "12:27" }. */
+function vnParts(iso: string | null | undefined): { date: string; time: string } | null {
+  if (!iso) return null
   const ms = Date.parse(iso)
-  if (Number.isNaN(ms)) return ""
+  if (Number.isNaN(ms)) return null
   const [date, time] = new Date(ms + 7 * 60 * 60 * 1000).toISOString().split("T")
   const [y, m, d] = date.split("-")
-  return `${d}.${m}.${y} · ${time.slice(0, 5)}`
+  return { date: `${d}.${m}.${y}`, time: time.slice(0, 5) }
+}
+
+/** "03.11.2026 · 12:27" in Vietnam time. */
+export function formatPlacedAt(iso: string | null | undefined): string {
+  const p = vnParts(iso)
+  return p ? `${p.date} · ${p.time}` : ""
+}
+
+/** "03.11.2026" in Vietnam time. */
+export function formatVnDate(iso: string | null | undefined): string {
+  return vnParts(iso)?.date ?? ""
+}
+
+/** "17:30" in Vietnam time. */
+export function formatVnTime(iso: string | null | undefined): string {
+  return vnParts(iso)?.time ?? ""
 }
 
 /** The slot day and time, e.g. "03.11 · 17:00–19:00". */
-function slotText(slot: NonNullable<RawOrder["metadata"]>["slot"]): string {
+export function slotText(slot: NonNullable<RawOrder["metadata"]>["slot"]): string {
   if (!slot || typeof slot.label !== "string") return ""
   const starts = typeof slot.startsAt === "string" ? slot.startsAt.slice(0, 10) : ""
   if (!starts) return slot.label

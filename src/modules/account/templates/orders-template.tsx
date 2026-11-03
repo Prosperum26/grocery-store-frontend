@@ -1,19 +1,17 @@
-import { isMockMode } from "@lib/mock/mode"
-import { MOCK_ORDERS, type MockOrder } from "@lib/mock/orders"
+import type { OrderView } from "@lib/util/order-view"
 import { formatVnd } from "@lib/util/price"
 import Button from "@modules/common/components/button"
-import { ComingSoonButton } from "@modules/common/components/coming-soon"
+import CancelOrderButton from "@modules/account/components/order-actions/cancel-button"
+import ReorderButton from "@modules/account/components/order-actions/reorder-button"
 import OrderStatusChip from "@modules/common/components/order-status-chip"
 import ProductArt from "@modules/products/components/product-art"
 
 /**
  * "Đơn hàng của tôi" (07_Don_Hang_Cua_Toi). Each order is a card with its
- * status ticket and the action that fits its stage. Mock mode lists the
- * design's five sample orders; without mock data the list is empty.
+ * status ticket and the action that fits its stage. The orders are the
+ * customer's own (real mode) or the design's five samples (mock mode).
  */
-export default function OrdersTemplate() {
-  const orders: MockOrder[] = isMockMode() ? MOCK_ORDERS : []
-
+export default function OrdersTemplate({ orders }: { orders: OrderView[] }) {
   return (
     <section aria-labelledby="orders-title" className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
@@ -40,7 +38,7 @@ export default function OrdersTemplate() {
   )
 }
 
-function OrderCard({ order }: { order: MockOrder }) {
+function OrderCard({ order }: { order: OrderView }) {
   const detailsHref = `/account/orders/details/${order.id}`
 
   return (
@@ -59,15 +57,19 @@ function OrderCard({ order }: { order: MockOrder }) {
           {order.date} · {order.itemCount} món ·{" "}
           <span className="font-mono font-semibold text-ink">{formatVnd(order.total)}</span>
         </p>
-        <ul aria-label="Một số món trong đơn" className="flex items-center">
-          {order.arts.slice(0, 4).map((art, i) => (
-            <li key={`${art}-${i}`} className={i ? "-ml-2" : undefined}>
-              <span className="flex h-10 w-10 overflow-hidden rounded-full border-2 border-surface bg-page-2">
-                <ProductArt product={{ title: art, art, tint: "cream" }} decorative dots={false} scale={0.8} />
-              </span>
-            </li>
-          ))}
-        </ul>
+        {order.arts.length > 0 ? (
+          <ul aria-label="Một số món trong đơn" className="flex items-center">
+            {order.arts.slice(0, 4).map((art, i) => (
+              <li key={`${art}-${i}`} className={i ? "-ml-2" : undefined}>
+                <span className="flex h-10 w-10 overflow-hidden rounded-full border-2 border-surface bg-page-2">
+                  <ProductArt product={{ title: art, art, tint: "cream" }} decorative dots={false} scale={0.8} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="truncate text-sm text-ink">{order.items.map((i) => i.title).join(", ")}</p>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2 small:justify-end">
@@ -76,11 +78,8 @@ function OrderCard({ order }: { order: MockOrder }) {
             Theo dõi đơn
           </Button>
         )}
-        {order.stage === "DELIVERED" && (
-          <ComingSoonButton feature="Mua lại" variant="accent" size="md">
-            Mua lại
-          </ComingSoonButton>
-        )}
+        {order.stage === "PENDING" && <CancelOrderButton orderId={order.id} />}
+        {order.stage === "DELIVERED" && <ReorderButton orderId={order.id} />}
         <Button variant="secondary" size="md" href={detailsHref}>
           Chi tiết
         </Button>
