@@ -99,13 +99,20 @@ export default async function ProductPage(props: Props) {
     notFound()
   }
 
-  // "Thường mua kèm" points at other products by handle; read the catalog once.
-  const { response: all } = await listProducts({
-    countryCode,
-    queryParams: { limit: 100 },
-  })
+  // "Thường mua kèm" points at other products by handle: read just those.
   const vm = toProductVM(product)
-  const companions = pickProducts(all.products.map(toProductVM), vm.companions ?? [])
+  const companionHandles = vm.companions ?? []
+  const found = await Promise.all(
+    companionHandles.map((companion) =>
+      listProducts({ countryCode, queryParams: { handle: companion } }).then(
+        ({ response }) => response.products[0]
+      )
+    )
+  )
+  const companions = pickProducts(
+    found.filter((p) => p).map(toProductVM),
+    companionHandles
+  )
 
   return <ProductTemplate product={vm} companions={companions} />
 }
