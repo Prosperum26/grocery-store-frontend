@@ -45,6 +45,8 @@ export type CartApi = {
   removeVoucher: () => Promise<void>
   /** Empties the cart, e.g. after an order is placed. */
   clear: () => Promise<void>
+  /** Reads the cart again, after something else (e.g. "Thêm tất cả") changed it on the server. */
+  refresh: () => Promise<void>
   /** Hides the "giá vừa đổi" notice for this session. */
   dismissPriceNotice: () => void
   priceNoticeDismissed: boolean

@@ -136,6 +136,10 @@ export function RealCartProvider({
       clear: async () => {
         await enqueue(async () => ({ view: await forgetCart() }))
       },
+
+      refresh: async () => {
+        await enqueue(async () => ({ view: await getCartView() }))
+      },
     }),
     [view, pending, priceNoticeDismissed, countryCode, enqueue]
   )

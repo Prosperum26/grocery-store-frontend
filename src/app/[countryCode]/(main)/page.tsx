@@ -7,6 +7,7 @@ import { MOCK_BUY_AGAIN, pickProducts } from "@lib/mock/home"
 import { isMockMode } from "@lib/mock/mode"
 import { toProductVM } from "@lib/viewmodels/product"
 import BuyAgain from "@modules/home/components/buy-again"
+import BuyAgainLive from "@modules/home/components/buy-again/live"
 import CategoryGrid from "@modules/home/components/category-grid"
 import Deals from "@modules/home/components/deals"
 import PromoBanners from "@modules/home/components/promo-banners"
@@ -59,7 +60,7 @@ export default async function Home(props: {
         <PromoBanners promo={promo} spinach={spinach} />
         <Deals products={deals} headingId="home-deals-phone" className="small:hidden" />
         <CategoryGrid />
-        <BuyAgain lines={MOCK_BUY_AGAIN} catalog={catalog} />
+        {isMockMode() ? <BuyAgain lines={MOCK_BUY_AGAIN} catalog={catalog} /> : <BuyAgainLive />}
         <Deals products={deals} headingId="home-deals-desktop" className="hidden small:flex" />
         <RecipeBanner catalog={catalog} />
       </div>

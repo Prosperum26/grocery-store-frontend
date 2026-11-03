@@ -166,6 +166,7 @@ export function MockCartProvider({
       setLines([])
       setVoucher(null)
     },
+    refresh: async () => undefined,
     dismissPriceNotice: () => setPriceNoticeDismissed(true),
     priceNoticeDismissed,
     pending: false,

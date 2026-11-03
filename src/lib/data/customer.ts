@@ -5,6 +5,7 @@ import { DEMO_STORE_CUSTOMER } from "@lib/mock/customer"
 import { isMockMode } from "@lib/mock/mode"
 import { isDemoSignedIn } from "./demo-session"
 import { COMING_SOON_TEXT, COMING_SOON_TITLE } from "@lib/util/coming-soon-copy"
+import { warmReorderBasket } from "./predictive"
 import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
@@ -143,6 +144,9 @@ export async function login(_currentState: unknown, formData: FormData) {
   } catch (error: any) {
     return error.toString()
   }
+
+  // Let the backend prepare the "Mua lại" basket while the shopper lands.
+  await warmReorderBasket()
 }
 
 export async function signout(countryCode: string) {
