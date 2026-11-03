@@ -351,6 +351,31 @@ Issue yêu cầu cân nhắc accessibility; các task trên đã có yêu cầu 
 | 08 Theo dõi | Không bản đồ; "Dự kiến tới lúc" là giữ chỗ; tài xế chỉ có ở đơn mẫu đang giao | Mục 1.1, 1.5 |
 | 09 Đăng nhập | Không đăng ký, không Google; gửi form mở hộp thoại giữ chỗ; nút tài khoản dùng thử chỉ ở dev | O5 |
 
+## 2b. Câu hỏi mở khi đấu BE thật (chờ nhóm quyết định)
+
+Ghi trong lúc làm đợt 1–3 (nhánh `feature/medusa-backend-integration`). Chưa câu nào chặn việc; mỗi câu có điều đang làm tạm.
+
+| # | Câu hỏi | Đang làm tạm |
+| :--- | :--- | :--- |
+| 1 | 3 danh mục mới (Mì & Đồ ăn liền, Bánh kẹo & Ăn vặt, Đông lạnh & Chế biến sẵn; 850 món) chưa có trên lưới danh mục trang chủ và thanh điều hướng. Cần minh họa và bố cục cho 11 ô | Vẫn lọc được ở `/store`, chỉ không có ô riêng ở trang chủ |
+| 2 | Nâng `@medusajs/*` của FE từ 2.12.3 lên 2.21.1 cho khớp BE (rủi ro TR-05) | Giữ 2.12.3, các API đang dùng chạy được |
+| 3 | Dòng "hết hàng trong giỏ" mới chỉ có unit test, chưa thử trên trình duyệt (cần đổi tồn kho qua Admin, cần mật khẩu admin) | — |
+| 4 | Khối giữ chỗ (Mua lại, Rau sáng nay, banner công thức) bị ẩn ở chế độ thật cho tới khi có API | Ẩn |
+| 5 | Catalog thật chưa có `art`, `origin`, `companions`, `prep_options`, ảnh (BE-2b) | Hiện nền màu theo `tint`, không ảnh |
+| 6 | Trang chi tiết với handle không tồn tại trả HTTP 200 thay vì 404 | Chưa sửa |
+| 7 | Cách sơ chế (`metadata.prep`) chưa được ghi vào dòng giỏ | Chỉ là lựa chọn trên giao diện |
+| 8 | Giỏ chưa gắn với tài khoản khi khách đăng nhập (chưa gọi `transferCart`) | Giỏ khách vãng lai |
+| 9 | Cache trong tiến trình của BE làm tồn kho trên `/store/products` cũ sau khi đổi tồn qua SQL. Liên quan tính năng đồng bộ tồn kho thời gian thực | Đổi tồn chỉ qua Admin API |
+| 10 | Chưa có thanh toán VNPAY thật: `.env` BE đang có mã giả (`TESTTMN1`), cổng sandbox từ chối và chuyển sang trang lỗi. Cần `VNPAY_TMN_CODE` / `VNPAY_HASH_SECRET` thật từ nhóm; IPN cần đường hầm HTTPS công khai (ngrok...) vì sandbox không gọi được `localhost`. Chữ ký sandbox và hoàn tiền (mã 94) vẫn chưa kiểm | Kiểm bằng IPN và return giả lập có ký bằng khóa thử (13 bước trình duyệt đạt) |
+| 11 | `VNPAY_RETURN_URL` mặc định là `http://localhost:8000/checkout/vnpay-return`, thiếu `/vn`. Chạy được nhờ middleware tự thêm mã nước (307, giữ query) nhưng nên đặt thẳng `.../vn/checkout/vnpay-return` | Giữ mặc định |
+| 12 | Thanh toán thật mới có khách vãng lai: nhập email và địa chỉ mỗi lần; chưa có địa chỉ đã lưu vì chưa nối đăng nhập/đăng ký | Một ô "Phường, quận, tỉnh/thành" lưu vào `city`; chưa tách tỉnh |
+| 13 | Đơn thật chưa có `metadata.code` dạng `C4F-...` (chỉ 7 đơn mẫu seed có). Ai sinh mã: BE khi đặt đơn? | Phiếu hiện `#<display_id>` |
+| 14 | Tồn kho chỉ kiểm trước khi sang VNPAY. Nếu hết hàng giữa lúc khách trả tiền và lúc tạo đơn thì khách đã trả mà đơn không tạo được. Chờ Atomic Hot-Stock Gate và quy trình hoàn tiền | Chưa xử lý |
+| 15 | Phiếu đơn chưa hiện mã giảm giá đã dùng, chỉ ghi "Giảm giá" (đơn không giữ mã trong trường FE đang đọc) | — |
+| 16 | Trang kết quả: nếu khách mở link return ở trình duyệt khác (không có cookie giỏ) thì chỉ báo "đơn sẽ có trong Đơn hàng"; tra theo `vnp_TxnRef` cần thêm API ở BE | Thông báo chung |
+| 17 | Server dev Next.js từng treo (trang không trả lời quá 90 giây) sau khi sửa file, khởi động lại thì hết. Chưa rõ nguyên nhân | Khởi động lại |
+| 18 | Chưa làm trong đợt 3 này: danh sách/chi tiết/theo dõi đơn thật, hủy đơn (API-6), đăng nhập/đăng ký thật, Mua lại (API-3), ví mã (API-10) | Vẫn là dữ liệu giả hoặc giữ chỗ |
+
 ## 3. Cách chia đôi công việc khi sync dở
 
 - **Đợt 1 (nền + khung):** FE-0 … FE-4. **Đừng bỏ qua** dù chỉ làm nửa chừng, mọi trang sau dựa vào token, thành phần, chế độ mock.
@@ -374,6 +399,7 @@ Khi nhóm đấu dữ liệu thật: làm các task BE trong file backend, rồi
 
 | Ngày | Người | Đã xong | Dở dang / lưu ý |
 | :--- | :--- | :--- | :--- |
+| 2026-11-03 | Claude | Đợt 3 đấu thanh toán thật (`ab24300`): form thanh toán ghi email, địa chỉ, ghi chú, khung giờ (`GET /store/delivery-slots`, `POST /store/carts/:id/delivery-slot`) và phương thức "Giao tận nhà" lên giỏ Medusa, mở phiên `pp_vnpay_vnpay` rồi chuyển sang `payment_url`; trang `/checkout/vnpay-return` gọi `GET /store/vnpay/verify-return`, chờ đơn do IPN tạo rồi mở trang xác nhận đọc từ đơn thật; hủy thanh toán giữ giỏ, thử lại được. Logic ở `lib/data/checkout.ts`, phần thuần ở `lib/util/checkout.ts`, `lib/util/order-receipt.ts` (+ test, tổng 98). `tsc`, lint sạch; kiểm trình duyệt thật 13/13 và mock 8/8 (IPN giả lập ký bằng khóa thử) | Chưa chạy `yarn build`. Chưa làm: đơn hàng thật, hủy đơn, đăng nhập, Mua lại, ví mã. Câu hỏi chờ quyết định: mục 2b |
 | 2026-11-03 | Claude | Đợt 2 đấu giỏ hàng thật (`113df7e`, `d98a3ce`): màn hình dùng `useCart` (API bất đồng bộ chung cho giỏ giả và giỏ Medusa), `RealCartProvider` + server action trong `lib/data/shopping-cart.ts`; cookie `_medusa_cart_id`; thêm/gộp dòng, đổi số lượng (hiện ngay, bấm `+` nhanh không mất lần nào), xoá và Hoàn tác, mã giảm giá (phân biệt "không hợp lệ" và "chưa đủ điều kiện", TUOI20 cần giỏ từ 150.000đ), món hết hàng loại khỏi tổng, giỏ còn sau khi nạp lại trang. Đã chạy thử trong Chrome headless trên BE seed catalog v2 (18 bước giỏ thật, 8 bước giỏ giả) và 11 test cho `cart-view`. Sửa luôn lỗi cũ: "Hoàn tác" sau khi thêm từ trang chi tiết không làm gì ở chế độ giả. | **Chưa đấu:** trang thanh toán (địa chỉ, khung giờ giao `/store/delivery-slots`, ghi chú, VNPAY, tạo đơn): ở chế độ thật bấm "Đặt hàng" chỉ báo "đang được phát triển" và giữ giỏ; đơn hàng, theo dõi đơn, huỷ đơn, đăng nhập thật, "Mua lại". Chưa chạy thử trong trình duyệt trường hợp món hết hàng khi đã ở trong giỏ (chỉ có test đơn vị): sửa tồn kho thẳng trong DB không có tác dụng vì BE có cache trong tiến trình, phải đổi qua Admin. Cách ghi `metadata.prep` (cách sơ chế) vào dòng giỏ vẫn chưa làm. Giỏ chưa gắn với tài khoản khách khi đăng nhập. |
 | 2026-11-03 | Claude | Đợt 1 đấu BE thật (nhánh `feature/medusa-backend-integration`, `NEXT_PUBLIC_UI_MOCK=false`): danh sách `/store` và `/categories/*` lọc, sắp xếp, đếm, phân trang bằng `POST /store/search` (`063a840`); trang chủ lấy "Ưu đãi hôm nay" từ món đang giảm giá và ẩn khối mẫu (`cb391a5`); gợi ý mua kèm ở PDP đọc theo handle (`3d33f5a`). Đối chiếu với BE trên catalog v2 (2.126 món): tổng, 11 danh mục, còn hàng, giảm giá, 3 kiểu sắp xếp, tìm không dấu, trang 3, trang cuối đều khớp. | **Chưa đấu:** giỏ hàng (vẫn là giỏ giả, `layout.tsx` nạp 100 món đầu nên chỉ thêm được các món đó), khung giờ giao, thanh toán VNPAY, mã giảm giá, đơn hàng/theo dõi đơn, huỷ đơn, đăng nhập thật, mua lại (API-3). **Cần quyết định:** lưới danh mục trang chủ và thanh điều hướng cố định 8 mục, thiếu 3 danh mục mới (Mì & Đồ ăn liền, Bánh kẹo & Ăn vặt, Đông lạnh & Chế biến sẵn, 850 món) vì chưa có minh họa và lưới 8 cột. Catalog thật không có `art`, `origin`, `companions`, ảnh sản phẩm (BE-2b). `@medusajs/js-sdk` FE là 2.12.3, BE là 2.21.1, chưa pin cùng phiên bản. Key publishable đổi mỗi khi tạo lại DB. |
 | 2026-10-20 | Claude | Sửa lỗi theo "Kiểm thư UI": (1) bỏ nút đen "Danh mục" ở hàng danh mục desktop; (2) phân trang `/store` thiếu dấu cách ở `min-w-[40px]items-center` làm nút trước/sau lệch; (3) nhãn "N món" ở trang danh mục giờ đếm theo danh mục, không phải cả catalog; (4) **lỗi nặng PDP**: `.touch-target::after` là `absolute` nhưng tab, ô quy cách, nút đóng toast thiếu `relative`, nên vùng bấm phủ cả trang (bấm đâu cũng ra tab "Dinh dưỡng", không bấm được nút nào); thêm `relative`; (5) ô "Áp dụng" mã giảm giá ở giỏ tràn khỏi thẻ: thêm `min-w-0`/`shrink-0`, nút căn ngang với ô nhập khi có lỗi. `tsc` 0 lỗi. | Chưa chạy lại được `yarn lint` (lỗi tải rule `no-html-link-for-pages`, không do thay đổi này) và chưa xem lại bằng trình duyệt. |
