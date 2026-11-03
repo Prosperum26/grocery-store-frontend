@@ -1,36 +1,91 @@
 "use client"
 
+import { login, signup } from "@lib/data/customer"
 import { signInDemo } from "@lib/data/demo-session"
 import { isMockMode } from "@lib/mock/mode"
+import { isVietnamesePhone } from "@lib/mock/checkout"
+import { authErrorMessage } from "@lib/util/auth-error"
+import { isEmail, splitName } from "@lib/util/checkout"
 import { useComingSoon, ComingSoonBadge } from "@modules/common/components/coming-soon"
 import Button from "@modules/common/components/button"
 import Field from "@modules/common/components/field"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useState, type FormEvent } from "react"
 
 /**
  * Sign-in page of the v2 design (09_Dang_Nhap_*). Left: the brand panel on
- * dark green. Right: the form. There is no real sign-in yet (issue #11), so
- * submitting shows the "đang phát triển" dialog. A demo account is offered
+ * dark green. Right: the form. Real mode signs in or registers against the
+ * backend (one form switches between the two). Mock mode has no accounts, so
+ * submitting shows the "đang phát triển" dialog; a demo account is offered
  * only in development (plan O5), and no password is stored in the code.
  */
 export default function LoginTemplate() {
   const { countryCode } = useParams<{ countryCode: string }>()
   const { open } = useComingSoon()
+  const router = useRouter()
+  const mock = isMockMode()
+  const [registering, setRegistering] = useState(false)
+  const [name, setName] = useState("")
+  const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState<string | undefined>()
-  const demoAvailable = process.env.NODE_ENV !== "production" && isMockMode()
+  const [errors, setErrors] = useState<{ name?: string; phone?: string; email?: string; password?: string; form?: string }>({})
+  const [busy, setBusy] = useState(false)
+  const demoAvailable = process.env.NODE_ENV !== "production" && mock
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!email.trim() || !password) {
-      setError("Nhập email và mật khẩu để đăng nhập")
+    if (busy) return
+    if (mock) {
+      if (!email.trim() || !password) {
+        setErrors({ password: "Nhập email và mật khẩu để đăng nhập" })
+        return
+      }
+      setErrors({})
+      open("Đăng nhập")
       return
     }
-    setError(undefined)
-    open("Đăng nhập")
+
+    const next: typeof errors = {}
+    if (!isEmail(email)) next.email = "Nhập email, ví dụ ban@example.com"
+    if (!password) next.password = "Nhập mật khẩu"
+    if (registering) {
+      if (!name.trim()) next.name = "Nhập họ và tên"
+      if (!isVietnamesePhone(phone)) next.phone = "Số điện thoại chưa đúng, ví dụ 0903 412 588"
+      if (password && password.length < 8) next.password = "Mật khẩu cần ít nhất 8 ký tự"
+    }
+    setErrors(next)
+    if (Object.keys(next).length > 0) return
+
+    setBusy(true)
+    const form = new FormData()
+    form.set("email", email.trim())
+    form.set("password", password)
+    let result: unknown
+    if (registering) {
+      const { first_name, last_name } = splitName(name)
+      form.set("first_name", first_name)
+      form.set("last_name", last_name)
+      form.set("phone", phone.split(" ").join(""))
+      result = await signup(null, form)
+    } else {
+      result = await login(null, form)
+    }
+    setBusy(false)
+
+    // Both actions return an error text on failure; on success the cookie is set.
+    if (typeof result === "string") {
+      setErrors({ form: authErrorMessage(result, registering) })
+      return
+    }
+    setErrors({})
+    router.refresh() // the account layout reads the signed-in customer again
+  }
+
+  const switchMode = () => {
+    setRegistering((r) => !r)
+    setErrors({})
   }
 
   return (
@@ -48,31 +103,58 @@ export default function LoginTemplate() {
 
       <div className="flex flex-col justify-center gap-6 bg-page p-8 small:p-12">
         <div className="flex max-w-md flex-col gap-2">
-          <ComingSoonBadge className="self-start" />
-          <h1 className="font-display text-3xl font-bold text-ink">Đăng nhập</h1>
-          <p className="text-sm text-ink-2">Đăng nhập thật đang trong quá trình phát triển.</p>
+          {mock && <ComingSoonBadge className="self-start" />}
+          <h1 className="font-display text-3xl font-bold text-ink">{registering ? "Đăng ký" : "Đăng nhập"}</h1>
+          {mock && <p className="text-sm text-ink-2">Đăng nhập thật đang trong quá trình phát triển.</p>}
         </div>
 
         <form onSubmit={onSubmit} noValidate className="flex max-w-md flex-col gap-4 rounded-card border border-line bg-surface p-6">
+          {registering && (
+            <>
+              <Field
+                label="Họ và tên"
+                name="name"
+                autoComplete="name"
+                value={name}
+                error={errors.name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <Field
+                label="Số điện thoại"
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                value={phone}
+                error={errors.phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </>
+          )}
           <Field
             label="Email"
             name="email"
             type="email"
             autoComplete="email"
             value={email}
+            error={errors.email}
             onChange={(e) => setEmail(e.target.value)}
           />
           <Field
             label="Mật khẩu"
             name="password"
             type="password"
-            autoComplete="current-password"
+            autoComplete={registering ? "new-password" : "current-password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            error={error}
+            error={errors.password}
           />
-          <Button type="submit" variant="primary" size="lg" fullWidth>
-            Đăng nhập
+          {errors.form && (
+            <p role="alert" className="text-sm text-sale-deep">
+              {errors.form}
+            </p>
+          )}
+          <Button type="submit" variant="primary" size="lg" fullWidth aria-disabled={busy || undefined}>
+            {busy ? "Đang xử lý…" : registering ? "Tạo tài khoản" : "Đăng nhập"}
           </Button>
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <button
@@ -85,11 +167,10 @@ export default function LoginTemplate() {
             </button>
             <button
               type="button"
-              aria-haspopup="dialog"
-              onClick={() => open("Đăng ký tài khoản")}
+              onClick={() => (mock ? open("Đăng ký tài khoản") : switchMode())}
               className="font-semibold text-brand underline-offset-2 hover:underline"
             >
-              Chưa có tài khoản? Đăng ký
+              {registering ? "Đã có tài khoản? Đăng nhập" : "Chưa có tài khoản? Đăng ký"}
             </button>
           </div>
         </form>
