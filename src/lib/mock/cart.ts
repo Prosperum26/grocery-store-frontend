@@ -12,6 +12,8 @@ export type CartSeedLine = {
   variant?: string
   /** Price when the line was added, for the "giá vừa đổi" notice. */
   pricePaid?: number
+  /** Medusa variant id; only the real cart needs it (to put a line back). */
+  variantId?: string
 }
 
 export const MOCK_CART_LINES = [
@@ -62,6 +64,10 @@ export type CartLineView = {
   lowStock: number
   inStock: boolean
   lineTotal: number
+  /** Medusa variant id (real cart only), used to put a removed line back. */
+  variantId?: string
+  /** Price when the line was added (real cart only). */
+  pricePaid?: number
 }
 
 export type CartView = {

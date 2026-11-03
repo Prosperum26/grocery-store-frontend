@@ -12,47 +12,27 @@ import {
   resolveVariant,
 } from "@lib/mock/cart"
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react"
 import type { ProductVM } from "types/viewmodels"
+import { CartContext, type CartApi } from "./cart-context"
 
 /*
  * The browser cart of the mock mode. Lines are kept in React state and in
  * sessionStorage (every access in try/catch: private windows can refuse it).
- * It survives reloads of the tab, not a new session. When the Medusa backend
- * is wired (backend plan BE-2), this context is replaced by the real cart.
+ * It survives reloads of the tab, not a new session. With the Medusa backend
+ * the layout uses RealCartProvider instead (real-cart-context.tsx); both give
+ * the same CartApi (cart-context.tsx), whose changes are async.
  */
 
 const STORAGE_KEY = "com4fud.mockCart.v1"
 
 type Stored = { lines: CartSeedLine[]; voucher: string | null }
-
-type CartApi = {
-  view: CartView
-  /** Adds one pack (or raises the quantity). Returns false when stock is full. */
-  add: (handle: string, opts?: { variant?: string; quantity?: number }) => boolean
-  setQuantity: (key: string, quantity: number) => void
-  /** Removes a line and returns it, so the caller can offer "Hoàn tác". */
-  remove: (key: string) => CartSeedLine | null
-  /** Puts back a removed line, at the end of the cart. */
-  restore: (line: CartSeedLine) => void
-  /** "ok" when the code is known; otherwise "invalid" and nothing changes. */
-  applyVoucher: (code: string) => "ok" | "invalid"
-  removeVoucher: () => void
-  /** Empties the cart, e.g. after an order is placed. */
-  clear: () => void
-  /** Hides the "giá vừa đổi" notice for this session. */
-  dismissPriceNotice: () => void
-  priceNoticeDismissed: boolean
-}
-
-const CartContext = createContext<CartApi | null>(null)
 
 function readStored(): Stored | null {
   try {
@@ -87,6 +67,10 @@ export function MockCartProvider({
   )
   const [priceNoticeDismissed, setPriceNoticeDismissed] = useState(false)
   const [hydrated, setHydrated] = useState(false)
+  // The undo of a toast runs long after the render that made it, so the
+  // callbacks read the lines through a ref instead of a stale closure.
+  const linesRef = useRef(lines)
+  linesRef.current = lines
 
   // Read what the shopper did earlier in this tab. Runs after the first
   // render so the server HTML and the first client render agree.
@@ -109,14 +93,13 @@ export function MockCartProvider({
   )
 
   const add = useCallback<CartApi["add"]>(
-    (handle, opts = {}) => {
-      const product = catalog.find((p) => p.handle === handle)
-      if (!product) return false
+    async (product, opts = {}) => {
+      const handle = product.handle
       const key = lineKey(handle, opts.variant)
       const max = maxQuantity(product, opts.variant)
-      const current = lines.find((l) => lineKey(l.handle, l.variant) === key)
+      const current = linesRef.current.find((l) => lineKey(l.handle, l.variant) === key)
       const wanted = (current?.quantity ?? 0) + (opts.quantity ?? 1)
-      if (max <= 0 || (current?.quantity ?? 0) >= max) return false
+      if (max <= 0 || (current?.quantity ?? 0) >= max) return { ok: false }
 
       const quantity = Math.min(wanted, max)
       // A new line records today's price, so it does not show as "giá vừa đổi".
@@ -128,13 +111,13 @@ export function MockCartProvider({
             )
           : [...prev, { handle, variant: opts.variant, quantity, pricePaid: price }]
       )
-      return true
+      return { ok: true, key, before: current?.quantity ?? 0 }
     },
-    [catalog, lines]
+    []
   )
 
   const setQuantity = useCallback<CartApi["setQuantity"]>(
-    (key, quantity) => {
+    async (key, quantity) => {
       setLines((prev) =>
         prev.map((l) => {
           if (lineKey(l.handle, l.variant) !== key) return l
@@ -149,21 +132,22 @@ export function MockCartProvider({
   )
 
   const remove = useCallback<CartApi["remove"]>(
-    (key) => {
-      const removed = lines.find((l) => lineKey(l.handle, l.variant) === key) ?? null
+    async (key) => {
+      const removed =
+        linesRef.current.find((l) => lineKey(l.handle, l.variant) === key) ?? null
       if (removed) {
         setLines((prev) => prev.filter((l) => lineKey(l.handle, l.variant) !== key))
       }
       return removed
     },
-    [lines]
+    []
   )
 
-  const restore = useCallback<CartApi["restore"]>((line) => {
+  const restore = useCallback<CartApi["restore"]>(async (line) => {
     setLines((prev) => [...prev, line])
   }, [])
 
-  const applyVoucher = useCallback<CartApi["applyVoucher"]>((code) => {
+  const applyVoucher = useCallback<CartApi["applyVoucher"]>(async (code) => {
     const normalized = code.trim().toUpperCase()
     if (!MOCK_VOUCHERS[normalized]) return "invalid"
     setVoucher(normalized)
@@ -177,22 +161,15 @@ export function MockCartProvider({
     remove,
     restore,
     applyVoucher,
-    removeVoucher: () => setVoucher(null),
-    clear: () => {
+    removeVoucher: async () => setVoucher(null),
+    clear: async () => {
       setLines([])
       setVoucher(null)
     },
     dismissPriceNotice: () => setPriceNoticeDismissed(true),
     priceNoticeDismissed,
+    pending: false,
   }
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
-}
-
-export function useMockCart(): CartApi {
-  const ctx = useContext(CartContext)
-  if (!ctx) {
-    throw new Error("useMockCart must be used inside <MockCartProvider>")
-  }
-  return ctx
 }

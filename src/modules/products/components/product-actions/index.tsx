@@ -1,8 +1,9 @@
 "use client"
 
-import { lineKey, resolveVariant } from "@lib/mock/cart"
-import { useMockCart } from "@lib/context/mock-cart-context"
+import { resolveVariant } from "@lib/mock/cart"
+import { useCart } from "@lib/context/cart-context"
 import { useToast } from "@lib/context/toast-context"
+import { isMockMode } from "@lib/mock/mode"
 import { cx } from "@lib/util/cx"
 import { formatVnd, pricePerKg, salePercent } from "@lib/util/price"
 import Button from "@modules/common/components/button"
@@ -16,10 +17,10 @@ import type { ProductVM } from "types/viewmodels"
 /**
  * Pack sizes, preparation and the add-to-cart row of the product page
  * (03_Chi_Tiet_San_Pham). On phones the row floats above the bottom nav.
- * The chosen preparation is shown only; the browser cart does not store it yet.
+ * The chosen preparation is shown only; the cart does not store it yet.
  */
 export default function ProductActions({ product }: { product: ProductVM }) {
-  const { add, remove, setQuantity, view } = useMockCart()
+  const { add, remove, setQuantity } = useCart()
   const { show } = useToast()
 
   const defaultVariant = resolveVariant(product)
@@ -57,24 +58,24 @@ export default function ProductActions({ product }: { product: ProductVM }) {
     }
   }
 
-  const onAdd = () => {
+  const onAdd = async () => {
     if (!variant || soldOut) return
-    const key = lineKey(product.handle, variant.label)
-    const before = view.lines.find((l) => l.key === key)?.quantity ?? 0
-    const ok = add(product.handle, { variant: variant.label, quantity: qty })
-    if (!ok) {
+    const result = await add(product, { variant: variant.label, quantity: qty })
+    if (!result.ok) {
       show({ tone: "warn", title: "Số lượng vượt quá tồn kho" })
       return
     }
     show({
       tone: "ok",
       title: `Đã thêm ${qty} × ${product.title} (${variant.label})`,
-      description: "Giỏ hàng được lưu trong phiên này.",
+      description: isMockMode()
+        ? "Giỏ hàng được lưu trong phiên này."
+        : "Giỏ hàng được lưu trên trình duyệt này.",
       action: {
         label: "Hoàn tác",
         onAction: () => {
-          if (before === 0) remove(key)
-          else setQuantity(key, before)
+          if (result.before === 0) remove(result.key)
+          else setQuantity(result.key, result.before)
         },
       },
     })

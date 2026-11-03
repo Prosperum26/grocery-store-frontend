@@ -1,7 +1,9 @@
 "use client"
 
-import { useMockCart } from "@lib/context/mock-cart-context"
+import { useCart } from "@lib/context/cart-context"
+import { useToast } from "@lib/context/toast-context"
 import { DEMO_ADDRESSES, type DemoAddress } from "@lib/mock/customer"
+import { isMockMode } from "@lib/mock/mode"
 import { DEFAULT_SLOT_ID, DELIVERY_SLOTS, isVietnamesePhone, NOTE_MAX_LENGTH } from "@lib/mock/checkout"
 import { cx } from "@lib/util/cx"
 import { formatVnd } from "@lib/util/price"
@@ -27,7 +29,8 @@ const STEPS = ["Giỏ hàng", "Thanh toán", "Hoàn tất"]
  * single submit button validates the form, then leads to the confirmation.
  */
 export default function CheckoutTemplate() {
-  const { view, clear } = useMockCart()
+  const { view, clear } = useCart()
+  const { show } = useToast()
   const router = useRouter()
   const { countryCode } = useParams<{ countryCode: string }>()
   const [addressId, setAddressId] = useState<string>(DEMO_ADDRESSES[0].id)
@@ -70,6 +73,16 @@ export default function CheckoutTemplate() {
     setErrors(next)
     if (Object.keys(next).length > 0) {
       summaryRef.current?.focus()
+      return
+    }
+    // Paying with VNPAY and creating the order are not wired yet. Do not empty
+    // the real cart and show a sample order as if it were the shopper's.
+    if (!isMockMode()) {
+      show({
+        tone: "warn",
+        title: "Thanh toán VNPAY đang được phát triển",
+        description: "Giỏ hàng của bạn được giữ nguyên.",
+      })
       return
     }
     clear()

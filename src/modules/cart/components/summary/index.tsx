@@ -1,6 +1,6 @@
 "use client"
 
-import { useMockCart } from "@lib/context/mock-cart-context"
+import { useCart } from "@lib/context/cart-context"
 import { formatVnd } from "@lib/util/price"
 import Button from "@modules/common/components/button"
 import VoucherInput from "@modules/cart/components/voucher-input"
@@ -14,7 +14,7 @@ export const OOS_NOTE_ID = "cart-oos-note"
  * reason is linked to it.
  */
 export default function CartSummary() {
-  const { view } = useMockCart()
+  const { view } = useCart()
   const blocked = view.outOfStockCount > 0
 
   return (

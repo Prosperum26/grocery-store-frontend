@@ -1,6 +1,6 @@
 "use client"
 
-import { useMockCart } from "@lib/context/mock-cart-context"
+import { useCart } from "@lib/context/cart-context"
 import { useToast } from "@lib/context/toast-context"
 import { cx } from "@lib/util/cx"
 import { formatVnd } from "@lib/util/price"
@@ -18,12 +18,12 @@ import type { CartLineView } from "@lib/mock/cart"
  * A changed price shows the old price struck through.
  */
 export default function CartLine({ line }: { line: CartLineView }) {
-  const { setQuantity, remove, restore } = useMockCart()
+  const { setQuantity, remove, restore } = useCart()
   const { show } = useToast()
   const name = line.variantLabel ? `${line.title} (${line.variantLabel})` : line.title
 
-  const onRemove = () => {
-    const removed = remove(line.key)
+  const onRemove = async () => {
+    const removed = await remove(line.key)
     if (!removed) return
     show({
       tone: "ok",

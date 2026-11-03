@@ -1,29 +1,28 @@
 "use client"
 
-import { useMockCart } from "@lib/context/mock-cart-context"
+import { useCart } from "@lib/context/cart-context"
 import { useToast } from "@lib/context/toast-context"
 import Button from "@modules/common/components/button"
 import { LuCheck, LuPlus } from "react-icons/lu"
 import { useState } from "react"
+import type { ProductVM } from "types/viewmodels"
 
 /**
  * The "+" of a product card. Products with several pack sizes open the
  * product page so the shopper picks one; out-of-stock products get a
  * disabled button that still says why. Otherwise it adds the default pack to
- * the browser cart and confirms with a toast.
+ * the cart and confirms with a toast.
  */
 export default function AddButton({
-  handle,
-  title,
-  variantCount,
+  product,
   inStock,
 }: {
-  handle: string
-  title: string
-  variantCount: number
+  product: ProductVM
   inStock: boolean
 }) {
-  const { add } = useMockCart()
+  const { handle, title } = product
+  const variantCount = product.variants.length
+  const { add } = useCart()
   const { show } = useToast()
   const [added, setAdded] = useState(false)
 
@@ -39,8 +38,9 @@ export default function AddButton({
     )
   }
 
-  const onAdd = () => {
-    if (!add(handle)) {
+  const onAdd = async () => {
+    const result = await add(product)
+    if (!result.ok) {
       show({ tone: "warn", title: `${title} đã đủ số lượng trong kho` })
       return
     }

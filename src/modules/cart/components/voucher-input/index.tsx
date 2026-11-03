@@ -1,28 +1,36 @@
 "use client"
 
-import { useMockCart } from "@lib/context/mock-cart-context"
+import { useCart } from "@lib/context/cart-context"
 import { formatVnd } from "@lib/util/price"
 import Button from "@modules/common/components/button"
 import Field from "@modules/common/components/field"
 import { useState, type FormEvent } from "react"
 
 /**
- * "Mã giảm giá" field of the cart. The code is checked against the mock list
- * only; an unknown code keeps the cart unchanged and says why.
+ * "Mã giảm giá" field of the cart. An unknown code keeps the cart unchanged
+ * and says so; a known code the cart does not qualify for says that instead.
  */
 export default function VoucherInput() {
-  const { view, applyVoucher, removeVoucher } = useMockCart()
+  const { view, applyVoucher, removeVoucher } = useCart()
   const [code, setCode] = useState("")
   const [error, setError] = useState<string | undefined>()
+  const [checking, setChecking] = useState(false)
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!code.trim()) {
       setError("Nhập mã giảm giá trước khi áp dụng")
       return
     }
-    if (applyVoucher(code) === "invalid") {
+    setChecking(true)
+    const result = await applyVoucher(code)
+    setChecking(false)
+    if (result === "invalid") {
       setError("Mã không hợp lệ hoặc đã hết hạn")
+      return
+    }
+    if (result === "not_eligible") {
+      setError("Giỏ hàng chưa đủ điều kiện dùng mã này")
       return
     }
     setError(undefined)
@@ -62,8 +70,8 @@ export default function VoucherInput() {
         }}
         className="min-w-0 flex-1"
       />
-      <Button type="submit" variant="secondary" size="md" className="mt-[26px] h-12 shrink-0">
-        Áp dụng
+      <Button type="submit" variant="secondary" size="md" aria-disabled={checking || undefined} className="mt-[26px] h-12 shrink-0">
+        {checking ? "Đang kiểm tra" : "Áp dụng"}
       </Button>
     </form>
   )

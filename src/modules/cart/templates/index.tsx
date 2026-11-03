@@ -1,6 +1,6 @@
 "use client"
 
-import { useMockCart } from "@lib/context/mock-cart-context"
+import { useCart } from "@lib/context/cart-context"
 import { formatVnd } from "@lib/util/price"
 import Button from "@modules/common/components/button"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -17,7 +17,7 @@ import { LuArrowLeft } from "react-icons/lu"
  * placeholder, rendered by the server page.
  */
 export default function CartTemplate({ buyAgain }: { buyAgain?: ReactNode }) {
-  const { view, priceNoticeDismissed, dismissPriceNotice } = useMockCart()
+  const { view, priceNoticeDismissed, dismissPriceNotice } = useCart()
   const changed = view.lines.find((l) => l.inStock && l.previousPrice !== undefined)
 
   return (
