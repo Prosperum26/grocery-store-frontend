@@ -1,4 +1,5 @@
 import type { OrderView } from "@lib/util/order-view"
+import { TRACKING_STEPS, trackingIndex } from "@lib/util/stage"
 import { formatVnd } from "@lib/util/price"
 import { ComingSoonBadge } from "@modules/common/components/coming-soon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -6,17 +7,7 @@ import OrderStatusChip from "@modules/common/components/order-status-chip"
 import CancelOrderButton from "@modules/account/components/order-actions/cancel-button"
 import ReorderButton from "@modules/account/components/order-actions/reorder-button"
 import ProductArt from "@modules/products/components/product-art"
-import type { OrderStage } from "types/viewmodels"
 import { LuCheck, LuChevronLeft, LuTruck } from "react-icons/lu"
-
-// The steps of a delivery, in order. Each stage maps to one step.
-const STEPS: { label: string; stage: OrderStage }[] = [
-  { label: "Đã đặt hàng", stage: "PENDING" },
-  { label: "Đã thanh toán", stage: "CONFIRMED" },
-  { label: "Đang chuẩn bị", stage: "PREPARING" },
-  { label: "Đang giao", stage: "SHIPPING" },
-  { label: "Đã giao", stage: "DELIVERED" },
-]
 
 /**
  * Order tracking (08_Theo_Doi_Don_Hang). The timeline is static: it shows
@@ -24,7 +15,7 @@ const STEPS: { label: string; stage: OrderStage }[] = [
  * arrival time is a placeholder until live tracking exists.
  */
 export default function OrderTrackingTemplate({ order }: { order: OrderView }) {
-  const currentIndex = STEPS.findIndex((s) => s.stage === order.stage)
+  const currentIndex = trackingIndex(order.stage)
   const cancelled = order.stage === "CANCELLED"
   const driver = order.delivery
 
@@ -64,11 +55,11 @@ export default function OrderTrackingTemplate({ order }: { order: OrderView }) {
               Tiến trình đơn
             </h2>
             <ol className="flex flex-col">
-              {STEPS.map((step, i) => {
+              {TRACKING_STEPS.map((step, i) => {
                 const done = i < currentIndex
                 const current = i === currentIndex
                 return (
-                  <li key={step.stage} aria-current={current ? "step" : undefined} className="flex gap-4 pb-5 last:pb-0">
+                  <li key={step.label} aria-current={current ? "step" : undefined} className="flex gap-4 pb-5 last:pb-0">
                     <span className="flex flex-col items-center">
                       <span
                         aria-hidden="true"
@@ -82,7 +73,7 @@ export default function OrderTrackingTemplate({ order }: { order: OrderView }) {
                       >
                         {done ? <LuCheck size={16} /> : i + 1}
                       </span>
-                      {i < STEPS.length - 1 && (
+                      {i < TRACKING_STEPS.length - 1 && (
                         <span aria-hidden="true" className={done ? "mt-1 h-full w-0.5 bg-brand" : "mt-1 h-full w-0.5 bg-line-2"} />
                       )}
                     </span>
