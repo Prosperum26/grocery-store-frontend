@@ -12,11 +12,11 @@
 | :--- | :--- | :--- | :--- | :--- |
 | RB-1 | backend | `stock_failed` theo từng giao dịch: thanh toán lại sau khi bị hoàn tiền không bị nuốt | | [x] Xong · 2 test http (lỗi khi bỏ bản sửa, qua khi có) |
 | RB-2 | backend | API-15 nhận `cart_id`: cộng lại phần chính giỏ đang giữ, trả `held_by_cart` | | [x] Xong · 1 test http, 1 unit |
-| RF-1 | storefront | Thanh toán: giữ hàng (API-14) trước khi sang VNPAY, báo đúng món hết hàng | RB-1 | [~] Code và test xong; chờ kiểm trên trình duyệt (RF-5) |
-| RF-2 | storefront | Trang kết quả thanh toán: báo "hết hàng, đã hoàn tiền" thay vì chờ đơn | RB-1 | [~] Code và test xong; chờ kiểm trên trình duyệt (RF-5) |
-| RF-3 | storefront | Số tồn ở giỏ và trang sản phẩm đã trừ phần người khác đang giữ (API-15) | RB-2 | [~] Code và test xong; chờ kiểm trên trình duyệt (RF-5) |
-| RF-4 | storefront | Tồn cập nhật trực tiếp qua Socket.io (API-16) | RF-3 | [~] Code và test xong; chờ kiểm trên trình duyệt (RF-5) |
-| RF-5 | cả hai | Kiểm tay trên trình duyệt, tài liệu, bàn giao | tất cả | [ ] |
+| RF-1 | storefront | Thanh toán: giữ hàng (API-14) trước khi sang VNPAY, báo đúng món hết hàng | RB-1 | [x] Xong · `d307996`, `7d5abef`; kiểm trên trình duyệt 2026-11-06 |
+| RF-2 | storefront | Trang kết quả thanh toán: báo "hết hàng, đã hoàn tiền" thay vì chờ đơn | RB-1 | [~] Code và test xong (`d307996`); chưa kiểm trên trình duyệt vì cần IPN thật (VNPAY giả lập) |
+| RF-3 | storefront | Số tồn ở giỏ và trang sản phẩm đã trừ phần người khác đang giữ (API-15) | RB-2 | [x] Xong · `e1672f1`; kiểm trên trình duyệt 2026-11-06 |
+| RF-4 | storefront | Tồn cập nhật trực tiếp qua Socket.io (API-16) | RF-3 | [x] Xong · `e1672f1`; kiểm trên trình duyệt 2026-11-06 |
+| RF-5 | cả hai | Kiểm tay trên trình duyệt, tài liệu, bàn giao | tất cả | [~] Đã kiểm (mục "Kết quả RF-5"); còn push và báo Thiện |
 
 Ký hiệu: `[x]` xong và đã kiểm · `[~]` code và test xong, còn phần kiểm tay · `[ ]` chưa làm.
 
@@ -164,15 +164,30 @@ Mỗi lần IPN hết hàng ghi đè giá trị cũ. Storefront chỉ coi là "l
 
 ## Task RF-5: Kiểm tay và bàn giao
 
-- [ ] Chạy đủ: backend (`npm run backend:dev`), gateway (`npm run gateway:dev`), storefront (`yarn dev`) với `NEXT_PUBLIC_UI_MOCK=false`.
-- [ ] Kịch bản trên trình duyệt (dùng `khachmoi@com4fud.demo` và một khách vãng lai):
+- [x] Chạy đủ: backend (`npm run backend:dev`), gateway (`npm run gateway:dev`), storefront (`yarn dev`) với `NEXT_PUBLIC_UI_MOCK=false`.
+- [x] Kịch bản trên trình duyệt (dùng `khachmoi@com4fud.demo` và một khách vãng lai): Kết quả ở mục "Kết quả RF-5" bên dưới.
   1. Hai giỏ tranh món còn 1: giỏ thứ hai bị chặn ở "Đặt hàng" với đúng tên món (RF-1).
   2. Giỏ thứ nhất huỷ trên VNPAY: giỏ thứ hai đặt được (RF-1, hàng trả về).
   3. Trang sản phẩm mở ở trình duyệt khác thấy số đổi theo (RF-4).
   4. Hoàn tiền vì hết hàng: VNPAY chỉ giả lập, kiểm bằng test của backend và bằng cách gọi IPN giả lập ký khóa thử như bộ kiểm cũ của Thiện (RF-2).
-- [ ] `yarn test`, `yarn lint`, `npx tsc --noEmit`, `yarn build` sạch.
+- [x] `yarn test`, `yarn lint`, `npx tsc --noEmit`, `yarn build` sạch. (127 test; build chạy được 2026-11-05)
 - [ ] Cập nhật: bảng mục 0, plan FE `2026-10-18` (đóng câu 14 của mục 2b, thêm dòng nhật ký), plan hot-stock (RB-1, RB-2), `docs/known-risks.md` (R6 đóng khi RF-3, RF-4 xong), nhật ký `log-teammate`.
 - [ ] Commit tài liệu, push cả hai repo, báo Thiện.
+
+## Kết quả RF-5 (2026-11-05 đến 2026-11-06)
+
+Môn thử: *Nước mắm Nam Ngư Phú Quốc 500ml*, tồn đặt còn 1 trong Admin, sau đó trả về 14. Ảnh và ghi chú của noper1080 ở thư mục `test-RF/` (thư mục gốc workspace, ngoài repo).
+
+| Kiểm | Cách | Kết quả |
+| :--- | :--- | :--- |
+| API: hai giỏ tranh chai cuối | Script gọi API-14, API-15, client Socket.io trên dịch vụ đang chạy | A `200 HELD`; B `409 OUT_OF_STOCK` có `requested 1, available 0`; API-15 không `cart_id` = 0, với `cart_id` của A = 1 và `held_by_cart` 1; socket nhận 0 khi A giữ, 1 khi A được nhả, 0 khi B giữ lại |
+| Trang sản phẩm sau hydrate | Chrome headless `--dump-dom` | HTML server không có badge; sau hydrate: "Hết hàng", nút quy cách bị khoá |
+| Test 1, badge tự đổi (RF-4) | Hai trình duyệt; A đặt hàng tới bước VNPAY | B đổi "Còn 1 chai" → "Hết hàng" gần như ngay, không tải lại; tab Messages thấy `subscribe` và `stock:update` |
+| Test 2, chặn ở thanh toán (RF-1) | B có chai trong giỏ, A đang giữ | Không sang VNPAY. **Khác dự kiến:** nhờ RF-3, giỏ của B đã đánh dấu dòng "Vừa hết hàng" nên trang thanh toán chặn trước khi gọi API-14, với câu chung không có tên món. Đã sửa: câu chặn ghi tên món (`soldOutMessage`, `7d5abef`). Thông báo của API-14 chỉ còn hiện khi hai người bấm cách nhau vài mili giây |
+| Test 3, giỏ của chính mình (RF-3) | A quay lại giỏ trong lúc đang giữ | Dòng của A vẫn "Còn 1 chai", không bị báo hết |
+| Test 4, admin nhập thêm | Admin sửa tồn 1 → 5 khi B đang xem trang | Badge B tự đổi thành "Còn 4 chai" (5 trừ 1 chai A giữ) |
+| Hết hạn trên backend dev | Hold của A để tự hết | Job mỗi phút trả hàng đúng hạn, Redis về đủ 14 |
+| RF-2, trang kết quả khi bị hoàn tiền | Chưa kiểm | Cần IPN thật (VNPAY giả lập); dựa vào test `hot-stock-ipn.spec.ts` (backend) và `refundNotice` (storefront) |
 
 ## Sau plan này
 
