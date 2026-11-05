@@ -191,3 +191,16 @@ export function refundNotice(
     description: `${what} vừa hết trong lúc bạn thanh toán, đơn chưa được tạo. Com4Fud chưa hoàn tiền tự động được và sẽ liên hệ với bạn để hoàn${amount}.`,
   }
 }
+
+/**
+ * Why the order cannot be placed when cart lines are sold out. With stock net
+ * of other customers' holds (backend API-15) this is usually what the customer
+ * sees when someone else holds the last units, so it names them, like the
+ * message of the stock hold (`reserveOutcome`).
+ */
+export function soldOutMessage(titles: string[]): string {
+  const names = titles.filter((title, i) => title && titles.indexOf(title) === i)
+  const shown = names.slice(0, 3).join(", ")
+  const what = !names.length ? "Giỏ có món hết hàng" : names.length > 3 ? `${shown} và ${names.length - 3} món khác vừa hết hàng` : `${shown} vừa hết hàng`
+  return `${what}. Quay lại giỏ để xóa trước khi đặt.`
+}

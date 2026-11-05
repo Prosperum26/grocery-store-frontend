@@ -4,6 +4,7 @@ import { backendUrl, sdk } from "@lib/config"
 import {
   refundNotice,
   reserveOutcome,
+  soldOutMessage,
   splitName,
   toSlotOptions,
   type RawStockFailed,
@@ -91,7 +92,7 @@ export async function startPayment(input: CheckoutInput): Promise<StartPaymentRe
     return { ok: false, reason: "empty_cart", message: "Giỏ hàng đang trống." }
   }
   if (view.outOfStockCount > 0) {
-    return { ok: false, reason: "out_of_stock", message: "Giỏ có món hết hàng. Quay lại giỏ để xóa trước khi đặt." }
+    return { ok: false, reason: "out_of_stock", message: soldOutMessage(view.lines.filter((line) => !line.inStock).map((line) => line.title)) }
   }
 
   const headers = { ...(await getAuthHeaders()) }

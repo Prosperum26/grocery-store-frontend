@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isEmail, refundNotice, reserveOutcome, slotDayLabel, splitName, toSavedAddress, toSlotOptions } from "./checkout"
+import { isEmail, refundNotice, reserveOutcome, slotDayLabel, soldOutMessage, splitName, toSavedAddress, toSlotOptions } from "./checkout"
 
 // 2026-11-03 12:30 in Vietnam = 05:30 UTC
 const NOW = Date.parse("2026-11-03T05:30:00Z")
@@ -137,5 +137,13 @@ describe("refundNotice", () => {
     expect(refundNotice(failed("2026-11-05T09:59:30Z"), started, 111000, titleOf)).not.toBeNull() // clock slack
     expect(refundNotice(failed("2026-11-05T09:30:00Z"), undefined, 111000, titleOf)).not.toBeNull()
     expect(refundNotice(null, started, 111000, titleOf)).toBeNull()
+  })
+})
+
+describe("soldOutMessage", () => {
+  it("names the sold-out lines, at most three", () => {
+    expect(soldOutMessage(["Nước mắm Nam Ngư"])).toBe("Nước mắm Nam Ngư vừa hết hàng. Quay lại giỏ để xóa trước khi đặt.")
+    expect(soldOutMessage(["A", "B", "A", "C", "D", "E"])).toBe("A, B, C và 2 món khác vừa hết hàng. Quay lại giỏ để xóa trước khi đặt.")
+    expect(soldOutMessage([])).toBe("Giỏ có món hết hàng. Quay lại giỏ để xóa trước khi đặt.")
   })
 })
