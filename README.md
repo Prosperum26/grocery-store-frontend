@@ -21,6 +21,19 @@ Mặc định bật (`true`). Khi bật, storefront **không gọi backend**: ca
 
 Khi backend có catalog thật: đặt `NEXT_PUBLIC_UI_MOCK=false`, rồi làm các task ở `grocery-store-backend/docs/plans/2026-10-18-sync-ui-v2-backend.md`. Giỏ, thanh toán và đơn hàng thật chưa được nối lại ở giai đoạn này.
 
+## Chạy với backend thật (`NEXT_PUBLIC_UI_MOCK=false`)
+
+Backend cần Postgres, **Redis** và (cho tồn real-time) gateway Socket.io, xem README của `grocery-store-backend`. Trong `.env.local`:
+
+| Biến | Giá trị dev |
+| :--- | :--- |
+| `NEXT_PUBLIC_UI_MOCK` | `false` |
+| `MEDUSA_BACKEND_URL` | `http://localhost:9000` |
+| `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` | key in ra khi `npm run seed` ở backend (đổi mỗi lần tạo lại DB) |
+| `NEXT_PUBLIC_REALTIME_URL` | `http://localhost:4001` (`npm run gateway:dev` ở backend); để trống thì tắt cập nhật trực tiếp |
+
+Khác bản chỉ dùng Postgres (plan `docs/plans/2026-11-05-redis-vs-postgres.md`): bấm "Đặt hàng" sẽ giữ hàng cả giỏ 15 phút trước khi sang VNPAY; trang kết quả báo khi món vừa hết và tiền đã được hoàn; số tồn ở giỏ và trang sản phẩm đã trừ phần khách khác đang giữ và cập nhật trực tiếp.
+
 ## Kiểm tra
 
 ```shell
