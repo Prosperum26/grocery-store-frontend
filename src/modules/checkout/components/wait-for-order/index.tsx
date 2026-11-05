@@ -1,6 +1,7 @@
 "use client"
 
 import { findPaidOrder } from "@lib/data/checkout"
+import type { RefundNotice } from "@lib/util/checkout"
 import { useCart } from "@lib/context/cart-context"
 import Button from "@modules/common/components/button"
 import { Banner } from "@modules/common/components/notice"
@@ -14,20 +15,27 @@ const MAX_TRIES = 20 // about 30 seconds
  * VNPAY has told us the payment succeeded; the backend creates the order a
  * moment later (when VNPAY's IPN arrives). Ask until it is there, then show
  * the confirmation. The cart view is emptied so the header badge drops to 0.
+ * If the stock ran out before the IPN arrived, the backend refunds instead of
+ * making the order: say so and keep the cart.
  */
 export default function WaitForOrder() {
   const { clear } = useCart()
   const router = useRouter()
   const { countryCode } = useParams<{ countryCode: string }>()
   const [gaveUp, setGaveUp] = useState(false)
+  const [refund, setRefund] = useState<RefundNotice | null>(null)
 
   useEffect(() => {
     let stopped = false
 
     async function poll() {
       for (let i = 0; i < MAX_TRIES && !stopped; i++) {
-        const { orderId, hasCart } = await findPaidOrder().catch(() => ({ orderId: null, hasCart: true }))
+        const { orderId, hasCart, refund } = await findPaidOrder().catch(() => ({ orderId: null, hasCart: true, refund: undefined }))
         if (stopped) return
+        if (refund) {
+          setRefund(refund)
+          return
+        }
         if (orderId) {
           await clear()
           router.replace(`/${countryCode}/order/${orderId}/confirmed`)
@@ -47,6 +55,24 @@ export default function WaitForOrder() {
     // The page asks once per visit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  if (refund) {
+    return (
+      <>
+        <div className="w-full max-w-md text-left">
+          <Banner tone={refund.tone} title={refund.title} description={refund.description} />
+        </div>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Button variant="primary" size="lg" href="/cart">
+            Về giỏ hàng
+          </Button>
+          <Button variant="secondary" size="lg" href="/store">
+            Tiếp tục mua sắm
+          </Button>
+        </div>
+      </>
+    )
+  }
 
   if (gaveUp) {
     return (

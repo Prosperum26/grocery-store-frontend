@@ -87,3 +87,23 @@ export const removeCartId = async () => {
     maxAge: -1,
   })
 }
+
+/**
+ * When the customer last left for VNPAY (ms). The return page uses it to tell
+ * a refund of this payment from one of an earlier try on the same cart.
+ */
+export const setPayStartedAt = async (ms: number) => {
+  const cookies = await nextCookies()
+  cookies.set("_c4f_pay_started", String(ms), {
+    maxAge: 60 * 30,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  })
+}
+
+export const getPayStartedAt = async (): Promise<number | undefined> => {
+  const cookies = await nextCookies()
+  const value = Number(cookies.get("_c4f_pay_started")?.value)
+  return Number.isFinite(value) && value > 0 ? value : undefined
+}

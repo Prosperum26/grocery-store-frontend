@@ -41,7 +41,7 @@ export default function CheckoutTemplate({
   /** Real mode, signed in: the addresses saved in the account. */
   savedAddresses?: SavedAddress[]
 }) {
-  const { view, clear } = useCart()
+  const { view, clear, refresh } = useCart()
   const router = useRouter()
   const { countryCode } = useParams<{ countryCode: string }>()
   const mock = isMockMode()
@@ -138,6 +138,8 @@ export default function CheckoutTemplate({
       loadSlots()
     } else {
       setErrors({ cart: result.message })
+      // Someone else holds the last units: reload the cart so the short lines show.
+      if (result.reason === "out_of_stock") refresh()
     }
     summaryRef.current?.focus()
   }
