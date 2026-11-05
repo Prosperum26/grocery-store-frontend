@@ -1,5 +1,6 @@
 "use client"
 
+import { useLiveStock } from "@lib/hooks/use-live-stock"
 import { resolveVariant } from "@lib/mock/cart"
 import { useCart } from "@lib/context/cart-context"
 import { useToast } from "@lib/context/toast-context"
@@ -29,8 +30,13 @@ export default function ProductActions({ product }: { product: ProductVM }) {
   const [quantity, setQty] = useState(1)
   const radios = useRef<(HTMLButtonElement | null)[]>([])
 
+  // Stock net of other customers' holds, kept current over Socket.io; the
+  // rendered number until it arrives (or when the gateway is down).
+  const live = useLiveStock(product.variants.map((v) => v.id))
+  const stockOf = (v: { id: string; stockQty: number }) => live[v.id]?.available ?? v.stockQty
+
   const variant = resolveVariant(product, packLabel)
-  const stock = variant?.stockQty ?? 0
+  const stock = variant ? stockOf(variant) : 0
   const soldOut = stock <= 0
   const qty = Math.min(quantity, Math.max(stock, 1))
   const percent = variant ? salePercent(variant.originalPrice, variant.price) : null
@@ -50,7 +56,7 @@ export default function ProductActions({ product }: { product: ProductVM }) {
     const n = product.variants.length
     for (let i = 1; i <= n; i++) {
       const next = (((index + step * i) % n) + n) % n
-      if (product.variants[next].stockQty > 0) {
+      if (stockOf(product.variants[next]) > 0) {
         setPackLabel(product.variants[next].label)
         radios.current[next]?.focus()
         return
@@ -114,7 +120,7 @@ export default function ProductActions({ product }: { product: ProductVM }) {
         <div className="grid grid-cols-2 gap-2.5 small:grid-cols-3">
           {product.variants.map((v, i) => {
             const checked = v.label === variant?.label
-            const out = v.stockQty <= 0
+            const out = stockOf(v) <= 0
             return (
               <button
                 key={v.id}
@@ -158,7 +164,7 @@ export default function ProductActions({ product }: { product: ProductVM }) {
               Giảm {percent}%
             </span>
           )}
-          {variant && <LiveStock qty={variant.stockQty} lowStock={product.lowStock} unit={product.stockUnit} />}
+          {variant && <LiveStock qty={stock} lowStock={product.lowStock} unit={product.stockUnit} />}
         </div>
         {perKg && <p className="font-mono text-xs text-ink-2">tương đương {formatVnd(perKg)}/kg</p>}
       </div>

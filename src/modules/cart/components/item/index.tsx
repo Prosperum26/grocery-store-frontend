@@ -15,9 +15,10 @@ import type { CartLineView } from "@lib/mock/cart"
 /**
  * One line of the cart (CartLine in the design). Sold-out lines keep their
  * place with a red note and a delete button; they do not count in the total.
- * A changed price shows the old price struck through.
+ * A changed price shows the old price struck through. `liveQty` is the stock
+ * kept current over Socket.io (net of other customers' holds), when known.
  */
-export default function CartLine({ line }: { line: CartLineView }) {
+export default function CartLine({ line, liveQty }: { line: CartLineView; liveQty?: number }) {
   const { setQuantity, remove, restore } = useCart()
   const { show } = useToast()
   const name = line.variantLabel ? `${line.title} (${line.variantLabel})` : line.title
@@ -42,8 +43,8 @@ export default function CartLine({ line }: { line: CartLineView }) {
       <LuTrendingUp aria-hidden="true" />
       Giá vừa đổi {formatVnd(line.previousPrice)} lên {formatVnd(line.unitPrice)}
     </p>
-  ) : line.stockQty <= line.lowStock ? (
-    <LiveStock qty={line.stockQty} lowStock={line.lowStock} unit={line.stockUnit} />
+  ) : (liveQty ?? line.stockQty) <= line.lowStock ? (
+    <LiveStock qty={liveQty ?? line.stockQty} lowStock={line.lowStock} unit={line.stockUnit} />
   ) : null
 
   return (
