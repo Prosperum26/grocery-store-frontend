@@ -397,7 +397,7 @@ Khi nhóm đấu dữ liệu thật: làm các task BE trong file backend, rồi
 | Giữ chỗ hiện tại | Thay bằng khi có | Task BE |
 | :--- | :--- | :--- |
 | Có thể bạn cần mua lại | `GET /store/predictive/reorder-basket` | BE-9 (bản tạm), module Predictive |
-| Trợ lý Bếp, Công thức | Trang chat/thực đơn/công thức theo `10_*`, `11_*` | BE-10, repo AI |
+| Trợ lý Bếp, Công thức | Trang chat/thực đơn/công thức theo `10_*`, `11_*` | AI-0 (2026-11-06): `POST /store/ai/search`, `/store/ai/copilot`, hợp đồng `grocery-store-backend/docs/contracts/ai-copilot.md` (thay BE-10). Nhóm AI làm cả màn hình này |
 | Thẻ dự kiến tới / thông báo | `order.metadata.delivery` | BE-6, BE-7 |
 | Ví mã giảm giá | Danh sách mã của khách | chưa có task, cần thiết kế |
 | Giỏ, sản phẩm, đơn giả | Medusa thật | BE-1 … BE-5, BE-8 |
