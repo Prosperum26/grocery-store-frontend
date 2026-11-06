@@ -8,8 +8,10 @@ import {
   EMPTY_CART_VIEW,
   type RawCart,
 } from "@lib/util/cart-view"
+import { mergeStock } from "@lib/util/stock"
 import { revalidateTag } from "next/cache"
 import { getOrSetCart } from "./cart"
+import { fetchLiveStock } from "./stock"
 import {
   getAuthHeaders,
   getCacheTag,
@@ -49,7 +51,10 @@ async function readCart(cartId: string): Promise<CartWithRegion | null> {
 
 /**
  * Units in stock per variant. Medusa does not put stock on cart lines, so
- * it is read from the products of the cart (one request, any number of lines).
+ * it is read from the products of the cart (one request, any number of lines),
+ * then replaced by the numbers net of other customers' holds (API-15) where
+ * the backend gives them. This cart's own hold is added back, so its lines do
+ * not show "Hết hàng" when the customer returns from VNPAY.
  */
 async function readStock(cart: CartWithRegion): Promise<Record<string, number>> {
   const productIds = Array.from(
@@ -83,7 +88,8 @@ async function readStock(cart: CartWithRegion): Promise<Record<string, number>> 
       stock[variant.id] = variant.inventory_quantity ?? 0
     }
   }
-  return stock
+  const variantIds = (cart.items ?? []).map((item) => (item as { variant_id?: string | null }).variant_id).filter((id): id is string => !!id)
+  return mergeStock(stock, await fetchLiveStock(variantIds, cart.id))
 }
 
 async function viewOf(cartId: string | undefined): Promise<CartView> {

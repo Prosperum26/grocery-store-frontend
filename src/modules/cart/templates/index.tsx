@@ -1,6 +1,7 @@
 "use client"
 
 import { useCart } from "@lib/context/cart-context"
+import { useLiveStock } from "@lib/hooks/use-live-stock"
 import { formatVnd } from "@lib/util/price"
 import Button from "@modules/common/components/button"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -18,6 +19,8 @@ import { LuArrowLeft } from "react-icons/lu"
  */
 export default function CartTemplate({ buyAgain }: { buyAgain?: ReactNode }) {
   const { view, priceNoticeDismissed, dismissPriceNotice } = useCart()
+  // One live stock watch for the whole cart, not one per line.
+  const live = useLiveStock(view.lines.map((l) => l.variantId))
   const changed = view.lines.find((l) => l.inStock && l.previousPrice !== undefined)
 
   return (
@@ -69,7 +72,7 @@ export default function CartTemplate({ buyAgain }: { buyAgain?: ReactNode }) {
             >
               <ul className="divide-y divide-line">
                 {view.lines.map((line) => (
-                  <CartLine key={line.key} line={line} />
+                  <CartLine key={line.key} line={line} liveQty={line.variantId ? live[line.variantId]?.available : undefined} />
                 ))}
               </ul>
             </section>

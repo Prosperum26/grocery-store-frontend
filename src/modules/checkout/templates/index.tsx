@@ -5,7 +5,7 @@ import { DEMO_ADDRESSES, type DemoAddress } from "@lib/mock/customer"
 import { isMockMode } from "@lib/mock/mode"
 import { DEFAULT_SLOT_ID, DELIVERY_SLOTS, isVietnamesePhone, NOTE_MAX_LENGTH } from "@lib/mock/checkout"
 import { listDeliverySlots, startPayment } from "@lib/data/checkout"
-import { isEmail, type SavedAddress, type SlotOption } from "@lib/util/checkout"
+import { isEmail, soldOutMessage, type SavedAddress, type SlotOption } from "@lib/util/checkout"
 import { cx } from "@lib/util/cx"
 import { formatVnd } from "@lib/util/price"
 import Button from "@modules/common/components/button"
@@ -41,7 +41,7 @@ export default function CheckoutTemplate({
   /** Real mode, signed in: the addresses saved in the account. */
   savedAddresses?: SavedAddress[]
 }) {
-  const { view, clear } = useCart()
+  const { view, clear, refresh } = useCart()
   const router = useRouter()
   const { countryCode } = useParams<{ countryCode: string }>()
   const mock = isMockMode()
@@ -89,7 +89,7 @@ export default function CheckoutTemplate({
     const next: Errors = {}
 
     if (hasOutOfStock) {
-      next.cart = "Giỏ có món hết hàng. Quay lại giỏ để xóa trước khi đặt."
+      next.cart = soldOutMessage(view.lines.filter((line) => !line.inStock).map((line) => line.title))
     }
     if (!mock && !customerEmail && !isEmail(draft.email)) next.email = "Nhập email để nhận thông tin đơn hàng"
     if (usingNewAddress) {
@@ -138,6 +138,8 @@ export default function CheckoutTemplate({
       loadSlots()
     } else {
       setErrors({ cart: result.message })
+      // Someone else holds the last units: reload the cart so the short lines show.
+      if (result.reason === "out_of_stock") refresh()
     }
     summaryRef.current?.focus()
   }

@@ -1,15 +1,26 @@
 "use server"
 
-import { sdk } from "@lib/config"
-import { splitName, toSlotOptions, type RawSlot, type SlotOption } from "@lib/util/checkout"
+import { backendUrl, sdk } from "@lib/config"
+import {
+  refundNotice,
+  reserveOutcome,
+  soldOutMessage,
+  splitName,
+  toSlotOptions,
+  type RawStockFailed,
+  type RawSlot,
+  type RefundNotice,
+  type Shortage,
+  type SlotOption,
+} from "@lib/util/checkout"
 import { buildOrderReceipt, type OrderReceipt, type RawOrder } from "@lib/util/order-receipt"
 import { revalidateTag } from "next/cache"
 import { getCartView } from "./shopping-cart"
-import { getAuthHeaders, getCacheTag, getCartId, removeCartId } from "./cookies"
+import { getAuthHeaders, getCacheTag, getCartId, getPayStartedAt, removeCartId, setPayStartedAt } from "./cookies"
 
 /*
  * Server side of the real checkout (mock mode never calls these):
- *   1. startPayment    address + slot + note + shipping + VNPAY session → payment URL
+ *   1. startPayment    address + slot + note + shipping + stock hold + VNPAY session → payment URL
  *   2. verifyReturn    the customer comes back from VNPAY: is the result genuine?
  *   3. findPaidOrder   VNPAY's IPN completes the cart on the backend; wait for the order
  *   4. getOrderReceipt the confirmation page
@@ -31,7 +42,26 @@ export type CheckoutInput = {
 
 export type StartPaymentResult =
   | { ok: true; paymentUrl: string }
-  | { ok: false; reason: "empty_cart" | "out_of_stock" | "slot_unavailable" | "failed"; message: string }
+  | { ok: false; reason: "empty_cart" | "out_of_stock" | "slot_unavailable" | "failed"; message: string; items?: Shortage[] }
+
+/**
+ * Holds the whole cart for 15 minutes (backend API-14). Plain fetch, not the
+ * SDK: the SDK keeps only the message of an error, and a 409 here carries the
+ * short lines in its body.
+ */
+async function reserveStock(cartId: string, headers: Record<string, string>) {
+  const response = await fetch(`${backendUrl}/store/carts/${cartId}/reserve`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? "",
+      ...headers,
+    },
+    body: "{}",
+    cache: "no-store",
+  })
+  return { status: response.status, body: await response.json().catch(() => ({})) }
+}
 
 const status = (error: unknown) => (error as { status?: number })?.status
 
@@ -62,7 +92,7 @@ export async function startPayment(input: CheckoutInput): Promise<StartPaymentRe
     return { ok: false, reason: "empty_cart", message: "Giỏ hàng đang trống." }
   }
   if (view.outOfStockCount > 0) {
-    return { ok: false, reason: "out_of_stock", message: "Giỏ có món hết hàng. Quay lại giỏ để xóa trước khi đặt." }
+    return { ok: false, reason: "out_of_stock", message: soldOutMessage(view.lines.filter((line) => !line.inStock).map((line) => line.title)) }
   }
 
   const headers = { ...(await getAuthHeaders()) }
@@ -102,6 +132,17 @@ export async function startPayment(input: CheckoutInput): Promise<StartPaymentRe
       return { ok: false, reason: "failed", message: "Chưa có hình thức giao hàng cho giỏ này." }
     }
     await sdk.store.cart.addShippingMethod(cartId, { option_id: option.id }, {}, headers)
+
+    // Hold the stock before VNPAY: if someone else holds the last units, the
+    // customer is told now instead of after paying. Safe to call again.
+    const reserved = await reserveStock(cartId, headers)
+    const hold = reserveOutcome(reserved.status, reserved.body, (variantId) => view.lines.find((line) => line.variantId === variantId)?.title)
+    if (!hold.ok) {
+      return hold.reason === "out_of_stock"
+        ? { ok: false, reason: "out_of_stock", message: hold.message, items: hold.items }
+        : { ok: false, reason: "failed", message: hold.message }
+    }
+    await setPayStartedAt(Date.now())
 
     // The payment session. The cart is read again so it carries its shipping
     // total and its payment collection, if an earlier try made one.
@@ -152,16 +193,30 @@ export async function verifyReturn(params: Record<string, string>): Promise<{ va
  * page asks again until it appears. Completing a finished cart again returns
  * the same order (backend spike S8), so this is safe to repeat.
  */
-export async function findPaidOrder(): Promise<{ orderId: string | null; hasCart: boolean }> {
+export async function findPaidOrder(): Promise<{ orderId: string | null; hasCart: boolean; refund?: RefundNotice }> {
   const cartId = await getCartId()
   if (!cartId) {
     return { orderId: null, hasCart: false }
   }
   const headers = { ...(await getAuthHeaders()) }
 
-  const { cart } = await sdk.store.cart.retrieve(cartId, { fields: "id,completed_at" }, headers)
-  if (!(cart as { completed_at?: string | null }).completed_at) {
-    return { orderId: null, hasCart: true }
+  const { cart } = await sdk.store.cart.retrieve(
+    cartId,
+    { fields: "id,completed_at,total,metadata,items.variant_id,items.product_title" },
+    headers
+  )
+  const raw = cart as {
+    completed_at?: string | null
+    total?: number
+    metadata?: { stock_failed?: RawStockFailed } | null
+    items?: { variant_id?: string | null; product_title?: string | null }[]
+  }
+  if (!raw.completed_at) {
+    // Paid but out of stock when VNPAY confirmed: the backend refunded and made no order (API-12).
+    const refund = refundNotice(raw.metadata?.stock_failed, await getPayStartedAt(), Number(raw.total ?? 0), (variantId) =>
+      raw.items?.find((item) => item.variant_id === variantId)?.product_title ?? undefined
+    )
+    return refund ? { orderId: null, hasCart: true, refund } : { orderId: null, hasCart: true }
   }
 
   const done = await sdk.store.cart.complete(cartId, {}, headers)

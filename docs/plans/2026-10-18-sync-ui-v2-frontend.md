@@ -370,7 +370,7 @@ Ghi trong lúc làm đợt 1–3 (nhánh `feature/medusa-backend-integration`). 
 | 11 | `VNPAY_RETURN_URL` mặc định là `http://localhost:8000/checkout/vnpay-return`, thiếu `/vn`. Chạy được nhờ middleware tự thêm mã nước (307, giữ query) nhưng nên đặt thẳng `.../vn/checkout/vnpay-return` | Giữ mặc định |
 | 12 | Khách vãng lai nhập email và địa chỉ mỗi lần. Khách đăng nhập dùng email tài khoản và địa chỉ đã lưu (đã nối) | Một ô "Phường, quận, tỉnh/thành" lưu vào `city`; chưa tách tỉnh |
 | 13 | Đơn thật chưa có `metadata.code` dạng `C4F-...` (chỉ 7 đơn mẫu seed có). Ai sinh mã: BE khi đặt đơn? | Phiếu hiện `#<display_id>` |
-| 14 | Tồn kho chỉ kiểm trước khi sang VNPAY. Nếu hết hàng giữa lúc khách trả tiền và lúc tạo đơn thì khách đã trả mà đơn không tạo được. Chờ Atomic Hot-Stock Gate và quy trình hoàn tiền | Chưa xử lý |
+| 14 | ~~Tồn kho chỉ kiểm trước khi sang VNPAY. Nếu hết hàng giữa lúc khách trả tiền và lúc tạo đơn thì khách đã trả mà đơn không tạo được~~ Đã xử lý 2026-11-06 (plan `2026-11-05-redis-vs-postgres.md`): bấm "Đặt hàng" giữ hàng cả giỏ 15 phút trước khi sang VNPAY (API-14); IPN tới muộn mà hết hàng thì backend hoàn tiền, trang kết quả báo cho khách | — |
 | 15 | Phiếu đơn chưa hiện mã giảm giá đã dùng, chỉ ghi "Giảm giá" (đơn không giữ mã trong trường FE đang đọc) | — |
 | 16 | Trang kết quả: nếu khách mở link return ở trình duyệt khác (không có cookie giỏ) thì chỉ báo "đơn sẽ có trong Đơn hàng"; tra theo `vnp_TxnRef` cần thêm API ở BE | Thông báo chung |
 | 17 | Server dev Next.js từng treo (trang không trả lời quá 90 giây) sau khi sửa file, khởi động lại thì hết. Chưa rõ nguyên nhân | Khởi động lại |
@@ -397,7 +397,7 @@ Khi nhóm đấu dữ liệu thật: làm các task BE trong file backend, rồi
 | Giữ chỗ hiện tại | Thay bằng khi có | Task BE |
 | :--- | :--- | :--- |
 | Có thể bạn cần mua lại | `GET /store/predictive/reorder-basket` | BE-9 (bản tạm), module Predictive |
-| Trợ lý Bếp, Công thức | Trang chat/thực đơn/công thức theo `10_*`, `11_*` | BE-10, repo AI |
+| Trợ lý Bếp, Công thức | Trang chat/thực đơn/công thức theo `10_*`, `11_*` | AI-0 (2026-11-06): `POST /store/ai/search`, `/store/ai/copilot`, hợp đồng `grocery-store-backend/docs/contracts/ai-copilot.md` (thay BE-10). Nhóm AI làm cả màn hình này |
 | Thẻ dự kiến tới / thông báo | `order.metadata.delivery` | BE-6, BE-7 |
 | Ví mã giảm giá | Danh sách mã của khách | chưa có task, cần thiết kế |
 | Giỏ, sản phẩm, đơn giả | Medusa thật | BE-1 … BE-5, BE-8 |
@@ -406,6 +406,7 @@ Khi nhóm đấu dữ liệu thật: làm các task BE trong file backend, rồi
 
 | Ngày | Người | Đã xong | Dở dang / lưu ý |
 | :--- | :--- | :--- | :--- |
+| 2026-11-06 | noper1080 + Claude | Nối storefront với phần Redis của backend (plan `2026-11-05-redis-vs-postgres.md`, `d307996`, `e1672f1`, `7d5abef`): `startPayment` giữ hàng (API-14) trước VNPAY, báo tên món hết hàng; trang kết quả báo hoàn tiền khi hết hàng (`stock_failed`); số tồn giỏ và trang sản phẩm theo API-15, cập nhật qua Socket.io (API-16). 127 test, kiểm trên trình duyệt (kết quả ở mục "Kết quả RF-5" của plan đó) | Cần Redis và gateway khi chạy backend thật, thêm `NEXT_PUBLIC_REALTIME_URL` (README). RF-2 chưa kiểm trên trình duyệt (cần IPN thật). Danh sách sản phẩm chưa trừ phần đang giữ |
 | 2026-11-03 | Claude | Câu 19 xong cả hai phía: FE coi "Đã đặt hàng", "Đã thanh toán" là xong với mọi đơn (`dc2a98e`); BE thêm nút "Xác nhận đơn" trong Admin và sửa bảng stage trong kế hoạch BE | Chưa bấm thử nút trong Admin trên trình duyệt (cần mật khẩu admin) |
 | 2026-11-03 | Claude | Nối VNPAY sandbox thật (khóa, IPN qua cloudflared, thẻ NCB): thanh toán, IPN, đơn và phiếu chạy đúng. Sửa phiếu và trang đơn dùng `item_subtotal` (`subtotal` của đơn Medusa đã gồm phí ship). Trang theo dõi: "Đã đặt hàng" và "Đã thanh toán" xong với mọi đơn, đơn mới chờ ở "Cửa hàng xác nhận" (câu 19) | Hoàn tiền: sandbox trả `99` cho mọi yêu cầu refund và querydr (kể cả chữ ký sai), nên hủy đơn đã trả tiền chưa chạy được, cần hỏi VNPAY (câu 20). Mã giảm giá trên phiếu chưa thử với đơn thật |
 | 2026-11-03 | Claude | Dọn đợt 4: `yarn build` chạy được không cảnh báo, kiểm liên kết nội bộ sạch. Làm lại Hồ sơ và Sổ địa chỉ theo v2 (câu 22): sửa họ tên và số điện thoại (không còn hiện "null"), thêm/sửa/xóa địa chỉ, đặt mặc định; ở chế độ mock lưu sẽ báo "đang phát triển". Thêm `lib/util/address-form.ts` (+ test, tổng 114). Trình duyệt thật 13/13, mock 4/4 | Chưa seed lại DB (câu 24), cần bạn xác nhận trước vì xóa dữ liệu. Câu 6 ghi lý do giữ HTTP 200 |

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isEmail, slotDayLabel, splitName, toSavedAddress, toSlotOptions } from "./checkout"
+import { isEmail, refundNotice, reserveOutcome, slotDayLabel, soldOutMessage, splitName, toSavedAddress, toSlotOptions } from "./checkout"
 
 // 2026-11-03 12:30 in Vietnam = 05:30 UTC
 const NOW = Date.parse("2026-11-03T05:30:00Z")
@@ -70,5 +70,80 @@ describe("isEmail", () => {
     expect(isEmail("khach@example.com")).toBe(true)
     expect(isEmail("khach@example")).toBe(false)
     expect(isEmail("khach example.com")).toBe(false)
+  })
+})
+
+describe("reserveOutcome", () => {
+  const titles: Record<string, string> = { v1: "Cà chua", v2: "Dâu tây" }
+  const titleOf = (id: string) => titles[id]
+
+  it("2xx: the cart is held", () => {
+    expect(reserveOutcome(200, { hold: { status: "HELD" } }, titleOf)).toEqual({ ok: true })
+  })
+
+  it("409 OUT_OF_STOCK: names every short line from the cart", () => {
+    const result = reserveOutcome(
+      409,
+      { code: "OUT_OF_STOCK", items: [{ variant_id: "v1", requested: 2, available: 0 }, { variant_id: "v2", requested: 3, available: 2 }] },
+      titleOf
+    )
+    expect(result).toEqual({
+      ok: false,
+      reason: "out_of_stock",
+      items: [
+        { title: "Cà chua", requested: 2, available: 0 },
+        { title: "Dâu tây", requested: 3, available: 2 },
+      ],
+      message: "Cà chua vừa hết; Dâu tây chỉ còn 2: vừa có người đặt trước bạn. Bạn sửa giỏ hàng rồi đặt lại nhé.",
+    })
+  })
+
+  it("a line missing from the cart and a negative stock still read well", () => {
+    const result = reserveOutcome(409, { code: "OUT_OF_STOCK", items: [{ variant_id: "x", requested: 1, available: -3 }] }, titleOf)
+    expect(result.ok === false && result.message).toBe("một món trong giỏ vừa hết: vừa có người đặt trước bạn. Bạn sửa giỏ hàng rồi đặt lại nhé.")
+  })
+
+  it("409 CART_COMPLETED and other errors are failures, not stock or slot problems", () => {
+    expect(reserveOutcome(409, { code: "CART_COMPLETED" }, titleOf)).toMatchObject({ ok: false, reason: "failed" })
+    expect(reserveOutcome(500, {}, titleOf)).toMatchObject({ ok: false, reason: "failed" })
+    expect(reserveOutcome(409, { code: "SOMETHING_ELSE" }, titleOf)).toMatchObject({ ok: false, reason: "failed" })
+  })
+})
+
+describe("refundNotice", () => {
+  const titleOf = (id: string) => ({ v1: "Cà chua" } as Record<string, string>)[id]
+  const started = Date.parse("2026-11-05T10:00:00Z")
+  const failed = (at: string, refund: "refunded" | "failed" = "refunded") => ({
+    at,
+    refund,
+    items: [{ variant_id: "v1", requested: 1, available: 0 }],
+  })
+
+  it("a refund of this payment: names the item and the amount", () => {
+    expect(refundNotice(failed("2026-11-05T10:03:00Z"), started, 111000, titleOf)).toEqual({
+      tone: "warn",
+      title: "Món bạn đặt vừa hết hàng",
+      description:
+        "Cà chua vừa hết trong lúc bạn thanh toán. Com4Fud đã hoàn 111.000đ về tài khoản của bạn và chưa tạo đơn. Bạn sửa giỏ hàng rồi đặt lại nhé.",
+    })
+  })
+
+  it("a failed refund says the shop will get in touch", () => {
+    expect(refundNotice(failed("2026-11-05T10:03:00Z", "failed"), started, 111000, titleOf)).toMatchObject({ tone: "err" })
+  })
+
+  it("a refund of an earlier try on the same cart is ignored; without a start time it counts", () => {
+    expect(refundNotice(failed("2026-11-05T09:30:00Z"), started, 111000, titleOf)).toBeNull()
+    expect(refundNotice(failed("2026-11-05T09:59:30Z"), started, 111000, titleOf)).not.toBeNull() // clock slack
+    expect(refundNotice(failed("2026-11-05T09:30:00Z"), undefined, 111000, titleOf)).not.toBeNull()
+    expect(refundNotice(null, started, 111000, titleOf)).toBeNull()
+  })
+})
+
+describe("soldOutMessage", () => {
+  it("names the sold-out lines, at most three", () => {
+    expect(soldOutMessage(["Nước mắm Nam Ngư"])).toBe("Nước mắm Nam Ngư vừa hết hàng. Quay lại giỏ để xóa trước khi đặt.")
+    expect(soldOutMessage(["A", "B", "A", "C", "D", "E"])).toBe("A, B, C và 2 món khác vừa hết hàng. Quay lại giỏ để xóa trước khi đặt.")
+    expect(soldOutMessage([])).toBe("Giỏ có món hết hàng. Quay lại giỏ để xóa trước khi đặt.")
   })
 })
