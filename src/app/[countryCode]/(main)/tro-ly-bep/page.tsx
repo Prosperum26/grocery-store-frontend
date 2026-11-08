@@ -1,17 +1,22 @@
 import { Metadata } from "next"
 import { LuArrowRight, LuChefHat, LuHouse } from "react-icons/lu"
 
+import { isMockMode } from "@lib/mock/mode"
 import Button from "@modules/common/components/button"
 import { ComingSoonPanel } from "@modules/common/components/coming-soon"
+import KitchenAssistant from "@modules/kitchen/kitchen-assistant"
 
 export const metadata: Metadata = {
   title: "Trợ lý Bếp · Com4Fud",
 }
 
-// Placeholder for the kitchen assistant (issue #11 section 3). The real page
-// (chat, weekly menu, recipe to cart) follows 10_Tro_Ly_Bep_* and needs the
-// AI service, so it belongs to phase 2.
+// With the real backend: search a dish, open its recipe, tick ingredients and
+// add them to the cart (screens 10 and 11, scope "Tìm món → công thức vào giỏ").
+// Mock mode has no AI service behind it, so it keeps the placeholder.
 export default function KitchenAssistantPage() {
+  if (!isMockMode()) {
+    return <KitchenAssistant />
+  }
   return (
     <div className="content-container py-10 small:py-16">
       <ComingSoonPanel
