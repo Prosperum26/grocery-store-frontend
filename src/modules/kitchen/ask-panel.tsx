@@ -28,6 +28,7 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
   const [state, setState] = useState<State>({ status: "idle" })
   // Only the latest question may write the answer.
   const latest = useRef(0)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const ask = async (text: string) => {
     const q = text.trim()
@@ -63,9 +64,10 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
             key={s}
             type="button"
             className="touch-target rounded-full border border-line-2 px-3 py-1.5 text-sm hover:bg-page"
+            // Only fills the box: the customer can edit the question, and nothing is sent until they press "Hỏi thêm".
             onClick={() => {
               setQuestion(s)
-              void ask(s)
+              inputRef.current?.focus()
             }}
           >
             {s}
@@ -84,6 +86,7 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
           Câu hỏi về món này
         </label>
         <input
+          ref={inputRef}
           id="kitchen-question"
           value={question}
           maxLength={300}
