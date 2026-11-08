@@ -2,6 +2,7 @@
 
 import { sdk } from "@lib/config"
 import { buildBasketView, type BasketView, type RawBasket } from "@lib/util/basket"
+import { buildScheduleView, type RawSchedule, type ScheduleView } from "@lib/util/reorder-schedule"
 import { getAuthHeaders } from "./cookies"
 import { addLine } from "./shopping-cart"
 
@@ -34,10 +35,41 @@ export async function getReorderBasket(): Promise<BasketView> {
  */
 export async function addReorderBasket(countryCode: string): Promise<{ added: number; skipped: number }> {
   const raw = await readBasket()
+  return addItems(countryCode, raw?.status === "ready" ? raw.items : [])
+}
+
+async function readSchedule(): Promise<RawSchedule | null> {
+  const authHeaders = await getAuthHeaders()
+  if (!authHeaders) {
+    return null
+  }
+  return sdk.client
+    .fetch<RawSchedule>("/store/predictive/reorder-schedule", {
+      method: "GET",
+      headers: { ...authHeaders },
+      cache: "no-store",
+    })
+    .catch(() => null)
+}
+
+export async function getReorderSchedule(): Promise<ScheduleView> {
+  return buildScheduleView(await readSchedule())
+}
+
+/** "Thêm tất cả" of the "Mua lại" page: the items suggested for today. */
+export async function addReorderToday(countryCode: string): Promise<{ added: number; skipped: number }> {
+  const raw = await readSchedule()
+  return addItems(countryCode, raw?.status === "ready" ? raw.today : [])
+}
+
+async function addItems(
+  countryCode: string,
+  items: RawBasket["items"]
+): Promise<{ added: number; skipped: number }> {
   let added = 0
   let skipped = 0
   // One after another: each call reads and changes the same cart.
-  for (const item of raw?.status === "ready" ? raw.items : []) {
+  for (const item of items) {
     if (!item.in_stock) {
       skipped += 1
       continue

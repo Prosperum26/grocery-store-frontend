@@ -39,9 +39,9 @@ export default async function Home(props: {
   const deals = await listDeals(countryCode)
   const [promo] = deals
 
-  // "Mua lại" and the recipe banner are placeholders made of sample products
-  // that only exist in the mock catalog. With the real backend they stay
-  // hidden until the predictive and recipe features replace them.
+  // The mock "Mua lại" and the recipe banner are made of sample products that
+  // only exist in the mock catalog. With the real backend "Mua lại" is
+  // BuyAgainLive, and the recipe banner stays hidden until its feature exists.
   const catalog = isMockMode()
     ? (
         await listProducts({
