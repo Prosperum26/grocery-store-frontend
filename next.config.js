@@ -42,6 +42,18 @@ const nextConfig = {
         protocol: "https",
         hostname: "medusa-server-testing.s3.us-east-1.amazonaws.com",
       },
+      // Ảnh sản phẩm dùng link gốc của Bách Hoá Xanh khi backend không có file ảnh (BE-2b, xem
+      // tools/catalog/IMAGES.md ở repo backend). Chỉ cho phép đường ảnh sản phẩm của CDN.
+      {
+        protocol: "https",
+        hostname: "cdnv2.tgdd.vn",
+        pathname: "/bhx-static/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.tgdd.vn",
+        pathname: "/Products/**",
+      },
       ...(S3_HOSTNAME && S3_PATHNAME
         ? [
             {
