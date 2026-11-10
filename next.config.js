@@ -54,6 +54,16 @@ const nextConfig = {
         hostname: "cdn.tgdd.vn",
         pathname: "/Products/**",
       },
+      // Ảnh bổ sung cho sản phẩm thêm tay: Co.op Online (ảnh lưu trên Google) và Wikimedia Commons.
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "thumb.wikimedia.org",
+        pathname: "/wikipedia/commons/thumb/**",
+      },
       ...(S3_HOSTNAME && S3_PATHNAME
         ? [
             {
