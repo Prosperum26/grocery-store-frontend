@@ -5,7 +5,6 @@ import { useId } from "react"
 import { LuChefHat, LuSearch } from "react-icons/lu"
 
 import { cx } from "@lib/util/cx"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 /**
  * Search box of the header. A plain GET form to /store?q=..., so it works
@@ -45,13 +44,16 @@ export default function HeaderSearch({
         className="min-w-0 flex-1 bg-transparent text-base text-ink placeholder:text-ink-3 focus:outline-none"
       />
       {showAssistant && (
-        <LocalizedClientLink
-          href="/tro-ly-bep"
+        // Second submit button of the same GET form: it sends what was typed to Trợ lý Bếp (?q=...) instead of
+        // the product list, and still works without JavaScript. With an empty box it just opens the page.
+        <button
+          type="submit"
+          formAction={`/${countryCode}/tro-ly-bep`}
           className="hidden h-9 shrink-0 items-center gap-1.5 rounded-[10px] bg-accent px-3 text-[13px] font-semibold text-ink medium:inline-flex"
         >
           <LuChefHat size={16} aria-hidden="true" />
           Hỏi Trợ lý Bếp
-        </LocalizedClientLink>
+        </button>
       )}
     </form>
   )
