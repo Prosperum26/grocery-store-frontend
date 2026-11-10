@@ -37,7 +37,8 @@ export default function IngredientList({
         const buyable = canBuy(option)
         const ticked = !!selection.ticked[line.key]
         const quantity = quantityOf(line, option)
-        const inputId = `kitchen-line-${line.key}`
+        // Product ids are safe in an HTML id; ingredient names (spaces, commas) are not.
+        const inputId = `kitchen-line-${line.options[0].catalogId}`
         const picking = openKey === line.key
 
         return (
@@ -52,7 +53,10 @@ export default function IngredientList({
                 onChange={(e) => onTick(line.key, e.target.checked)}
               />
               <label htmlFor={inputId} className="min-w-0 flex-1 basis-40 text-sm">
-                <span className={cx("block font-medium", !ticked && "text-ink-2")}>{line.rawText}</span>
+                <span className={cx("block font-medium", !ticked && "text-ink-2")}>
+                  {line.label}
+                  {line.needLabel && <span className="font-normal text-ink-2"> · {line.needLabel}</span>}
+                </span>
                 {line.maybeHave && (
                   <span className="mt-0.5 inline-flex items-center gap-1 rounded-md bg-page-2 px-1.5 py-0.5 text-xs text-ink-2">
                     <LuCheck aria-hidden="true" size={12} />
