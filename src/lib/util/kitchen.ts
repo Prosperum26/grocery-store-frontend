@@ -17,7 +17,9 @@ export type KitchenVariant = {
 }
 
 export type RawKitchenItem = {
+  /** Display name. One product can serve several ingredients, then they are joined with ", ". */
   ingredient: string
+  need?: { quantity: number; unit: string | null } | null
   kind: "core" | "addon"
   raw_text: string
   derived: boolean
@@ -50,10 +52,12 @@ export type RawRecipeDetail = {
   prep_steps: string[]
   cooking_steps: string[]
   basket: RawKitchenBasket
+  /** Ingredients exactly as the recipe writes them, each line once. */
+  ingredient_lines?: string[]
   not_in_basket: string[]
 }
 
-/** POST /store/ai/search, only what the list needs. */
+/** POST /store/ai/search with include_basket: false, only what the list needs. */
 export type RawRecipeSearch = {
   accepted: boolean
   results: { recipe: RecipeInfo; complete: boolean }[]
@@ -63,8 +67,12 @@ export type RawRecipeSearch = {
 export type KitchenOption = { catalogId: string; name: string; variant: KitchenVariant | null }
 
 export type KitchenLine = {
-  /** Ingredient name: unique inside one basket. */
+  /** Ingredient name: unique inside one basket (the backend gives one line per product). */
   key: string
+  /** "Cá lóc", "Rau om, ngò gai" */
+  label: string
+  /** Amount the recipe needs for the chosen number of people, e.g. "100 g"; null when the recipe gives none. */
+  needLabel: string | null
   rawText: string
   derived: boolean
   /** True for lines the store suggests the customer may already have. */
@@ -81,9 +89,22 @@ export function packsOf(item: Pick<RawKitchenItem, "pack_hint" | "default_qty">)
   return Math.max(1, Math.round(packs || 1))
 }
 
+const capitalize = (text: string) => text.charAt(0).toLocaleUpperCase("vi") + text.slice(1)
+
+/** "100 g", "0,5 cây", "2" (no unit). Up to two decimals, Vietnamese decimal comma. */
+export function needLabelOf(need: RawKitchenItem["need"]): string | null {
+  if (!need || !(need.quantity > 0)) {
+    return null
+  }
+  const amount = String(Math.round(need.quantity * 100) / 100).replace(".", ",")
+  return need.unit ? `${amount} ${need.unit}` : amount
+}
+
 export function buildLines(basket: RawKitchenBasket): KitchenLine[] {
   const make = (item: RawKitchenItem, maybeHave: boolean): KitchenLine => ({
     key: item.ingredient,
+    label: capitalize(item.ingredient),
+    needLabel: needLabelOf(item.need),
     rawText: item.raw_text,
     derived: item.derived,
     maybeHave,
@@ -136,20 +157,27 @@ export function cartLinesOf(lines: KitchenLine[], selection: Selection): CartLin
   return out
 }
 
-export type Summary = { count: number; total: number; skipped: number; unticked: number }
+export type Summary = {
+  /** Lines the add button will put in the cart, and their price. */
+  count: number
+  total: number
+  /** Lines the customer left unticked although they could be bought. */
+  notChosen: number
+  /** Lines that cannot be bought now, whatever the tick: no product in the store, or out of stock. */
+  unavailable: number
+}
 
-/**
- * `count` and `total` are what the add button will put in the cart. `skipped`
- * counts ticked lines that cannot be added (no product or out of stock).
- */
 export function summarize(lines: KitchenLine[], selection: Selection): Summary {
   const cart = cartLinesOf(lines, selection)
-  const ticked = lines.filter((l) => selection.ticked[l.key]).length
+  const unavailable = lines.filter((l) => {
+    const option = chosenOption(l, selection)
+    return !canBuy(option) || quantityOf(l, option) === 0
+  }).length
   return {
     count: cart.length,
     total: cart.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0),
-    skipped: ticked - cart.length,
-    unticked: lines.length - ticked,
+    notChosen: lines.length - cart.length - unavailable,
+    unavailable,
   }
 }
 
