@@ -27,9 +27,13 @@ async function post<T>(path: string, body: object): Promise<KitchenResult<T>> {
   }
 }
 
-/** Recipes for a typed dish name. Fast: the AI language model is not used. */
+/**
+ * Recipes for a typed dish name. Fast: the AI language model is not used, and
+ * `include_basket: false` asks for the list only (no ingredients, prices or
+ * stock), because the search page shows names. The recipe page loads the rest.
+ */
 export async function searchRecipes(query: string): Promise<KitchenResult<RawRecipeSearch>> {
-  return post<RawRecipeSearch>("/store/ai/search", { query: query.trim().slice(0, 300), top_k: 6 })
+  return post<RawRecipeSearch>("/store/ai/search", { query: query.trim().slice(0, 300), top_k: 6, include_basket: false })
 }
 
 /** One recipe with its steps and an ingredient list scaled to `servings`. */
@@ -38,13 +42,27 @@ export async function getRecipe(recipeId: string, servings?: number): Promise<Ki
 }
 
 export type RawAsk = { answer: string | null; status: string }
+export type AskTurn = { question: string; answer: string }
 
-/** Follow-up question about the recipe on screen; this is the only call that uses the language model. */
-export async function askAboutRecipe(recipeId: string, question: string, servings?: number): Promise<KitchenResult<RawAsk>> {
+/** The backend takes at most this many earlier turns. */
+const MAX_HISTORY = 6
+
+/**
+ * Follow-up question about the recipe on screen; this is the only call that
+ * uses the language model. `history` holds the earlier turns of this page, so
+ * "vậy thay bằng gì?" is understood; nothing is stored on the server.
+ */
+export async function askAboutRecipe(
+  recipeId: string,
+  question: string,
+  servings?: number,
+  history: AskTurn[] = []
+): Promise<KitchenResult<RawAsk>> {
   return post<RawAsk>("/store/ai/ask", {
     recipe_id: recipeId,
     question: question.trim().slice(0, 300),
     ...(servings ? { servings } : {}),
+    history: history.slice(-MAX_HISTORY).map((turn) => ({ question: turn.question.slice(0, 300), answer: turn.answer.slice(0, 1500) })),
   })
 }
 
