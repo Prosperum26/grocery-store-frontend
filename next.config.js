@@ -64,6 +64,26 @@ const nextConfig = {
         hostname: "thumb.wikimedia.org",
         pathname: "/wikipedia/commons/thumb/**",
       },
+      // Đợt ảnh 2 do nhóm tự tìm: ảnh thu nhỏ của Bing và vài trang bán hàng lẻ (mỗi trang 1 ảnh).
+      // Danh sách lấy từ image-manifest.json của backend; thêm ảnh từ host mới thì thêm host vào đây.
+      {
+        protocol: "https",
+        hostname: "th.bing.com",
+        pathname: "/th/id/**",
+      },
+      ...[
+        "atuankhang.vn",
+        "bizweb.dktcdn.net",
+        "haisantrungnam.vn",
+        "lahotel.vn",
+        "media.tripmap.vn",
+        "product.hstatic.net",
+        "thaphaco.com.vn",
+        "thucphamchaydieuthien.com",
+        "thucphamdongxanh.com",
+        "thucphamsachgiatot.vn",
+        "thumbor.asia-southeast1.aeon-vn-prod.e.spresso.com",
+      ].map((hostname) => ({ protocol: "https", hostname })),
       ...(S3_HOSTNAME && S3_PATHNAME
         ? [
             {
