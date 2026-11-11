@@ -1,7 +1,7 @@
 "use client"
 
 import { askAboutRecipe, type AskTurn } from "@lib/data/kitchen"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { LuChefHat, LuSend } from "react-icons/lu"
 
 import Button from "@modules/common/components/button"
@@ -17,6 +17,9 @@ const SUGGESTIONS = [
  * button, and it answers from this recipe. Earlier questions and answers stay
  * on screen and are sent along, so a follow-up ("vậy thay bằng gì?") is
  * understood. Nothing is stored: leaving the page forgets the conversation.
+ *
+ * The conversation lives in a box of fixed height that scrolls inside, so the
+ * question box and the send button never move while answers come in.
  */
 export default function AskPanel({ recipeId, servings }: { recipeId: string; servings: number }) {
   const [question, setQuestion] = useState("")
@@ -24,6 +27,13 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
   const [pending, setPending] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const logRef = useRef<HTMLDivElement>(null)
+
+  // Show the newest message: scroll the box, not the page.
+  useEffect(() => {
+    const log = logRef.current
+    if (log) log.scrollTop = log.scrollHeight
+  }, [turns.length, pending, error])
 
   const ask = async () => {
     const q = question.trim()
@@ -57,7 +67,35 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
       </div>
       <p className="mt-1 text-sm text-ink-2">Dinh dưỡng, bớt gì cho hợp khẩu vị, thay nguyên liệu... Trợ lý trả lời dựa trên công thức đang xem.</p>
 
-      <div aria-live="polite" className="mt-3 flex flex-col gap-3">
+      <div
+        ref={logRef}
+        role="log"
+        aria-label="Hỏi đáp về món này"
+        tabIndex={0}
+        className="mt-3 flex h-72 flex-col gap-3 overflow-y-auto rounded-2xl bg-page p-3"
+      >
+        {turns.length === 0 && !pending && (
+          <div className="m-auto flex flex-col items-center gap-2 text-center">
+            <p className="text-sm text-ink-2">Thử một câu hỏi:</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {SUGGESTIONS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className="touch-target relative rounded-full border border-line-2 bg-surface px-3 py-1.5 text-sm hover:bg-page-2"
+                  // Only fills the box: the customer can edit the question, and nothing is sent until they press "Hỏi thêm".
+                  onClick={() => {
+                    setQuestion(s)
+                    // preventScroll: focusing must not move the page under the pointer.
+                    inputRef.current?.focus({ preventScroll: true })
+                  }}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {turns.map((turn, i) => (
           <div key={i} className="flex flex-col gap-2">
             <p className="ml-auto max-w-[85%] rounded-2xl bg-brand px-4 py-2 text-sm text-white">{turn.question}</p>
@@ -72,25 +110,6 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
         )}
         {error && <p className="rounded-2xl bg-warn-bg p-4 text-sm text-warn-ink">{error}</p>}
       </div>
-
-      {turns.length === 0 && !pending && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {SUGGESTIONS.map((s) => (
-            <button
-              key={s}
-              type="button"
-              className="touch-target rounded-full border border-line-2 px-3 py-1.5 text-sm hover:bg-page"
-              // Only fills the box: the customer can edit the question, and nothing is sent until they press "Hỏi thêm".
-              onClick={() => {
-                setQuestion(s)
-                inputRef.current?.focus()
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
 
       <form
         className="mt-3 flex gap-2"
@@ -111,14 +130,13 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
           placeholder={turns.length ? "Hỏi tiếp…" : "Ví dụ: món này có hợp cho bé 3 tuổi không?"}
           className="h-11 min-w-0 flex-1 rounded-btn border border-line-2 bg-surface px-3 text-sm"
         />
-        <Button type="submit" icon={<LuSend />} aria-disabled={!!pending || !question.trim() || undefined}>
+        {/* Fixed minimum width: "Đang hỏi…" is wider than "Hỏi thêm" and must not resize the row. */}
+        <Button type="submit" icon={<LuSend />} className="min-w-[132px]" aria-disabled={!!pending || !question.trim() || undefined}>
           {pending ? "Đang hỏi…" : "Hỏi thêm"}
         </Button>
       </form>
 
-      {turns.length > 0 && (
-        <p className="mt-2 text-xs text-ink-2">Số liệu dinh dưỡng chỉ là ước tính, không thay lời khuyên của bác sĩ hay chuyên gia dinh dưỡng.</p>
-      )}
+      <p className="mt-2 text-xs text-ink-2">Số liệu dinh dưỡng chỉ là ước tính, không thay lời khuyên của bác sĩ hay chuyên gia dinh dưỡng.</p>
     </section>
   )
 }
