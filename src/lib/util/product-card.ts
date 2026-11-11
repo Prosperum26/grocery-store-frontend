@@ -36,14 +36,16 @@ export function cardBadges(product: Pick<ProductVM, "price" | "originalPrice" | 
 
 /**
  * "22.000đ/kg" for packs sold by weight, so packs of different sizes can be
- * compared. Null when the weight is unknown or the pack is exactly 1 kg (the
- * price already is the per-kg price).
+ * compared. Rounded to the nearest 100đ: it is a comparison aid, not a price.
+ * Null when the weight is unknown, when the pack is exactly 1 kg (the price
+ * already is the per-kg price), or when the pack is sold by volume ("110ml",
+ * "1 lít"): the catalog stores a weight for those too, but "/kg" would be wrong.
  */
-export function perKgLabel(product: Pick<ProductVM, "price" | "variants">): string | null {
+export function perKgLabel(product: Pick<ProductVM, "price" | "variants" | "unitLabel">): string | null {
   const weight = product.variants[0]?.weightGrams
-  if (!weight || weight === 1000) {
+  if (!weight || weight === 1000 || /\d\s*(ml|l|lít)\b/i.test(product.unitLabel)) {
     return null
   }
   const perKg = pricePerKg(product.price, weight)
-  return perKg ? `${formatVnd(perKg)}/kg` : null
+  return perKg ? `${formatVnd(Math.round(perKg / 100) * 100)}/kg` : null
 }

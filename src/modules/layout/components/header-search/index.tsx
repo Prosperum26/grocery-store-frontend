@@ -116,7 +116,6 @@ export default function HeaderSearch({ className }: { className?: string }) {
             setOpen(true)
           }}
           onFocus={() => setOpen(true)}
-          aria-expanded={showPanel}
           aria-controls={panelId}
           placeholder="Tìm sản phẩm hoặc món ăn…"
           className="min-w-0 flex-1 bg-transparent text-base text-ink placeholder:text-ink-3 focus:outline-none"

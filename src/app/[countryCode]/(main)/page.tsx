@@ -1,16 +1,17 @@
 import { Metadata } from "next"
 
-import { listDeals } from "@lib/data/catalog"
+import { listDeals, listShortRow } from "@lib/data/catalog"
 import { listProducts } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
-import { MOCK_BUY_AGAIN, pickProducts } from "@lib/mock/home"
+import { MOCK_BUY_AGAIN } from "@lib/mock/home"
 import { isMockMode } from "@lib/mock/mode"
 import { toProductVM } from "@lib/viewmodels/product"
 import BuyAgain from "@modules/home/components/buy-again"
 import BuyAgainLive from "@modules/home/components/buy-again/live"
 import CategoryGrid from "@modules/home/components/category-grid"
-import Deals from "@modules/home/components/deals"
-import PromoBanners from "@modules/home/components/promo-banners"
+import CookTonight from "@modules/home/components/cook-tonight"
+import HomeHero from "@modules/home/components/home-hero"
+import ProductRow from "@modules/home/components/product-row"
 import RecipeBanner from "@modules/home/components/recipe-banner"
 
 export const metadata: Metadata = {
@@ -18,12 +19,19 @@ export const metadata: Metadata = {
   description: "Rau củ, thịt cá và hàng thiết yếu giao trong ngày tại TP.HCM.",
 }
 
+// Fresh food first: these are the rows a shopper cooking tonight looks for.
+// `name` is the category name as the search index stores it.
+const CATEGORY_ROWS = [
+  { handle: "rau-cu", name: "Rau củ" },
+  { handle: "thit", name: "Thịt" },
+  { handle: "hai-san", name: "Hải sản" },
+]
+
 /**
- * Home page of the v2 design (01_Trang_Chu_*). Desktop order: promos,
- * categories, buy again, deals, recipe. Phone order puts deals before
- * categories (docs/07), so the deals block is rendered in both places and
- * one copy is hidden per breakpoint. That keeps reading and tab order equal
- * to the visual order, which CSS `order` would not.
+ * Home page. One order for every screen size: a short opening band, the
+ * categories, "Mua lại" (signed-in shoppers), today's deals, the way into
+ * Trợ lý Bếp, then a row of products per fresh category. Every block below
+ * the band is products or a way to reach them.
  */
 export default async function Home(props: {
   params: Promise<{ countryCode: string }>
@@ -35,14 +43,16 @@ export default async function Home(props: {
     return null
   }
 
-  // The biggest discount is the big banner, the rest fill "Ưu đãi hôm nay".
-  const deals = await listDeals(countryCode)
-  const [promo] = deals
+  const mock = isMockMode()
+  const [deals, ...rows] = await Promise.all([
+    listDeals(countryCode),
+    ...CATEGORY_ROWS.map((category) => listShortRow({ countryCode, category, take: 5 })),
+  ])
 
-  // The mock "Mua lại" and the recipe banner are made of sample products that
-  // only exist in the mock catalog. With the real backend "Mua lại" is
-  // BuyAgainLive, and the recipe banner stays hidden until its feature exists.
-  const catalog = isMockMode()
+  // The mock "Mua lại" and the mock recipe banner are made of sample products
+  // that only exist in the mock catalog. With the real backend "Mua lại" is
+  // BuyAgainLive and the recipe block is CookTonight.
+  const catalog = mock
     ? (
         await listProducts({
           regionId: region.id,
@@ -50,19 +60,26 @@ export default async function Home(props: {
         })
       ).response.products.map(toProductVM)
     : []
-  // The "Rau sáng nay" card names a bunch of spinach; no real product fits.
-  const [spinach] = pickProducts(catalog, ["rau-muong"])
 
   return (
     <>
       <h1 className="sr-only">Com4Fud, đi chợ online</h1>
-      <div className="content-container flex flex-col gap-6 pb-28 pt-5 small:gap-11 small:pb-24 small:pt-8">
-        <PromoBanners promo={promo} spinach={spinach} />
-        <Deals products={deals} headingId="home-deals-phone" className="small:hidden" />
+      <div className="content-container flex flex-col gap-7 pb-28 pt-4 small:gap-10 small:pb-24 small:pt-6">
+        <HomeHero showKitchen={!mock} />
         <CategoryGrid />
-        {isMockMode() ? <BuyAgain lines={MOCK_BUY_AGAIN} catalog={catalog} /> : <BuyAgainLive />}
-        <Deals products={deals} headingId="home-deals-desktop" className="hidden small:flex" />
-        <RecipeBanner catalog={catalog} />
+        {mock ? <BuyAgain lines={MOCK_BUY_AGAIN} catalog={catalog} /> : <BuyAgainLive />}
+        <ProductRow id="home-deals" title="Ưu đãi hôm nay" href="/store?sale=1" linkLabel="Xem tất cả ưu đãi" products={deals} />
+        {mock ? <RecipeBanner catalog={catalog} /> : <CookTonight countryCode={countryCode} />}
+        {CATEGORY_ROWS.map((category, i) => (
+          <ProductRow
+            key={category.handle}
+            id={`home-row-${category.handle}`}
+            title={category.name}
+            href={`/categories/${category.handle}`}
+            linkLabel={`Xem tất cả ${category.name.toLowerCase()}`}
+            products={rows[i]}
+          />
+        ))}
       </div>
     </>
   )

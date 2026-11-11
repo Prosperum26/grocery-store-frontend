@@ -29,12 +29,19 @@ describe("cardBadges", () => {
 
 describe("perKgLabel", () => {
   it("gives the price per kilogram for packs sold by weight", () => {
-    expect(perKgLabel({ price: 5500, variants: [variant(250)] })).toBe("22.000đ/kg")
+    expect(perKgLabel({ price: 5500, unitLabel: "túi 250g", variants: [variant(250)] })).toBe("22.000đ/kg")
+    expect(perKgLabel({ price: 12700, unitLabel: "65g", variants: [variant(65)] })).toBe("195.400đ/kg")   // rounded to 100đ
   })
 
   it("is empty when the weight is unknown or the pack is exactly 1 kg", () => {
-    expect(perKgLabel({ price: 5500, variants: [variant()] })).toBeNull()
-    expect(perKgLabel({ price: 22000, variants: [variant(1000)] })).toBeNull()
-    expect(perKgLabel({ price: 22000, variants: [] })).toBeNull()
+    expect(perKgLabel({ price: 5500, unitLabel: "gói", variants: [variant()] })).toBeNull()
+    expect(perKgLabel({ price: 22000, unitLabel: "1 kg", variants: [variant(1000)] })).toBeNull()
+    expect(perKgLabel({ price: 22000, unitLabel: "1 trái", variants: [] })).toBeNull()
+  })
+
+  it("is empty for packs sold by volume", () => {
+    expect(perKgLabel({ price: 4000, unitLabel: "110ml", variants: [variant(110)] })).toBeNull()
+    expect(perKgLabel({ price: 86500, unitLabel: "1 lít", variants: [variant(900)] })).toBeNull()
+    expect(perKgLabel({ price: 45000, unitLabel: "chai 500 ml", variants: [variant(500)] })).toBeNull()
   })
 })
