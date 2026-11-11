@@ -87,7 +87,7 @@ export default function KitchenSearch({
               <button
                 key={example}
                 type="button"
-                className="touch-target rounded-full border border-line-2 px-3 py-1.5 hover:bg-page"
+                className="touch-target relative rounded-full border border-line-2 px-3 py-1.5 hover:bg-page"
                 onClick={() => search(example)}
               >
                 {example}

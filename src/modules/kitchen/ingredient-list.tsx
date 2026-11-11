@@ -80,7 +80,7 @@ export default function IngredientList({
               {line.options.length > 1 && (
                 <button
                   type="button"
-                  className="touch-target inline-flex h-8 items-center gap-1 rounded-full border border-line-2 px-3 text-xs font-semibold hover:bg-page"
+                  className="touch-target relative inline-flex h-8 items-center gap-1 rounded-full border border-line-2 px-3 text-xs font-semibold hover:bg-page"
                   aria-expanded={picking}
                   aria-controls={`${inputId}-brands`}
                   onClick={() => setOpenKey(picking ? null : line.key)}

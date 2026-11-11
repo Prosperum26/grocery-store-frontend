@@ -131,7 +131,7 @@ export default function RecipeView({ initial, backQuery }: { initial: RawRecipeD
             <button
               type="button"
               aria-label="Giảm số người"
-              className="touch-target flex h-9 w-9 items-center justify-center rounded-full disabled:opacity-35"
+              className="touch-target relative flex h-9 w-9 items-center justify-center rounded-full disabled:opacity-35"
               disabled={servings <= 1 || loading}
               onClick={() => void changeServings(servings - 1)}
             >
@@ -143,7 +143,7 @@ export default function RecipeView({ initial, backQuery }: { initial: RawRecipeD
             <button
               type="button"
               aria-label="Tăng số người"
-              className="touch-target flex h-9 w-9 items-center justify-center rounded-full disabled:opacity-35"
+              className="touch-target relative flex h-9 w-9 items-center justify-center rounded-full disabled:opacity-35"
               disabled={servings >= 50 || loading}
               onClick={() => void changeServings(servings + 1)}
             >
