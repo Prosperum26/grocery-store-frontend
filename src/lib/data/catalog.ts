@@ -36,6 +36,13 @@ export type Listing = {
   totalAll: number
   /** Products per category handle, ignoring the other filters. */
   categoryCounts: Record<string, number>
+  /**
+   * Subcategories of the current result ("Rau lá", "Nấm các loại") with their
+   * product counts, ignoring the subcategory filter itself so the shopper can
+   * switch between them. Empty on the whole catalog without a search (too many
+   * to list) and when the search index has no subcategory field yet.
+   */
+  subcategories: { value: string; count: number }[]
 }
 
 // "popular" has no order: the search keeps its own order. Prices are indexed
@@ -51,7 +58,11 @@ const PRODUCT_FIELDS =
   "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,+categories.handle"
 
 type SearchResponse = {
-  results: { hits: { id: string }[]; metadata: { count: number } }[]
+  results: {
+    hits: { id: string }[]
+    metadata: { count: number }
+    facets?: Record<string, { values?: { value: string; count: number }[] }>
+  }[]
 }
 
 /**
@@ -81,6 +92,8 @@ export async function getListing({
         q: params.q,
         inStock: params.inStock,
         onSale: params.onSale,
+        minPrice: params.minPrice,
+        maxPrice: params.maxPrice,
       }),
       params.sort
     )
@@ -93,22 +106,30 @@ export async function getListing({
           catalog.filter((p) => p.categoryHandle === c.handle).length,
         ])
       ),
+      // The mock catalog has no subcategories.
+      subcategories: [],
     }
   }
 
   const region = await getRegion(countryCode)
   if (!region) {
-    return { page: toPage([], 0, 1, pageSize), totalAll: 0, categoryCounts: {} }
+    return { page: toPage([], 0, 1, pageSize), totalAll: 0, categoryCounts: {}, subcategories: [] }
   }
 
   // Only filters the user turned on are sent: an undefined value is dropped
   // by JSON.stringify.
-  const filters = {
+  const price =
+    params.minPrice || params.maxPrice
+      ? { $gte: params.minPrice, $lte: params.maxPrice }
+      : undefined
+  const baseFilters = {
     q: params.q,
     category: category?.name,
     in_stock: params.inStock || undefined,
     on_sale_vnd: params.onSale || undefined,
+    min_price_vnd: price,
   }
+  const filters = { ...baseFilters, subcategory: params.sub }
   const mainQuery = (pageNumber: number) => ({
     entity: "product",
     filters,
@@ -145,7 +166,11 @@ export async function getListing({
   }
 
   const ids = main.hits.map((hit) => hit.id)
-  const products = await readProducts(ids, region.id)
+  const [products, subcategories] = await Promise.all([
+    readProducts(ids, region.id),
+    // Only inside a category or a search: the whole catalog has about 90 subcategories.
+    category || params.q ? listSubcategories(baseFilters) : Promise.resolve([]),
+  ])
 
   return {
     page: toPage(products.map(toProductVM), total, params.page, pageSize),
@@ -153,6 +178,30 @@ export async function getListing({
     categoryCounts: Object.fromEntries(
       countedCategories.map((c, i) => [c.handle, counts[i + 1].metadata.count])
     ),
+    subcategories,
+  }
+}
+
+/**
+ * Subcategory counts for the given filters (the subcategory filter left out).
+ * A request of its own, so a backend whose index lacks the `subcategory`
+ * field (not migrated yet) only loses this list, not the whole page.
+ */
+async function listSubcategories(filters: object) {
+  try {
+    const { results } = await search({
+      queries: [
+        {
+          entity: "product",
+          filters,
+          pagination: { take: 0 },
+          search_options: { facets: [{ field: "subcategory", limit: 30 }] },
+        },
+      ],
+    })
+    return results[0].facets?.subcategory?.values ?? []
+  } catch {
+    return []
   }
 }
 

@@ -1,17 +1,17 @@
 import { listCategories } from "@lib/data/categories"
 import { getListing } from "@lib/data/catalog"
 import { getRegion } from "@lib/data/regions"
-import { ListingParams } from "@lib/util/catalog"
+import { hasListingFilters, ListingParams, relatedWords } from "@lib/util/catalog"
 import { isMockMode } from "@lib/mock/mode"
 import Button from "@modules/common/components/button"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductCard from "@modules/products/components/product-card"
-import ListingControls, { SortSelect } from "@modules/store/components/listing-controls"
 import ListingPagination from "@modules/store/components/listing-pagination"
-import { LuChefHat } from "react-icons/lu"
+import ListingSidebar from "@modules/store/components/listing-sidebar"
+import { LuChefHat, LuSlidersHorizontal } from "react-icons/lu"
 
-/** 20 cards fill whole rows at every width the grid uses (2, 4 and 5 columns). */
-export const PAGE_SIZE = 20
+/** 24 cards fill whole rows at every width the grid uses (2, 3 and 4 columns). */
+export const PAGE_SIZE = 24
 
 type StoreTemplateProps = {
   countryCode: string
@@ -25,9 +25,10 @@ type StoreTemplateProps = {
  * describes (mock data or the Medusa search) and renders it. The filter
  * controls are small client components that only change the URL.
  *
- * Layout: the products get the full width. Categories and the two quick
- * filters sit in rows above the grid instead of a side column, so a desktop
- * row holds five products and the first screen shows ten.
+ * Layout: on desktop the filters (sort, category, kind, price, state,
+ * keywords) sit in a left column and the grid holds four products per row.
+ * On phones the same filters fold into a "Bộ lọc" panel above the grid, so
+ * the products still start near the top of the screen.
  */
 export default async function StoreTemplate({
   countryCode,
@@ -40,7 +41,7 @@ export default async function StoreTemplate({
   }
 
   const categories = (await listCategories()) ?? []
-  const { page } = await getListing({
+  const { page, totalAll, categoryCounts, subcategories } = await getListing({
     countryCode,
     params,
     category,
@@ -50,12 +51,30 @@ export default async function StoreTemplate({
 
   const basePath = category ? `/categories/${category.handle}` : "/store"
   const title = category?.name ?? (params.q ? `Kết quả cho “${params.q}”` : "Tất cả sản phẩm")
-  const hasFilters = Boolean(params.q || params.inStock || params.onSale)
+  const hasFilters = hasListingFilters(params)
+  // How many filters are on, shown on the phone "Bộ lọc" button.
+  const activeCount = [
+    params.q,
+    params.inStock,
+    params.onSale,
+    params.minPrice || params.maxPrice,
+    params.sub,
+  ].filter(Boolean).length
 
-  const chipClass = (on: boolean) =>
-    `inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-full border px-3.5 text-sm font-medium ${
-      on ? "border-ink bg-ink text-white" : "border-line-2 bg-surface text-ink hover:bg-page-2"
-    }`
+  const sidebar = (
+    <ListingSidebar
+      params={params}
+      basePath={basePath}
+      categories={categories.map((c) => ({ handle: c.handle, name: c.name, count: categoryCounts[c.handle] }))}
+      currentCategory={category?.handle}
+      totalAll={totalAll}
+      subcategories={subcategories}
+      related={relatedWords(
+        page.items.map((p) => p.title),
+        [params.q, category?.name].filter(Boolean).join(" ")
+      )}
+    />
+  )
 
   // A typed word may be a dish, not a product ("canh chua"): offer the recipe search for the same words.
   const recipeSearch = params.q && !isMockMode() && (
@@ -98,78 +117,77 @@ export default async function StoreTemplate({
         </ol>
       </nav>
 
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h1 className="font-display text-2xl font-bold text-ink small:text-[32px] small:leading-tight">{title}</h1>
-          {/* The count of what is listed (search and filters applied), not of the whole catalog. */}
-          <p aria-live="polite" className="text-sm text-ink-2">
-            {page.total > 0 ? `${page.total} sản phẩm` : "Không có sản phẩm nào"}
-          </p>
-        </div>
-        <SortSelect params={params} />
-      </div>
-
-      {/* Categories: one row that scrolls sideways on narrow screens and wraps on wide ones. */}
-      <nav aria-label="Danh mục">
-        <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 small:mx-0 small:flex-wrap small:overflow-visible small:px-0 small:pb-0">
-          <li className="shrink-0">
-            <LocalizedClientLink href="/store" aria-current={!category ? "page" : undefined} className={chipClass(!category)}>
-              Tất cả
-            </LocalizedClientLink>
-          </li>
-          {categories.map((c) => {
-            const on = category?.handle === c.handle
-            return (
-              <li key={c.id} className="shrink-0">
-                <LocalizedClientLink href={`/categories/${c.handle}`} aria-current={on ? "page" : undefined} className={chipClass(on)}>
-                  {c.name}
-                </LocalizedClientLink>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <ListingControls params={params} variant="chips" />
-        {recipeSearch}
-      </div>
-
-      {page.items.length > 0 ? (
-        <>
-          {/* Cards use h3; this keeps the heading order h1 → h2 → h3. */}
-          <h2 className="sr-only">Danh sách sản phẩm</h2>
-          <ul
-            className="grid grid-cols-2 gap-3 xsmall:grid-cols-3 small:grid-cols-4 small:gap-4 medium:grid-cols-5"
-            data-testid="products-list"
-          >
-            {page.items.map((p) => (
-              <li key={p.id} className="flex">
-                <ProductCard product={p} className="w-full" />
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : (
-        <section
-          aria-labelledby="listing-empty"
-          className="flex flex-col items-start gap-3 rounded-card border border-dashed border-line-2 bg-surface p-6 small:p-8"
+      <div className="flex flex-col gap-4 small:flex-row small:items-start small:gap-8">
+        {/* Desktop: the filters in a column that stays in view while the grid scrolls. */}
+        <aside
+          aria-label="Bộ lọc"
+          className="hidden small:sticky small:top-4 small:block small:max-h-[calc(100vh-2rem)] small:w-[260px] small:shrink-0 small:overflow-y-auto small:pb-4 small:pr-1"
         >
-          <h2 id="listing-empty" className="font-display text-xl font-bold text-ink">
-            Không có sản phẩm phù hợp
-          </h2>
-          <p className="text-sm text-ink-2">
-            {hasFilters ? "Thử bỏ bớt bộ lọc hoặc tìm bằng từ khóa khác." : "Danh mục này chưa có sản phẩm."}
-          </p>
-          {hasFilters && (
-            <Button variant="secondary" href={basePath}>
-              Xóa bộ lọc
-            </Button>
-          )}
-        </section>
-      )}
+          {sidebar}
+        </aside>
 
-      <ListingPagination basePath={basePath} params={params} page={page.page} totalPages={page.totalPages} />
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h1 className="font-display text-2xl font-bold text-ink small:text-[32px] small:leading-tight">{title}</h1>
+            {/* The count of what is listed (search and filters applied), not of the whole catalog. */}
+            <p aria-live="polite" className="text-sm text-ink-2">
+              {page.total > 0 ? `${page.total} sản phẩm` : "Không có sản phẩm nào"}
+            </p>
+          </div>
+
+          {/* Phones: the same filters folded into a panel, so the grid starts near the top. */}
+          <details className="small:hidden">
+            <summary className="inline-flex h-10 cursor-pointer list-none items-center gap-2 rounded-btn border border-line-2 bg-surface px-3.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+              <LuSlidersHorizontal aria-hidden="true" />
+              Sắp xếp và lọc
+              {activeCount > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-ink px-1.5 text-xs text-white">
+                  {activeCount}
+                </span>
+              )}
+            </summary>
+            <div className="mt-3 rounded-card border border-line bg-surface p-4">{sidebar}</div>
+          </details>
+
+          {recipeSearch}
+
+          {page.items.length > 0 ? (
+            <>
+              {/* Cards use h3; this keeps the heading order h1 → h2 → h3. */}
+              <h2 className="sr-only">Danh sách sản phẩm</h2>
+              <ul
+                className="grid grid-cols-2 gap-3 xsmall:grid-cols-3 small:gap-4 medium:grid-cols-4"
+                data-testid="products-list"
+              >
+                {page.items.map((p) => (
+                  <li key={p.id} className="flex">
+                    <ProductCard product={p} className="w-full" />
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <section
+              aria-labelledby="listing-empty"
+              className="flex flex-col items-start gap-3 rounded-card border border-dashed border-line-2 bg-surface p-6 small:p-8"
+            >
+              <h2 id="listing-empty" className="font-display text-xl font-bold text-ink">
+                Không có sản phẩm phù hợp
+              </h2>
+              <p className="text-sm text-ink-2">
+                {hasFilters ? "Thử bỏ bớt bộ lọc hoặc tìm bằng từ khóa khác." : "Danh mục này chưa có sản phẩm."}
+              </p>
+              {hasFilters && (
+                <Button variant="secondary" href={basePath}>
+                  Xóa bộ lọc
+                </Button>
+              )}
+            </section>
+          )}
+
+          <ListingPagination basePath={basePath} params={params} page={page.page} totalPages={page.totalPages} />
+        </div>
+      </div>
     </div>
   )
 }
