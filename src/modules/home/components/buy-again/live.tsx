@@ -75,8 +75,8 @@ export default function BuyAgainLive() {
         {basket.items.map((item) => (
           <li key={item.variantId} className={"flex flex-col gap-2.5 rounded-2xl border border-line p-2.5 " + (item.inStock ? "" : "opacity-60")}>
             <LocalizedClientLink href={`/products/${item.handle}`} className="flex flex-col gap-2.5">
-              <div className="aspect-[1.4] overflow-hidden rounded-btn">
-                <ProductArt product={{ title: item.title, art: item.art, tint: item.tint }} decorative scale={0.7} />
+              <div className="aspect-square overflow-hidden rounded-btn">
+                <ProductArt product={{ title: item.title, art: item.art, tint: item.tint, thumbnail: item.thumbnail }} decorative fit="contain" scale={0.7} />
               </div>
               <div className="px-0.5">
                 <p className="truncate text-sm font-semibold">{item.title}</p>
