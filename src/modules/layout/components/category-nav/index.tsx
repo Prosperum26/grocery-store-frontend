@@ -7,11 +7,15 @@ import {
   LuApple,
   LuBeef,
   LuChefHat,
+  LuCookie,
+  LuCupSoda,
   LuEgg,
   LuFish,
   LuLeaf,
   LuMilk,
   LuRepeat,
+  LuSnowflake,
+  LuSoup,
   LuWheat,
 } from "react-icons/lu"
 
@@ -20,7 +24,7 @@ import { isMockMode } from "@lib/mock/mode"
 import { cx } from "@lib/util/cx"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
-// Desktop category row under the header (header() in ui.js, CATS).
+// Desktop category row under the header: every top-level category of the catalog, fresh food first.
 export const CATEGORY_LINKS: { handle: string; name: string; icon: IconType }[] = [
   { handle: "rau-cu", name: "Rau củ", icon: LuLeaf },
   { handle: "trai-cay", name: "Trái cây", icon: LuApple },
@@ -29,6 +33,10 @@ export const CATEGORY_LINKS: { handle: string; name: string; icon: IconType }[] 
   { handle: "trung-sua", name: "Trứng & Sữa", icon: LuEgg },
   { handle: "gao-do-kho", name: "Gạo & Đồ khô", icon: LuWheat },
   { handle: "gia-vi", name: "Gia vị", icon: LuMilk },
+  { handle: "do-uong", name: "Đồ uống", icon: LuCupSoda },
+  { handle: "mi-an-lien", name: "Mì & Đồ ăn liền", icon: LuSoup },
+  { handle: "banh-keo-an-vat", name: "Bánh kẹo", icon: LuCookie },
+  { handle: "dong-lanh-che-bien", name: "Đông lạnh", icon: LuSnowflake },
 ]
 
 export default function CategoryNav() {
@@ -55,13 +63,15 @@ export default function CategoryNav() {
 
   return (
     <nav aria-label="Danh mục sản phẩm" className="flex h-[52px] items-center justify-between gap-4">
-      <ul className="flex min-w-0 items-center gap-1">
+      {/* Eleven links do not fit a 1024px window: the row scrolls sideways instead of wrapping. */}
+      <ul className="flex min-w-0 items-center gap-0.5 overflow-x-auto">
         {CATEGORY_LINKS.map(({ handle, name, icon: Icon }) => {
           const active = current === `categories/${handle}`
           return (
             <li key={handle}>
               <LocalizedClientLink
                 href={`/categories/${handle}`}
+                title={name}
                 aria-current={active ? "page" : undefined}
                 className={cx(
                   "flex h-9 items-center gap-1.5 whitespace-nowrap rounded-[10px] px-2.5 text-sm",

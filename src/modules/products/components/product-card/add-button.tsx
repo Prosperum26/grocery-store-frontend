@@ -27,7 +27,8 @@ export default function AddButton({
   const { handle, title } = product
   const { view, add, setQuantity, remove } = useCart()
   const { show } = useToast()
-  // One request at a time: a second tap before the cart answers would be applied to a stale quantity.
+  // Adding and removing wait for the server before the control changes shape, so a second tap meanwhile
+  // is ignored. Quantity taps are not: the cart shows the new number at once and saves the taps in order.
   const [busy, setBusy] = useState(false)
 
   if (!inStock) {
@@ -45,13 +46,15 @@ export default function AddButton({
   // Single-pack product: its cart line, if any, is the one with this handle.
   const line = view.lines.find((l) => l.handle === handle)
 
+  const failed = () => show({ tone: "err", title: "Chưa cập nhật được giỏ", description: "Bạn thử lại nhé." })
+
   const run = async (change: () => Promise<unknown>) => {
     if (busy) return
     setBusy(true)
     try {
       await change()
     } catch {
-      show({ tone: "err", title: "Chưa cập nhật được giỏ", description: "Bạn thử lại nhé." })
+      failed()
     } finally {
       setBusy(false)
     }
@@ -84,7 +87,7 @@ export default function AddButton({
       value={line.quantity}
       max={line.stockQty}
       removeAtMin
-      onChange={(next) => run(() => setQuantity(line.key, next))}
+      onChange={(next) => void setQuantity(line.key, next).catch(failed)}
       onRemove={() => run(() => remove(line.key))}
       className={busy ? "opacity-60" : undefined}
     />

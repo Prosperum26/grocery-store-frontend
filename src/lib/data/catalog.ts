@@ -222,3 +222,41 @@ async function readProducts(ids: string[], regionId: string) {
   const byId = new Map(products.map((p) => [p.id, p]))
   return ids.map((id) => byId.get(id)).filter((p): p is HttpTypes.StoreProduct => !!p)
 }
+
+/**
+ * A short row of products: search suggestions, home page rows, "cùng danh
+ * mục". One search query, no counts, so it is much lighter than getListing.
+ * Products that are out of stock are left out: a short row should only show
+ * what can be bought. Returns [] on any error, so the caller's page still renders.
+ */
+export async function listShortRow({
+  countryCode,
+  q,
+  category,
+  take,
+}: {
+  countryCode: string
+  q?: string
+  /** `handle` filters the mock catalog, `name` is what the search index stores. */
+  category?: { handle: string; name: string }
+  take: number
+}): Promise<ProductVM[]> {
+  try {
+    if (isMockMode()) {
+      const { response } = await listProducts({ countryCode, queryParams: { limit: 100 } })
+      const catalog = response.products.map(toProductVM)
+      return filterCatalog(catalog, { category: category?.handle, q, inStock: true, onSale: false }).slice(0, take)
+    }
+    const region = await getRegion(countryCode)
+    if (!region) {
+      return []
+    }
+    const { results } = await search({
+      queries: [{ entity: "product", filters: { q, category: category?.name, in_stock: true }, pagination: { take } }],
+    })
+    const products = await readProducts(results[0].hits.map((hit) => hit.id), region.id)
+    return products.map(toProductVM)
+  } catch {
+    return []
+  }
+}
