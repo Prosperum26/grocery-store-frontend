@@ -16,8 +16,8 @@ import Logo from "@modules/layout/components/logo"
 import MobileNav from "@modules/layout/components/mobile-nav"
 
 /**
- * Store header: logo, search, delivery slot, account, cart, then the category
- * row. Phones get the same pieces stacked plus the floating bottom nav.
+ * Store header: logo, search, delivery slot, account, cart, then a thin row of
+ * shortcuts (category menu, deals, Mua lại, Trợ lý Bếp). Phones get the same pieces stacked plus the floating bottom nav.
  * Breakpoint `small` = 1024px. Everything here leads somewhere: there is no
  * announcement strip (the delivery pill already says when the order arrives)
  * and no button for a feature that does not exist yet.
