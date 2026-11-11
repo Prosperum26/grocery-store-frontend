@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  needLabelOf,
   buildLines,
   cartLinesOf,
   chosenOption,
@@ -67,14 +68,23 @@ describe("kitchen basket lines", () => {
   it("adds the ticked lines with their pack count and sums the price", () => {
     const selection = initialSelection(lines)
     expect(cartLinesOf(lines, selection)).toEqual([{ variantId: "v_ca", quantity: 2, unitPrice: 85000 }])
-    expect(summarize(lines, selection)).toEqual({ count: 1, total: 170000, skipped: 0, unticked: 3 })
+    // me: no product, dứa: out of stock -> unavailable; nước mắm: buyable but not ticked -> notChosen
+    expect(summarize(lines, selection)).toEqual({ count: 1, total: 170000, notChosen: 1, unavailable: 2 })
   })
 
-  it("counts ticked lines that cannot be added as skipped", () => {
+  it("keeps unavailable lines out of the cart even when ticked", () => {
     const selection = initialSelection(lines)
     selection.ticked["me"] = true
     selection.ticked["dứa"] = true
-    expect(summarize(lines, selection)).toMatchObject({ count: 1, skipped: 2 })
+    expect(summarize(lines, selection)).toMatchObject({ count: 1, unavailable: 2, notChosen: 1 })
+  })
+
+  it("labels a line with the ingredient name and the amount needed", () => {
+    expect(lines[0].label).toBe("Cá lóc")
+    expect(needLabelOf({ quantity: 100, unit: "g" })).toBe("100 g")
+    expect(needLabelOf({ quantity: 0.5, unit: "cây" })).toBe("0,5 cây")
+    expect(needLabelOf({ quantity: 2, unit: null })).toBe("2")
+    expect(needLabelOf(null)).toBeNull()
   })
 
   it("uses the brand the customer chose for the price and the cart", () => {

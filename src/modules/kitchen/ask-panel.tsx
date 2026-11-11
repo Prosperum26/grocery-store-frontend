@@ -1,6 +1,6 @@
 "use client"
 
-import { askAboutRecipe } from "@lib/data/kitchen"
+import { askAboutRecipe, type AskTurn } from "@lib/data/kitchen"
 import { useRef, useState } from "react"
 import { LuChefHat, LuSend } from "react-icons/lu"
 
@@ -12,38 +12,37 @@ const SUGGESTIONS = [
   "Làm sao để món ít mặn, ít cay hơn?",
 ]
 
-type State =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "answer"; text: string }
-  | { status: "failed"; message: string }
-
 /**
  * "Hỏi thêm về món này". The AI is called only when the customer presses the
- * button, and it answers from this recipe. A new question replaces the old
- * answer (one question at a time, no chat history).
+ * button, and it answers from this recipe. Earlier questions and answers stay
+ * on screen and are sent along, so a follow-up ("vậy thay bằng gì?") is
+ * understood. Nothing is stored: leaving the page forgets the conversation.
  */
 export default function AskPanel({ recipeId, servings }: { recipeId: string; servings: number }) {
   const [question, setQuestion] = useState("")
-  const [state, setState] = useState<State>({ status: "idle" })
-  // Only the latest question may write the answer.
-  const latest = useRef(0)
+  const [turns, setTurns] = useState<AskTurn[]>([])
+  const [pending, setPending] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const ask = async (text: string) => {
-    const q = text.trim()
-    if (!q || state.status === "loading") return
-    const id = ++latest.current
-    setState({ status: "loading" })
-    const result = await askAboutRecipe(recipeId, q, servings)
-    if (id !== latest.current) return
+  const ask = async () => {
+    const q = question.trim()
+    if (!q || pending) return
+    setPending(q)
+    setError(null)
+    const result = await askAboutRecipe(recipeId, q, servings, turns)
+    setPending(null)
     if (result.ok && result.data.answer) {
-      setState({ status: "answer", text: result.data.answer })
-    } else if (!result.ok && result.reason === "unavailable") {
-      setState({ status: "failed", message: "Trợ lý Bếp tạm nghỉ, bạn thử lại sau nhé." })
-    } else {
-      setState({ status: "failed", message: "Chưa trả lời được câu này, bạn thử hỏi lại nhé." })
+      setTurns((before) => [...before, { question: q, answer: result.data.answer as string }])
+      setQuestion("")
+      return
     }
+    // The question stays in the box so the customer can send it again.
+    setError(
+      !result.ok && result.reason === "unavailable"
+        ? "Trợ lý Bếp tạm nghỉ, bạn thử lại sau nhé."
+        : "Chưa trả lời được câu này, bạn thử hỏi lại nhé."
+    )
   }
 
   return (
@@ -58,28 +57,46 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
       </div>
       <p className="mt-1 text-sm text-ink-2">Dinh dưỡng, bớt gì cho hợp khẩu vị, thay nguyên liệu... Trợ lý trả lời dựa trên công thức đang xem.</p>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        {SUGGESTIONS.map((s) => (
-          <button
-            key={s}
-            type="button"
-            className="touch-target rounded-full border border-line-2 px-3 py-1.5 text-sm hover:bg-page"
-            // Only fills the box: the customer can edit the question, and nothing is sent until they press "Hỏi thêm".
-            onClick={() => {
-              setQuestion(s)
-              inputRef.current?.focus()
-            }}
-          >
-            {s}
-          </button>
+      <div aria-live="polite" className="mt-3 flex flex-col gap-3">
+        {turns.map((turn, i) => (
+          <div key={i} className="flex flex-col gap-2">
+            <p className="ml-auto max-w-[85%] rounded-2xl bg-brand px-4 py-2 text-sm text-white">{turn.question}</p>
+            <p className="max-w-[85%] whitespace-pre-line rounded-2xl bg-brand-bg px-4 py-3 text-sm leading-6">{turn.answer}</p>
+          </div>
         ))}
+        {pending && (
+          <div className="flex flex-col gap-2">
+            <p className="ml-auto max-w-[85%] rounded-2xl bg-brand px-4 py-2 text-sm text-white">{pending}</p>
+            <p className="w-fit rounded-2xl bg-brand-bg px-4 py-3 text-sm text-ink-2">Đang trả lời…</p>
+          </div>
+        )}
+        {error && <p className="rounded-2xl bg-warn-bg p-4 text-sm text-warn-ink">{error}</p>}
       </div>
+
+      {turns.length === 0 && !pending && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className="touch-target rounded-full border border-line-2 px-3 py-1.5 text-sm hover:bg-page"
+              // Only fills the box: the customer can edit the question, and nothing is sent until they press "Hỏi thêm".
+              onClick={() => {
+                setQuestion(s)
+                inputRef.current?.focus()
+              }}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
 
       <form
         className="mt-3 flex gap-2"
         onSubmit={(e) => {
           e.preventDefault()
-          void ask(question)
+          void ask()
         }}
       >
         <label htmlFor="kitchen-question" className="sr-only">
@@ -91,23 +108,17 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
           value={question}
           maxLength={300}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ví dụ: món này có hợp cho bé 3 tuổi không?"
+          placeholder={turns.length ? "Hỏi tiếp…" : "Ví dụ: món này có hợp cho bé 3 tuổi không?"}
           className="h-11 min-w-0 flex-1 rounded-btn border border-line-2 bg-surface px-3 text-sm"
         />
-        <Button type="submit" icon={<LuSend />} aria-disabled={state.status === "loading" || !question.trim() || undefined}>
-          {state.status === "loading" ? "Đang hỏi…" : "Hỏi thêm"}
+        <Button type="submit" icon={<LuSend />} aria-disabled={!!pending || !question.trim() || undefined}>
+          {pending ? "Đang hỏi…" : "Hỏi thêm"}
         </Button>
       </form>
 
-      <div aria-live="polite" className="mt-3">
-        {state.status === "answer" && (
-          <div className="rounded-2xl bg-brand-bg p-4 text-sm leading-6">
-            <p className="whitespace-pre-line">{state.text}</p>
-            <p className="mt-2 text-xs text-ink-2">Số liệu dinh dưỡng chỉ là ước tính, không thay lời khuyên của bác sĩ hay chuyên gia dinh dưỡng.</p>
-          </div>
-        )}
-        {state.status === "failed" && <p className="rounded-2xl bg-warn-bg p-4 text-sm text-warn-ink">{state.message}</p>}
-      </div>
+      {turns.length > 0 && (
+        <p className="mt-2 text-xs text-ink-2">Số liệu dinh dưỡng chỉ là ước tính, không thay lời khuyên của bác sĩ hay chuyên gia dinh dưỡng.</p>
+      )}
     </section>
   )
 }
