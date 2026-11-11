@@ -12,6 +12,11 @@ Tách riêng với [spec A, B, C](2026-11-11-recipe-suggestions-spec.md). Hạng
 | R4 | Dọn hộp thoại "đang phát triển" (`ComingSoon`) | frontend | P2, sau R1 và R3 |
 | R5 | Hoàn tất trùng tu UX: bước 5 (trang sản phẩm) và bước 6 (trang công thức) | frontend | P1 |
 | R6 | Nợ kiểm thử và tài liệu | cả 3 | P2 |
+| **R7** | Ngữ cảnh cho AI ở "Hỏi thêm về món này" | ai (chính), backend, frontend | P1, sau R0 |
+
+**Quyết định của nhóm (2026-11-11):** R0 làm ngay. R1 theo đề xuất (header chỉ chọn khung giờ). R3 làm đủ (cách b), xếp cuối vì cần thao tác tay để cấu hình dịch vụ gửi email. R4: dọn sạch hộp thoại "đang phát triển".
+
+**R0 đã làm (2026-11-11):** thêm `relative` ở 5 chỗ, test chặn tái phát `src/lib/util/touch-target.test.ts`, khung "Hỏi thêm" thành hộp cao cố định cuộn bên trong. Đo trên Edge 1440px và 500px: không còn vùng bấm quá cỡ ở 8 trang; 200 điểm ngẫu nhiên trên trang món không bị nút ở xa nhận; tick, +/- số người, gợi ý câu hỏi không làm cuộn trang; nút gửi giữ nguyên toạ độ dọc qua 3 lần hỏi. Còn lại của R0.4: chuyển khối "Hỏi thêm" lên cột phải (làm cùng R5 bước 6).
 
 Nguyên tắc chung: không còn nút nào trên storefront mở hộp thoại "đang phát triển" khi chạy với backend thật. Mỗi nút hoặc chạy thật, hoặc bị gỡ.
 
@@ -208,12 +213,69 @@ Những việc đã ghi là "chưa chạy" hoặc lệch tài liệu, mình th�
 6. **Docker Compose** mới có ở repo AI (`grocery-store-ai/docker-compose.yml`); chưa có cho Postgres Medusa, Redis, gateway. Theo Q8 của `docs/06`, đặt ở repo backend. Hạng mục riêng nếu nhóm muốn người khác chạy được bằng một lệnh.
 7. **TanStack Query** (Q9) chưa được cài; các khối tải ở client hiện dùng `useEffect` và server action. Không cần thiết cho các spec này; ghi vào `docs/06` rằng đã chọn cách không dùng.
 
+## R7. Ngữ cảnh cho AI ở "Hỏi thêm về món này"
+
+### R7.1 Triệu chứng
+
+Khách hỏi về một bước nấu thì trợ lý trả lời như không biết các bước của món.
+
+### R7.2 Nguyên nhân đã xác định (đo ngày 2026-11-11, món "Canh chua cá", qua `/store/ai/ask`)
+
+Prompt **có** các bước nấu ([ask_facts.py](../../../grocery-store-ai/src/services/ask_facts.py), hàm `build_ask_prompt`), và dữ liệu có đủ (chỉ 3 trong 1.061 món không có bước nào). Lỗi nằm ở **cách đánh số**:
+
+- Trang công thức gộp bước chuẩn bị và bước nấu thành một danh sách "Cách nấu · 8 bước", đánh số **1 đến 8** ([recipe-view.tsx](../../src/modules/kitchen/recipe-view.tsx), `steps = [...prep_steps, ...cooking_steps]`).
+- Prompt gửi hai danh sách riêng, "Các bước chuẩn bị" **1 đến 4** và "Các bước nấu" **1 đến 4**.
+
+| Câu hỏi | Trả lời thật | Đánh giá |
+| :-- | :-- | :-- |
+| "Bước 6 làm gì vậy?" | "…chỉ có 4 bước chuẩn bị và 4 bước nấu thôi, không có bước số 6 nhé." | Sai: màn hình có bước 6 |
+| "Ở bước 3 mình cần chú ý gì?" | Trả lời về "cho bạc hà, đậu bắp, giá vào…" | Sai bước: đó là bước 7 trên màn hình; bước 3 trên màn hình là "cắt lát mỏng thơm, bạc hà…" |
+| "Tổng cộng có mấy bước?" | Liệt kê đúng 8 bước, chia hai nhóm | Đúng |
+| "1M là bao nhiêu?" | "1 muỗng canh (khoảng 15ml)…" | Đúng (mô hình tự suy ra, prompt không giải thích) |
+
+Thiếu thêm so với những gì khách đang nhìn thấy:
+
+| Thứ khách thấy hoặc dữ liệu có sẵn | Trong prompt? |
+| :-- | :-- |
+| Số bước đánh liên tục như trên màn hình | Không |
+| `usage_notes` (cách dùng, 1.044 món có) và `tips` (mẹo, 1.040 món có) trong bảng `recipe` | Không. `RecipeService` cũng không đọc hai cột này |
+| Thời gian nấu, độ khó | Không |
+| Lượng nguyên liệu **đã nhân theo số người đang xem** | Không: chỉ có dòng công thức gốc và câu "Khách đang xem cho N người" |
+| Nguyên liệu khách đã bỏ tick hoặc "Nhà bạn đã có", món hết hàng | Không |
+| Quy ước viết tắt của nguồn công thức (M = muỗng canh, m = muỗng cà phê) | Không |
+
+### R7.3 Sửa
+
+**AI service** (`ask_facts.py`, `recipe_service.py`, test `tests/recipe_rag/test_ask*.py`):
+
+1. **Một danh sách bước, đánh số liên tục, giống màn hình**: "Các bước (đánh số như khách thấy trên màn hình)", bước chuẩn bị trước, bước nấu sau, kèm nhãn `[chuẩn bị]` hoặc `[nấu]` ở mỗi dòng. Thêm quy tắc vào `SYSTEM_PROMPT`: khi khách nói "bước N" thì là số trong danh sách này.
+2. Đọc thêm `usage_notes`, `tips` trong `RecipeService` và đưa vào prompt (cắt độ dài như các bước).
+3. Thêm thời gian nấu và độ khó khi có.
+4. Thêm một dòng quy ước: "M = muỗng canh (khoảng 15 ml), m = muỗng cà phê (khoảng 5 ml)". **Cần người kiểm lại quy ước này với nguồn công thức trước khi đưa vào**; nếu không chắc thì bỏ dòng này.
+5. Lượng theo số người: thêm phần "Lượng cho N người" lấy từ `build_basket` (đã có `need.quantity`, `need.unit`), chỉ khi N khác khẩu phần gốc.
+6. Giới hạn độ dài prompt: giữ `STEP_CHARS`, thêm giới hạn cho mẹo và cách dùng; đo số token trước và sau trên 20 món dài nhất để chắc không vượt hạn mức của mô hình đang dùng.
+
+**Backend và frontend** (tuỳ chọn, làm sau 1–6): gửi kèm trạng thái giỏ của màn hình (nguyên liệu đã bỏ tick, món hết hàng) để trợ lý trả lời được "mình không mua cá thì thay bằng gì". Cần thêm trường vào `AskRequest` và hợp đồng `ai-copilot.md`; dữ liệu do máy khách gửi nên coi là dữ liệu, không phải chỉ thị (như `history` hiện nay).
+
+**Giao diện**: không đổi số bước. Giữ danh sách gộp 1 đến N.
+
+### R7.4 Nghiệm thu
+
+1. Test đơn vị cho `build_ask_prompt`: số bước liên tục; có mẹo và cách dùng khi dữ liệu có; không có phần lượng theo số người khi N bằng khẩu phần gốc.
+2. Bộ câu hỏi cố định trên 5 món (có món không có bước chuẩn bị, món nhiều bước): "bước K làm gì" với K ở cả hai nhóm, "bước cuối là gì", "có mẹo gì không", "nấu cho 8 người thì cần bao nhiêu cá". Người chấm đối chiếu câu trả lời với màn hình; ghi tỉ lệ đúng trước và sau khi sửa. Hiện tại: 2 trên 4 câu thử ở bảng trên sai.
+3. Câu hỏi ngoài chủ đề vẫn bị từ chối; độ trễ `/ask` không tăng đáng kể (đo, không ước lượng).
+
+Lưu ý: câu trả lời do mô hình ngôn ngữ sinh nên không cố định; nghiệm thu bằng bộ câu hỏi và người chấm, không bằng so khớp chuỗi.
+
+---
+
 ## Thứ tự đề xuất
 
 | Thứ tự | Hạng mục | Ước lượng thô |
 | :-- | :-- | :-- |
 | 1 | **R0.1–R0.3** (sửa và chặn tái phát) | 0,5 giờ sửa, 1–2 giờ viết test và script |
 | 2 | R0.4 và R0.5 cùng R5 bước 6 | 1 ngày |
+| 2b | R7 (ngữ cảnh "Hỏi thêm"), mục 1–4 trước | 0,5 ngày; mục 5–6 thêm 0,5 ngày |
 | 3 | R2 (bỏ "Dự kiến tới lúc") | 0,5 ngày |
 | 4 | R1 (khung giờ ở header) | 0,5–1 ngày |
 | 5 | R5 bước 5 (cùng C) | 0,5 ngày |
