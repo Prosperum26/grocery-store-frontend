@@ -91,7 +91,7 @@ function Card({ suggestion, headingId, onChange, changing }: { suggestion: RawSu
         )}
       </div>
 
-      <div className="flex flex-col gap-2 small:w-[280px] small:shrink-0">
+      <div className="flex flex-col gap-2 small:w-[340px] small:shrink-0">
         <p className="text-sm text-ink">{formatMissing(missing_count, missing_total)}</p>
         {missing_count > 0 && (
           <Button
@@ -106,7 +106,7 @@ function Card({ suggestion, headingId, onChange, changing }: { suggestion: RawSu
             {busy ? "Đang thêm…" : "Thêm cả giỏ nguyên liệu"}
           </Button>
         )}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="secondary" size="md" href={`/tro-ly-bep/${recipe.id}`} aria-label={`Xem công thức ${recipe.name}`} className="flex-1">
             Xem công thức
           </Button>
