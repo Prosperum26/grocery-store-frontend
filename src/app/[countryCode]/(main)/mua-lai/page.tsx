@@ -8,6 +8,8 @@ import Button from "@modules/common/components/button"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductArt from "@modules/products/components/product-art"
 import AddTodayButton from "@modules/reorder/add-today-button"
+import { isMockMode } from "@lib/mock/mode"
+import TryNewRecipe from "@modules/suggestions/try-new-recipe"
 
 export const metadata: Metadata = {
   title: "Mua lại · Com4Fud",
@@ -89,6 +91,9 @@ export default async function ReorderPage() {
           </ul>
         </section>
       )}
+
+      {/* A: a dish with a few ingredients the customer has not bought yet. Needs the backend. */}
+      {!isMockMode() && <TryNewRecipe headingId="reorder-try-new" />}
     </div>
   )
 }

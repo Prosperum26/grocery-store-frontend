@@ -1,6 +1,7 @@
 "use client"
 
 import { signout } from "@lib/data/customer"
+import { clearAllDrafts } from "@lib/util/draft"
 import { signOutDemo } from "@lib/data/demo-session"
 import { isMockMode } from "@lib/mock/mode"
 import { cx } from "@lib/util/cx"
@@ -26,6 +27,7 @@ export default function AccountNav({ name }: { name: string }) {
   const initial = name.trim().charAt(0).toUpperCase() || "?"
 
   const logout = async () => {
+    clearAllDrafts() // addresses and phone numbers must not outlive the session on a shared device
     if (isMockMode()) {
       await signOutDemo(countryCode)
       return
