@@ -1,29 +1,42 @@
 import { cx } from "@lib/util/cx"
 
 /**
- * Com4Fud logo (logoMark()/logo() in ui.js): a rounded tile with a white rice
- * bowl and a sprout, then the wordmark with the "4" highlighted. The tile is
- * green here (the v2 red was dropped for the v1 palette).
+ * Com4Fud mark: a walking person in the style of the pedestrian road sign, carrying a supermarket hand basket. No
+ * background tile. On a dark background (`inverse`) the person turns white and the basket lime, so both stay visible.
+ * The same drawing is the favicon (src/app/icon.svg).
  */
-export function LogoMark({ size = 36 }: { size?: number }) {
+export function LogoMark({ size = 36, inverse = false }: { size?: number; inverse?: boolean }) {
+  const person = inverse ? "#FFFFFF" : "#16241B"
+  const basket = inverse ? "#C8F169" : "#1F6B3A"
+  const rim = inverse ? "#A9D94A" : "#17532D"
+  const slots = inverse ? "#123D24" : "#C8F169"
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 36 36"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <rect width="36" height="36" rx="11" fill="#1F6B3A" />
-      <path d="M7 18h22a11 11 0 0 1-22 0z" fill="#FFFFFF" />
-      <path d="M12 18c0-3 3-5 6-5s6 2 6 5" fill="#FFFFFF" opacity=".55" />
+    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+      {/* Person: back arm, legs, body, front arm (round strokes like the sign), then the head. */}
+      <g stroke={person} strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M18.5 15.5l-4.5 5-1.5 4.5" strokeWidth="3.6" />
+        <path d="M17.5 26.5l3.5 7 1.2 9" strokeWidth="4.4" />
+        <path d="M17.5 26.5l-3 7.5-4.5 7.5" strokeWidth="4.4" />
+        <path d="M19 14.5l-1.5 12" strokeWidth="6.4" />
+        <path d="M19.8 15.5l4.6 4.5 5.3 3" strokeWidth="3.6" />
+      </g>
+      <circle cx="20.5" cy="7.4" r="4.3" fill={person} />
+      {/* Hand basket: two handles meeting in the hand, body, rim, ventilation slots. */}
       <path
-        d="M18 13V8m0 3c-1-2-3-3-5-3 0 2 2 3 5 3zm0-1c1-2 3-3 5-3 0 2-2 3-5 3z"
-        stroke="#C8F169"
-        strokeWidth="1.8"
+        d="M25.2 30.5c-.4-4.6 2.2-7 4.5-7.4M37.8 30.5c.4-4.6-3.3-7.2-8.1-7.4"
+        stroke={basket}
+        strokeWidth="1.9"
         strokeLinecap="round"
-        fill="#C8F169"
+        fill="none"
       />
+      <path d="M23.4 30.5h16.4l-1.9 11.2a1.6 1.6 0 0 1-1.6 1.3H26.9a1.6 1.6 0 0 1-1.6-1.3z" fill={basket} />
+      <path d="M23 30.2h17.2" stroke={rim} strokeWidth="2.2" strokeLinecap="round" />
+      <g fill={slots}>
+        <rect x="26.6" y="33.2" width="1.6" height="5.6" rx=".8" />
+        <rect x="29.7" y="33.2" width="1.6" height="5.6" rx=".8" />
+        <rect x="32.8" y="33.2" width="1.6" height="5.6" rx=".8" />
+        <rect x="35.9" y="33.2" width="1.4" height="5.6" rx=".7" />
+      </g>
     </svg>
   )
 }
@@ -39,8 +52,8 @@ export default function Logo({
   className?: string
 }) {
   return (
-    <span className={cx("inline-flex items-center gap-2.5", className)}>
-      <LogoMark size={size} />
+    <span className={cx("inline-flex items-center gap-2", className)}>
+      <LogoMark size={size} inverse={inverse} />
       <span
         className={cx(
           "font-display font-extrabold tracking-tight",
