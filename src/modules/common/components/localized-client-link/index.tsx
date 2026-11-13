@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, usePathname } from "next/navigation"
 import React from "react"
 
 /**
@@ -20,7 +20,11 @@ const LocalizedClientLink = ({
   passHref?: true
   [x: string]: any
 }) => {
-  const { countryCode } = useParams()
+  const params = useParams()
+  const pathname = usePathname()
+  // The site-wide 404 page sits outside [countryCode], so there is no param: take the first part of the address
+  // ("/vn/khong-ton-tai" -> "vn"), never print "undefined" into the link.
+  const countryCode = (params?.countryCode as string | undefined) || pathname?.split("/")[1] || "vn"
 
   return (
     <Link href={`/${countryCode}${href}`} {...props}>
