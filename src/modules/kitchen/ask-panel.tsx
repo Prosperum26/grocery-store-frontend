@@ -131,7 +131,7 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
           className="h-11 min-w-0 flex-1 rounded-btn border border-line-2 bg-surface px-3 text-sm"
         />
         {/* Fixed minimum width: "Đang hỏi…" is wider than "Hỏi thêm" and must not resize the row. */}
-        <Button type="submit" icon={<LuSend />} className="min-w-[132px]" aria-disabled={!!pending || !question.trim() || undefined}>
+        <Button type="submit" icon={<LuSend />} className="min-w-[152px]" aria-disabled={!!pending || !question.trim() || undefined}>
           {pending ? "Đang hỏi…" : "Hỏi thêm"}
         </Button>
       </form>
