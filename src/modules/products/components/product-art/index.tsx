@@ -1,12 +1,13 @@
 import { clx } from "@medusajs/ui"
 import Image from "next/image"
 
+import { artFor } from "@lib/util/category-art"
 import { tintColors } from "@lib/util/tint"
-import PlaceholderImage from "@modules/common/icons/placeholder-image"
 import type { ProductVM } from "types/viewmodels"
 
 type ProductArtProps = {
-  product: Pick<ProductVM, "title" | "art" | "tint" | "thumbnail">
+  /** `categoryHandle` picks the stand-in illustration when the product has no photo and no illustration. */
+  product: Pick<ProductVM, "title" | "art" | "tint" | "thumbnail"> & { categoryHandle?: string }
   /** Dot pattern on the plate (the design drops it on small thumbnails). */
   dots?: boolean
   /** Illustration size relative to the plate. */
@@ -44,7 +45,9 @@ export default function ProductArt({
   fit = "cover",
 }: ProductArtProps) {
   const alt = decorative ? "" : product.title
-  const { plate, dot } = tintColors(product.tint)
+  // No photo: the product's illustration, or the one of its category (category-art.ts), never an empty icon.
+  const drawn = artFor(product)
+  const { plate, dot } = tintColors(drawn.tint)
 
   if (product.thumbnail) {
     return (
@@ -76,23 +79,21 @@ export default function ProductArt({
         backgroundPosition: dots ? "0 0, 7px 14px" : undefined,
       }}
     >
-      {product.art ? (
+      {drawn.art ? (
         <div
           className="relative"
           style={{ width: `${scale * 100}%`, height: `${scale * 100}%` }}
         >
           {/* SVGs are local and tiny, so skip the image optimizer. */}
           <Image
-            src={`/art/${product.art}.svg`}
+            src={`/art/${drawn.art}.svg`}
             alt={alt}
             fill
             unoptimized
             className="object-contain"
           />
         </div>
-      ) : (
-        <PlaceholderImage size={24} />
-      )}
+      ) : null}
     </div>
   )
 }
