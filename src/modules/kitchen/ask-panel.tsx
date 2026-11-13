@@ -25,7 +25,7 @@ const SUGGESTIONS = [
 const MAX_PRODUCTS = 3
 
 /** One exchange as shown: the answer, plus the dishes or products it found. Only question and answer go back to the AI. */
-type Turn = AskTurn & { dishes: NonNullable<RawAsk["dishes"]>; products: ProductVM[] }
+type Turn = AskTurn & { dishes: NonNullable<RawAsk["dishes"]>; products: ProductVM[]; productQuery: string | null }
 
 /**
  * "Bạn có thắc mắc gì về món này không?": a short bar floating at the bottom of the recipe page. Pressing it opens the
@@ -77,7 +77,7 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
     setPending(null)
     if (result.ok && result.data.answer) {
       const answer = result.data.answer
-      setTurns((before) => [...before, { question: q, answer, dishes: result.data.dishes ?? [], products }])
+      setTurns((before) => [...before, { question: q, answer, dishes: result.data.dishes ?? [], products, productQuery: productQuery ?? null }])
       setQuestion("")
       return
     }
@@ -184,6 +184,15 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
                     </li>
                   ))}
                 </ul>
+              )}
+              {turn.productQuery && turn.products.length === 0 && (
+                // The quick search found nothing (short words such as "me" match poorly): offer the full search page.
+                <LocalizedClientLink
+                  href={`/store?q=${encodeURIComponent(turn.productQuery)}`}
+                  className="w-fit rounded-xl border border-line bg-surface px-3 py-2 text-sm font-semibold text-brand hover:bg-page-2"
+                >
+                  Tìm “{turn.productQuery}” trong cửa hàng
+                </LocalizedClientLink>
               )}
               {turn.products.length > 0 && (
                 <ul className="flex max-w-[85%] flex-col gap-1.5" aria-label="Sản phẩm tìm được">
