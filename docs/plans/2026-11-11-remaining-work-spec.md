@@ -18,6 +18,19 @@ Tách riêng với [spec A, B, C](2026-11-11-recipe-suggestions-spec.md). Hạng
 
 **R0 đã làm (2026-11-11):** thêm `relative` ở 5 chỗ, test chặn tái phát `src/lib/util/touch-target.test.ts`, khung "Hỏi thêm" thành hộp cao cố định cuộn bên trong. Đo trên Edge 1440px và 500px: không còn vùng bấm quá cỡ ở 8 trang; 200 điểm ngẫu nhiên trên trang món không bị nút ở xa nhận; tick, +/- số người, gợi ý câu hỏi không làm cuộn trang; nút gửi giữ nguyên toạ độ dọc qua 3 lần hỏi. Còn lại của R0.4: chuyển khối "Hỏi thêm" lên cột phải (làm cùng R5 bước 6).
 
+**Trạng thái (2026-11-13):**
+
+| Mã | Trạng thái | Nhánh | Ghi chú |
+| :-- | :-- | :-- | :-- |
+| R0 | Xong, đã kiểm trên trình duyệt | frontend `feature/storefront-ux-rework` | Kiểm lại sau khi đổi bố cục trang công thức (R5) |
+| R1 | Xong, đã kiểm trên trình duyệt | frontend `feature/storefront-ux-rework` | Chưa thử khi backend tắt (có test đơn vị) |
+| R2 | Xong | backend `chore/remove-delivery-eta`, frontend | Test tích hợp backend chưa chạy (cần Postgres thử cổng 5434 và `.env.test`) |
+| R3 | **Chưa làm**, chờ cấu hình gửi email | — | Cần người tạo tài khoản dịch vụ gửi email; xem mục R3 |
+| R4 | Xong | frontend | "Quên mật khẩu?" bị gỡ khỏi form, sẽ quay lại cùng R3. Chế độ mock chưa mở trên trình duyệt |
+| R5 | Xong (bước 5 và 6) | frontend | Bố cục khác đề xuất ban đầu: cột phải dính theo gồm tạm tính và "Hỏi thêm"; các bước nấu nằm dưới nguyên liệu ở cột trái |
+| R6 | Xong phần tài liệu | backend `feature/search-subcategory` (README) | Còn: chạy test tích hợp, khối Mua lại khi đăng nhập, kịch bản demo đầu-cuối, Docker Compose |
+| R7 | Xong mục 1, 2, 3, 5, 6 | ai `fix/ask-context` | Mục 4 (quy ước M/m) bỏ: dữ liệu không có chỗ nào giải thích, không kiểm chứng được. Phần gửi trạng thái giỏ (tuỳ chọn) chưa làm |
+
 Nguyên tắc chung: không còn nút nào trên storefront mở hộp thoại "đang phát triển" khi chạy với backend thật. Mỗi nút hoặc chạy thật, hoặc bị gỡ.
 
 ---
