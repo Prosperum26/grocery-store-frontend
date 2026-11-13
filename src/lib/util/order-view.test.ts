@@ -18,7 +18,7 @@ const order: RawMyOrder = {
     stage: "SHIPPING",
     delivery_note: "Gọi cửa",
     slot: { label: "15:00–17:00", startsAt: "2026-11-03T15:00:00+07:00" },
-    delivery: { driver_name: "Nguyễn Văn Đức", plate: "59-X3 482.17", distance_km: 3.2, eta_at: "2026-11-03T10:30:00.000Z" },
+    delivery: { driver_name: "Nguyễn Văn Đức", plate: "59-X3 482.17" },
   },
 }
 
@@ -34,7 +34,7 @@ describe("buildOrderView", () => {
       note: "Gọi cửa",
       address: "Trần Minh Thư · 0903412588 · 12 Nguyễn Văn Linh, Q.7",
       items: [{ key: "i1", title: "Nước mắm", variantLabel: "chai 500ml", quantity: 2, lineTotal: 90000, variantId: "var_1" }],
-      delivery: { driverName: "Nguyễn Văn Đức", plate: "59-X3 482.17", distanceKm: 3.2, etaTime: "17:30" },
+      delivery: { driverName: "Nguyễn Văn Đức", plate: "59-X3 482.17" },
     })
   })
 

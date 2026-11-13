@@ -1,7 +1,7 @@
 import { DEMO_ORDER } from "@lib/mock/checkout"
 import type { MockOrder } from "@lib/mock/orders"
 import type { OrderStage } from "types/viewmodels"
-import { formatVnDate, formatVnTime, slotText } from "./order-receipt"
+import { formatVnDate, slotText } from "./order-receipt"
 import { ORDER_STAGES } from "./stage"
 
 /**
@@ -19,12 +19,10 @@ export type OrderItemView = {
   variantId?: string
 }
 
+/** Who is bringing the order. There is no arrival estimate: the team dropped it (2026-11-11). */
 export type DeliveryView = {
   driverName: string
   plate: string
-  distanceKm: number | null
-  /** "17:30", Vietnam time. */
-  etaTime: string
 }
 
 export type OrderView = {
@@ -84,8 +82,6 @@ export type RawMyOrder = {
     delivery?: {
       driver_name?: unknown
       plate?: unknown
-      distance_km?: unknown
-      eta_at?: unknown
     } | null
   } | null
 }
@@ -106,8 +102,6 @@ function readDelivery(raw: NonNullable<RawMyOrder["metadata"]>["delivery"]): Del
   return {
     driverName: asText(raw.driver_name),
     plate: asText(raw.plate),
-    distanceKm: typeof raw.distance_km === "number" ? raw.distance_km : null,
-    etaTime: formatVnTime(asText(raw.eta_at)),
   }
 }
 
@@ -146,7 +140,7 @@ export function buildOrderView(order: RawMyOrder): OrderView {
 }
 
 /** The driver of the design's sample order (shared.js ORDER). Other samples have none. */
-const SAMPLE_DRIVER: DeliveryView = { driverName: "Nguyễn Văn Đức", plate: "59-X3 482.17", distanceKm: null, etaTime: "" }
+const SAMPLE_DRIVER: DeliveryView = { driverName: "Nguyễn Văn Đức", plate: "59-X3 482.17" }
 
 /** A sample order of mock mode, shaped like a real one. */
 export function fromMockOrder(order: MockOrder): OrderView {

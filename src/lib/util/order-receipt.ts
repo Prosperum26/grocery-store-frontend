@@ -54,11 +54,6 @@ export function formatVnDate(iso: string | null | undefined): string {
   return vnParts(iso)?.date ?? ""
 }
 
-/** "17:30" in Vietnam time. */
-export function formatVnTime(iso: string | null | undefined): string {
-  return vnParts(iso)?.time ?? ""
-}
-
 /** The slot day and time, e.g. "03.11 · 17:00–19:00". */
 export function slotText(slot: NonNullable<RawOrder["metadata"]>["slot"]): string {
   if (!slot || typeof slot.label !== "string") return ""
