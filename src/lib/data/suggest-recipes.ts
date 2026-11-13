@@ -4,6 +4,7 @@ import { sdk } from "@lib/config"
 import { isMockMode } from "@lib/mock/mode"
 import type { RawSuggestResponse } from "@lib/util/suggest"
 import { retrieveCart } from "./cart"
+import { getAuthHeaders } from "./cookies"
 import type { KitchenResult } from "./kitchen"
 import { listProducts } from "./products"
 
@@ -51,4 +52,26 @@ export async function getRecipesForProduct(countryCode: string, handle: string):
   const skus = unique((product?.variants ?? []).map((v) => v.sku))
   if (skus.length === 0) return NOTHING
   return suggest({ catalog_ids: skus, mode: "product", limit: 3 })
+}
+
+/**
+ * A: one dish the customer may want to try. Signed in, the backend knows what they bought before (from the session,
+ * not from here); signed out, it picks among the best-checked dishes. `excludeIds` are the dishes already shown
+ * ("Đổi món khác"). The cart's products are sent as `have`, so a dish the cart already covers is not offered.
+ */
+export async function getRecipeToTry(excludeIds: string[] = []): Promise<KitchenResult<RawSuggestResponse>> {
+  if (isMockMode()) return NOTHING
+  const cart = await retrieveCart(undefined, "id,*items,*items.variant")
+  try {
+    const data = await sdk.client.fetch<RawSuggestResponse>("/store/ai/suggest/discover", {
+      method: "POST",
+      body: { exclude_ids: excludeIds, have: unique((cart?.items ?? []).map((item) => item.variant?.sku)) },
+      headers: { ...(await getAuthHeaders()) },
+      cache: "no-store",
+    })
+    return { ok: true, data }
+  } catch (error) {
+    const status = (error as { status?: number })?.status
+    return { ok: false, reason: status === 503 ? "unavailable" : "error" }
+  }
 }
