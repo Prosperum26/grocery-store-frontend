@@ -9,6 +9,7 @@ import CookTonight from "@modules/home/components/cook-tonight"
 import HomeHero from "@modules/home/components/home-hero"
 import ProductRow from "@modules/home/components/product-row"
 import CartRecipes from "@modules/suggestions/cart-recipes"
+import TryNewRecipe from "@modules/suggestions/try-new-recipe"
 
 export const metadata: Metadata = {
   title: "Com4Fud - Đi chợ online",
@@ -55,6 +56,7 @@ export default async function Home(props: {
         {!mock && <BuyAgainLive />}
         {!mock && <CartRecipes headingId="home-cart-recipes" />}
         <ProductRow id="home-deals" title="Ưu đãi hôm nay" href="/store?sale=1" linkLabel="Xem tất cả ưu đãi" products={deals} />
+        {!mock && <TryNewRecipe headingId="home-try-new" />}
         {!mock && <CookTonight countryCode={countryCode} />}
         {CATEGORY_ROWS.map((category, i) => (
           <ProductRow

@@ -9,6 +9,8 @@ import { Banner } from "@modules/common/components/notice"
 import CartLine from "@modules/cart/components/item"
 import CartSummary from "@modules/cart/components/summary"
 import CartRecipes from "@modules/suggestions/cart-recipes"
+import TryNewRecipe from "@modules/suggestions/try-new-recipe"
+import { isMockMode } from "@lib/mock/mode"
 import EmptyCartMessage from "@modules/cart/components/empty-cart-message"
 import type { ReactNode } from "react"
 import { LuArrowLeft } from "react-icons/lu"
@@ -63,7 +65,10 @@ export default function CartTemplate({ buyAgain }: { buyAgain?: ReactNode }) {
       )}
 
       {view.lines.length === 0 ? (
-        <EmptyCartMessage />
+        <>
+          <EmptyCartMessage />
+          {!isMockMode() && <TryNewRecipe headingId="cart-try-new" />}
+        </>
       ) : (
         <div className="flex flex-col gap-6 small:flex-row small:items-start small:gap-8">
           <div className="flex min-w-0 flex-1 flex-col gap-6">
@@ -79,6 +84,7 @@ export default function CartTemplate({ buyAgain }: { buyAgain?: ReactNode }) {
             </section>
             {buyAgain}
             <CartRecipes />
+            {!isMockMode() && <TryNewRecipe headingId="cart-try-new" />}
           </div>
           <div className="w-full small:sticky small:top-6 small:w-[380px] small:shrink-0">
             <CartSummary />
