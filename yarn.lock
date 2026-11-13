@@ -712,6 +712,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/be-vietnam-pro@npm:5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource/be-vietnam-pro@npm:5.3.0"
+  checksum: 10/de4e9ae66f5c18d0d716f4b78945093f03936541e1e9f8b42c3e6944cfa5544b3c204f994a6cb25161dc24bd821d3d222c3a77685041b9ef667c34db1b1edfec
+  languageName: node
+  linkType: hard
+
+"@fontsource/bricolage-grotesque@npm:5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource/bricolage-grotesque@npm:5.3.0"
+  checksum: 10/d89b26ac12320154e456fc66dc7cd0a4ad74aaa5312cd0e70e9458ccfcb6a5031725fb8245c36f77f699e684135cf9c3361c2d49f29c5168b2a6e974ceca4875
+  languageName: node
+  linkType: hard
+
+"@fontsource/jetbrains-mono@npm:5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource/jetbrains-mono@npm:5.3.0"
+  checksum: 10/8d96ebd4b19639a1988a3004909d454470069315b39b3177dddcc13f0d79570b14ed183abdf36866751d1c34814667ae6c8bbd558e6f366d168f7ec49167a851
+  languageName: node
+  linkType: hard
+
 "@formatjs/ecma402-abstract@npm:2.3.6":
   version: 2.3.6
   resolution: "@formatjs/ecma402-abstract@npm:2.3.6"
@@ -8159,6 +8180,9 @@ __metadata:
   resolution: "medusa-next@workspace:."
   dependencies:
     "@babel/core": "npm:^7.17.5"
+    "@fontsource/be-vietnam-pro": "npm:5.3.0"
+    "@fontsource/bricolage-grotesque": "npm:5.3.0"
+    "@fontsource/jetbrains-mono": "npm:5.3.0"
     "@headlessui/react": "npm:^2.2.0"
     "@medusajs/icons": "npm:2.21.1"
     "@medusajs/js-sdk": "npm:2.21.1"

@@ -2,29 +2,28 @@ import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
 import "styles/globals.css"
 
+// Be Vietnam Pro (body), Bricolage Grotesque (headings), JetBrains Mono (prices, order codes): all three have
+// Vietnamese glyphs. Served from our own build (@fontsource, OFL fonts packaged for npm), not fetched from Google at
+// run time: a network that blocks Google no longer drops the page to the system font. Only the weights in use.
+// (next/font/google is not used: it fails under Turbopack on Windows with Next 15.3.)
+import "@fontsource/be-vietnam-pro/400.css"
+import "@fontsource/be-vietnam-pro/500.css"
+import "@fontsource/be-vietnam-pro/600.css"
+import "@fontsource/be-vietnam-pro/700.css"
+import "@fontsource/bricolage-grotesque/600.css"
+import "@fontsource/bricolage-grotesque/700.css"
+import "@fontsource/bricolage-grotesque/800.css"
+import "@fontsource/jetbrains-mono/500.css"
+import "@fontsource/jetbrains-mono/700.css"
+
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
   title: "Com4Fud - Đi chợ online",
 }
 
-// Be Vietnam Pro (body), Bricolage Grotesque (headings), JetBrains Mono
-// (prices, order codes): all three have Vietnamese glyphs. Loaded via <link>
-// because next/font/google fails under Turbopack on Windows (Next 15.3).
-const FONT_URL =
-  "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap"
-
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="vi" data-mode="light">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link rel="stylesheet" href={FONT_URL} />
-      </head>
       <body className="bg-page font-sans text-ink antialiased">
         {/* Keyboard users can jump over the header. Every layout renders
             <main id="main">. */}
