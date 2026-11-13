@@ -8,6 +8,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { Banner } from "@modules/common/components/notice"
 import CartLine from "@modules/cart/components/item"
 import CartSummary from "@modules/cart/components/summary"
+import CartRecipes from "@modules/suggestions/cart-recipes"
 import EmptyCartMessage from "@modules/cart/components/empty-cart-message"
 import type { ReactNode } from "react"
 import { LuArrowLeft } from "react-icons/lu"
@@ -77,6 +78,7 @@ export default function CartTemplate({ buyAgain }: { buyAgain?: ReactNode }) {
               </ul>
             </section>
             {buyAgain}
+            <CartRecipes />
           </div>
           <div className="w-full small:sticky small:top-6 small:w-[380px] small:shrink-0">
             <CartSummary />
