@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { listShortRow } from "@lib/data/catalog"
 import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
 import { pickProducts } from "@lib/mock/home"
@@ -114,5 +115,20 @@ export default async function ProductPage(props: Props) {
     companionHandles
   )
 
-  return <ProductTemplate product={vm} companions={companions} />
+  // "Cùng danh mục": in-stock products of the same category, without this one and the companions above.
+  const shown = new Set([vm.id, ...companions.map((p) => p.id)])
+  const sameCategory =
+    vm.categoryHandle && vm.categoryName
+      ? (
+          await listShortRow({
+            countryCode,
+            category: { handle: vm.categoryHandle, name: vm.categoryName },
+            take: 10,
+          })
+        )
+          .filter((p) => !shown.has(p.id))
+          .slice(0, 5)
+      : []
+
+  return <ProductTemplate product={vm} companions={companions} sameCategory={sameCategory} />
 }
