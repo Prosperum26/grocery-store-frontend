@@ -41,7 +41,14 @@ export async function getRecipe(recipeId: string, servings?: number): Promise<Ki
   return post<RawRecipeDetail>("/store/ai/recipe", { recipe_id: recipeId, ...(servings ? { servings } : {}) })
 }
 
-export type RawAsk = { answer: string | null; status: string }
+export type RawAsk = {
+  answer: string | null
+  status: string
+  /** Dishes suggested when the customer asked for other dishes (recipe search on the AI side, at most 3). */
+  dishes?: { id: string; name: string; servings: number; time_minutes: number | null }[]
+  /** Product name when the customer wants to find or buy something; the chat looks it up like the header search. */
+  product_query?: string | null
+}
 export type AskTurn = { question: string; answer: string }
 
 /** The backend takes at most this many earlier turns. */

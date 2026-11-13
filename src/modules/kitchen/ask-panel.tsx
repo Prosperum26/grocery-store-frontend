@@ -1,6 +1,14 @@
 "use client"
 
-import { askAboutRecipe, type AskTurn } from "@lib/data/kitchen"
+import { askAboutRecipe, type AskTurn, type RawAsk } from "@lib/data/kitchen"
+import { suggest } from "@lib/data/suggest"
+import { formatVnd } from "@lib/util/price"
+import { recipeMeta } from "@lib/util/suggest"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import ProductArt from "@modules/products/components/product-art"
+import AddButton from "@modules/products/components/product-card/add-button"
+import type { ProductVM } from "types/viewmodels"
+import { useParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { LuChefHat, LuSend, LuX } from "react-icons/lu"
 
@@ -8,14 +16,22 @@ import Button from "@modules/common/components/button"
 
 const SUGGESTIONS = [
   "Món này khoảng bao nhiêu calo?",
-  "Nên bớt gì cho hợp khẩu vị miền Bắc?",
   "Làm sao để món ít mặn, ít cay hơn?",
+  "Gợi ý món canh ăn kèm",
+  "Tìm nước mắm ngon",
 ]
+
+/** Products shown under an answer when the customer asked for one (same search as the header box). */
+const MAX_PRODUCTS = 3
+
+/** One exchange as shown: the answer, plus the dishes or products it found. Only question and answer go back to the AI. */
+type Turn = AskTurn & { dishes: NonNullable<RawAsk["dishes"]>; products: ProductVM[]; productQuery: string | null }
 
 /**
  * "Bạn có thắc mắc gì về món này không?": a short bar floating at the bottom of the recipe page. Pressing it opens the
- * chat (a box in the corner on desktop, a sheet from the bottom on phones). The chat only answers questions about this
- * recipe; it never changes the cart or places an order, and says so.
+ * chat (a box in the corner on desktop, a sheet from the bottom on phones). Besides answering about this recipe, it can
+ * suggest other dishes (the AI side runs the recipe search) and look up a product (the header search, with the usual
+ * add button). It never adds to the cart or orders by itself: the customer presses the buttons.
  *
  * The AI is called only when the customer sends a question, and it answers from this recipe. Earlier questions and
  * answers stay in the chat and are sent along, so a follow-up ("vậy thay bằng gì?") is understood. They also survive
@@ -27,7 +43,8 @@ const SUGGESTIONS = [
 export default function AskPanel({ recipeId, servings }: { recipeId: string; servings: number }) {
   const [open, setOpen] = useState(false)
   const [question, setQuestion] = useState("")
-  const [turns, setTurns] = useState<AskTurn[]>([])
+  const { countryCode } = useParams<{ countryCode: string }>()
+  const [turns, setTurns] = useState<Turn[]>([])
   const [pending, setPending] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -53,10 +70,14 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
     if (!q || pending) return
     setPending(q)
     setError(null)
-    const result = await askAboutRecipe(recipeId, q, servings, turns)
+    const result = await askAboutRecipe(recipeId, q, servings, turns.map(({ question, answer }) => ({ question, answer })))
+    // A product the customer asked for: looked up here, the same way as the header search box.
+    const productQuery = result.ok ? result.data.product_query : null
+    const products = productQuery ? (await suggest(countryCode, productQuery).catch(() => null))?.products.slice(0, MAX_PRODUCTS) ?? [] : []
     setPending(null)
     if (result.ok && result.data.answer) {
-      setTurns((before) => [...before, { question: q, answer: result.data.answer as string }])
+      const answer = result.data.answer
+      setTurns((before) => [...before, { question: q, answer, dishes: result.data.dishes ?? [], products, productQuery: productQuery ?? null }])
       setQuestion("")
       return
     }
@@ -114,7 +135,7 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
             <LuX size={20} aria-hidden="true" />
           </button>
         </div>
-        <p className="mt-1 text-xs text-ink-2">Mình chỉ trả lời câu hỏi về công thức này, không thêm vào giỏ hay đặt hàng thay bạn.</p>
+        <p className="mt-1 text-xs text-ink-2">Hỏi về món này, nhờ gợi ý món khác hoặc tìm nhanh sản phẩm. Mình không tự thêm vào giỏ hay đặt hàng thay bạn.</p>
 
         <div
           ref={logRef}
@@ -149,6 +170,48 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
             <div key={i} className="flex flex-col gap-2">
               <p className="ml-auto max-w-[85%] rounded-2xl bg-brand px-4 py-2 text-sm text-white">{turn.question}</p>
               <p className="max-w-[85%] whitespace-pre-line rounded-2xl bg-brand-bg px-4 py-3 text-sm leading-6">{turn.answer}</p>
+              {turn.dishes.length > 0 && (
+                <ul className="flex max-w-[85%] flex-col gap-1.5" aria-label="Món gợi ý">
+                  {turn.dishes.map((d) => (
+                    <li key={d.id}>
+                      <LocalizedClientLink
+                        href={`/tro-ly-bep/${d.id}`}
+                        className="flex flex-col rounded-xl border border-line bg-surface px-3 py-2 text-sm hover:bg-page-2"
+                      >
+                        <span className="font-semibold text-ink">{d.name}</span>
+                        <span className="text-xs text-ink-2">{recipeMeta(d)} · Xem công thức</span>
+                      </LocalizedClientLink>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {turn.productQuery && turn.products.length === 0 && (
+                // The quick search found nothing (short words such as "me" match poorly): offer the full search page.
+                <LocalizedClientLink
+                  href={`/store?q=${encodeURIComponent(turn.productQuery)}`}
+                  className="w-fit rounded-xl border border-line bg-surface px-3 py-2 text-sm font-semibold text-brand hover:bg-page-2"
+                >
+                  Tìm “{turn.productQuery}” trong cửa hàng
+                </LocalizedClientLink>
+              )}
+              {turn.products.length > 0 && (
+                <ul className="flex max-w-[85%] flex-col gap-1.5" aria-label="Sản phẩm tìm được">
+                  {turn.products.map((product) => (
+                    <li key={product.id} className="flex items-center gap-2 rounded-xl border border-line bg-surface p-2">
+                      <LocalizedClientLink href={`/products/${product.handle}`} className="flex min-w-0 flex-1 items-center gap-2">
+                        <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
+                          <ProductArt product={product} decorative dots={false} fit="contain" sizes="40px" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold text-ink">{product.title}</span>
+                          <span className="block text-xs text-ink-2">{formatVnd(product.price)}</span>
+                        </span>
+                      </LocalizedClientLink>
+                      <AddButton product={product} inStock={product.stockQty > 0} />
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
           {pending && (

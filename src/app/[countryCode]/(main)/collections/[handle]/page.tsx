@@ -51,6 +51,10 @@ export async function generateStaticParams() {
   return staticParams
 }
 
+// Only the collections built ahead of time exist; any other handle is a 404. Rendering an unknown handle on demand
+// failed with DYNAMIC_SERVER_USAGE (the page reads cookies) and showed a 500.
+export const dynamicParams = false
+
 export async function generateMetadata(props: Props): Promise<Metadata> {
   // The mock catalog has no collections (it groups by category only).
   if (isMockMode()) notFound()

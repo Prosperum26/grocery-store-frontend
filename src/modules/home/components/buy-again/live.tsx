@@ -13,9 +13,9 @@ import { useEffect, useState } from "react"
 import { LuPlus, LuRepeat } from "react-icons/lu"
 
 /**
- * "Có thể bạn cần mua lại" with the real basket (backend API-3). Nothing is
- * drawn for a visitor who is not signed in or has no past orders: an empty
- * "buy again" box would only be noise.
+ * "Có thể bạn cần mua lại" with the real basket (backend API-3). A signed-in customer without enough history gets the
+ * shop's best sellers instead, titled "Được mua nhiều gần đây". Nothing is drawn for a visitor who is not signed in
+ * or when the basket is empty: an empty box would only be noise.
  */
 export default function BuyAgainLive() {
   const { countryCode } = useParams<{ countryCode: string }>()
@@ -62,7 +62,7 @@ export default function BuyAgainLive() {
           <LuRepeat size={18} />
         </span>
         <h2 id="home-buy-again" className="font-sans text-base font-semibold small:font-display small:text-[28px] small:font-bold small:leading-[34px]">
-          Có thể bạn cần mua lại
+          {basket.popular ? "Được mua nhiều gần đây" : "Có thể bạn cần mua lại"}
         </h2>
         {basket.addableCount > 0 && (
           <Button variant="primary" size="md" icon={<LuPlus />} className="ml-auto hidden small:inline-flex" onClick={addAll} aria-disabled={busy || undefined}>
