@@ -6,6 +6,7 @@ import { isMockMode } from "@lib/mock/mode"
 import { DEFAULT_SLOT_ID, DELIVERY_SLOTS, isVietnamesePhone, NOTE_MAX_LENGTH } from "@lib/mock/checkout"
 import { listDeliverySlots, startPayment } from "@lib/data/checkout"
 import { isEmail, soldOutMessage, type SavedAddress, type SlotOption } from "@lib/util/checkout"
+import { pickShownSlot, readCookie, SLOT_COOKIE } from "@lib/util/delivery-slot"
 import { cx } from "@lib/util/cx"
 import { formatVnd } from "@lib/util/price"
 import Button from "@modules/common/components/button"
@@ -57,13 +58,16 @@ export default function CheckoutTemplate({
   const [submitting, setSubmitting] = useState(false)
   const summaryRef = useRef<HTMLDivElement>(null)
 
-  // Real mode: the slots come from the backend. Pick the first one still open.
+  // Real mode: the slots come from the backend. Keep the slot already chosen on this page if it is
+  // still open; otherwise the one picked in the header (cookie), otherwise the earliest open one.
   const loadSlots = () =>
     listDeliverySlots()
       .then((list) => {
         setSlots(list)
         setSlotId((current) =>
-          list.some((s) => s.id === current && s.open) ? current : (list.find((s) => s.open)?.id ?? "")
+          list.some((s) => s.id === current && s.open)
+            ? current
+            : (pickShownSlot(list, readCookie(document.cookie, SLOT_COOKIE))?.slot.id ?? "")
         )
       })
       .catch(() => setErrors((e) => ({ ...e, slot: "Không tải được khung giờ giao. Tải lại trang để thử lại." })))
