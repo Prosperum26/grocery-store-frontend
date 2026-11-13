@@ -133,6 +133,33 @@ export async function login(_currentState: unknown, formData: FormData) {
   await warmReorderBasket()
 }
 
+/**
+ * "Quên mật khẩu": Medusa tạo token và gửi email cho email này. Route luôn trả thành công kể cả khi email chưa có
+ * tài khoản (để không lộ ai đã đăng ký), nên ở đây cũng chỉ báo lỗi khi không gọi được backend.
+ */
+export async function requestPasswordReset(email: string): Promise<SaveResult> {
+  if (isMockMode()) return { ok: false, message: MOCK_AUTH_MESSAGE }
+
+  try {
+    await sdk.auth.resetPassword("customer", "emailpass", { identifier: email })
+  } catch {
+    return { ok: false, message: "Chưa gửi được email. Bạn thử lại sau nhé." }
+  }
+  return { ok: true }
+}
+
+/** Trang đặt mật khẩu mới: `token` lấy từ link trong email, Medusa gửi nó trong header Authorization. */
+export async function resetPassword(email: string, token: string, password: string): Promise<SaveResult> {
+  if (isMockMode()) return { ok: false, message: MOCK_AUTH_MESSAGE }
+
+  try {
+    await sdk.auth.updateProvider("customer", "emailpass", { email, password }, token)
+  } catch {
+    return { ok: false, message: "Link đã hết hạn hoặc không hợp lệ. Hãy yêu cầu một link mới." }
+  }
+  return { ok: true }
+}
+
 export async function signout(countryCode: string) {
   await sdk.auth.logout()
 
