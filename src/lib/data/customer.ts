@@ -5,7 +5,7 @@ import { DEMO_STORE_CUSTOMER } from "@lib/mock/customer"
 import { isMockMode } from "@lib/mock/mode"
 import { isDemoSignedIn } from "./demo-session"
 import { toAddressBody, type AddressInput } from "@lib/util/address-form"
-import { COMING_SOON_TEXT, COMING_SOON_TITLE } from "@lib/util/coming-soon-copy"
+import { MOCK_NO_BACKEND } from "@lib/util/mock-copy"
 import { warmReorderBasket } from "./predictive"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
@@ -56,7 +56,7 @@ export const retrieveCustomer =
 
 // Accounts need the backend; in mock mode the forms say so instead of
 // failing with a network error (issue #11: placeholder, never a crash).
-const MOCK_AUTH_MESSAGE = `${COMING_SOON_TITLE}. ${COMING_SOON_TEXT}`
+const MOCK_AUTH_MESSAGE = MOCK_NO_BACKEND
 
 export async function signup(_currentState: unknown, formData: FormData) {
   if (isMockMode()) return MOCK_AUTH_MESSAGE
