@@ -4,13 +4,12 @@ import { reorderOrder } from "@lib/data/my-orders"
 import { useToast } from "@lib/context/toast-context"
 import { isMockMode } from "@lib/mock/mode"
 import Button from "@modules/common/components/button"
-import { ComingSoonButton } from "@modules/common/components/coming-soon"
 import { useParams } from "next/navigation"
 import { useState } from "react"
 
 /**
  * "Mua lại": puts the items of a past order back in the cart. Mock orders
- * have no item list, so there it stays the "đang phát triển" button.
+ * have no item list, so mock mode shows no button.
  */
 export default function ReorderButton({ orderId }: { orderId: string }) {
   const { countryCode } = useParams<{ countryCode: string }>()
@@ -18,11 +17,7 @@ export default function ReorderButton({ orderId }: { orderId: string }) {
   const [busy, setBusy] = useState(false)
 
   if (isMockMode()) {
-    return (
-      <ComingSoonButton feature="Mua lại" variant="accent" size="md">
-        Mua lại
-      </ComingSoonButton>
-    )
+    return null
   }
 
   const onClick = async () => {
