@@ -12,18 +12,15 @@ import { useState } from "react"
 import { LuPlus } from "react-icons/lu"
 
 /**
- * One suggested dish, shared by the cart (B), product page (C) and "thử món mới" (A) blocks. A strip of ingredient
- * photos stands in for a dish photo (the dish photo host is not allowed in next.config yet). "Thêm" puts only the
- * missing ingredients in the cart, the same lines the recipe page would add.
+ * "Thêm" for one suggestion: puts only the missing ingredients in the cart (the same lines the recipe page would add),
+ * refreshes the cart and says what happened. Shared by the cards and by the "Thử món mới?" block.
  */
-export default function RecipeCard({ suggestion, onAdded }: { suggestion: RawSuggestion; onAdded?: () => void }) {
+export function useAddSuggestion(suggestion: RawSuggestion, onAdded?: () => void) {
   const { countryCode } = useParams<{ countryCode: string }>()
   const { refresh } = useCart()
   const { show } = useToast()
   const [busy, setBusy] = useState(false)
-  const { recipe, missing_count, missing_total } = suggestion
-  const photos = thumbnailsOf(suggestion)
-  const covered = missing_count === 0
+  const name = suggestion.recipe.name
 
   const add = async () => {
     if (busy) return
@@ -33,11 +30,24 @@ export default function RecipeCard({ suggestion, onAdded }: { suggestion: RawSug
     setBusy(false)
     show(
       added > 0
-        ? { tone: "ok", title: `Đã thêm ${added} nguyên liệu cho ${recipe.name}`, description: skipped > 0 ? `${skipped} nguyên liệu vừa hết hàng nên chưa thêm.` : undefined }
+        ? { tone: "ok", title: `Đã thêm ${added} nguyên liệu cho ${name}`, description: skipped > 0 ? `${skipped} nguyên liệu vừa hết hàng nên chưa thêm.` : undefined }
         : { tone: "warn", title: "Chưa thêm được nguyên liệu nào", description: "Các nguyên liệu này vừa hết hàng." }
     )
     onAdded?.()
   }
+  return { add, busy }
+}
+
+/**
+ * One suggested dish, shared by the cart (B), product page (C) and "thử món mới" (A) blocks. A strip of ingredient
+ * photos stands in for a dish photo (the dish photo host is not allowed in next.config yet). "Thêm" puts only the
+ * missing ingredients in the cart, the same lines the recipe page would add.
+ */
+export default function RecipeCard({ suggestion, onAdded }: { suggestion: RawSuggestion; onAdded?: () => void }) {
+  const { add, busy } = useAddSuggestion(suggestion, onAdded)
+  const { recipe, missing_count, missing_total } = suggestion
+  const photos = thumbnailsOf(suggestion)
+  const covered = missing_count === 0
 
   return (
     <article className="flex min-w-0 flex-col gap-3 rounded-2xl border border-line bg-surface p-3.5">
