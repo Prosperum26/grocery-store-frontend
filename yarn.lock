@@ -1154,68 +1154,78 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@medusajs/icons@npm:2.12.3":
-  version: 2.12.3
-  resolution: "@medusajs/icons@npm:2.12.3"
+"@medusajs/icons@npm:2.21.0":
+  version: 2.21.0
+  resolution: "@medusajs/icons@npm:2.21.0"
   peerDependencies:
-    react: ^18.3.1
-  checksum: 10/baef7a86c6c4aac8dbe5584c59ab496eeea3722715352a88f086ceaea52200f9e3752087bb7b1b437694ec3e47a9ec5397d946873d76b3faa9af9dbc5fd7f5e2
+    react: ^18.3.1 || ^19.0.0
+  checksum: 10/f6aecfa6624c42afe380eb9901153c33229e393f63c0080ff3e25777765ff910d0ce03a211dc8b72033dbbad2883cb8a28bf76c8d9fb2f1c4b3aef8cd9123472
   languageName: node
   linkType: hard
 
-"@medusajs/js-sdk@npm:2.12.3":
-  version: 2.12.3
-  resolution: "@medusajs/js-sdk@npm:2.12.3"
+"@medusajs/icons@npm:2.21.1":
+  version: 2.21.1
+  resolution: "@medusajs/icons@npm:2.21.1"
+  peerDependencies:
+    react: ^18.3.1 || ^19.0.0
+  checksum: 10/007996a7f7bf5ebb286363526533eeaff3a61fc12c13c15db4010cdb16d9e7e47a1aa7123afb7c6553964d553ee85b00fcc21fdca2b8764508f9281832c0c134
+  languageName: node
+  linkType: hard
+
+"@medusajs/js-sdk@npm:2.21.1":
+  version: 2.21.1
+  resolution: "@medusajs/js-sdk@npm:2.21.1"
   dependencies:
     fetch-event-stream: "npm:^0.1.5"
-    qs: "npm:^6.12.1"
-  checksum: 10/91a9263a047bae459c6ec6d8f830bc5a29994c696bbcacc8f4815c4b26cb6ba08ad5fef907e6988320e3568e018e85fd52cef9730d064f24777d6b1571b5c1cb
+    qs: "npm:^6.15.2"
+  checksum: 10/c76679f7f82a7713431d8067fd4d15ac458f1eddb5f2f2a8239fdfcdbf3888b008e147e61aa158d280875a84966cc94a03c9d1d91acae1751caa8358f29a62f5
   languageName: node
   linkType: hard
 
-"@medusajs/types@npm:2.12.3":
-  version: 2.12.3
-  resolution: "@medusajs/types@npm:2.12.3"
+"@medusajs/types@npm:2.21.1":
+  version: 2.21.1
+  resolution: "@medusajs/types@npm:2.21.1"
   dependencies:
     bignumber.js: "npm:^9.1.2"
   peerDependencies:
     ioredis: ^5.4.1
-    vite: ^5.4.21
+    vite: ">=5"
   peerDependenciesMeta:
     ioredis:
       optional: true
     vite:
       optional: true
-  checksum: 10/7a619ff984508b64611487c9160c5e15f5ab99cf75deaf3c5f91afd9cb395e1ff50cd8a22e7943098a4b50039cb0fa97d908d923f68b53308a6c95209e7f8748
+  checksum: 10/662e08f0f5b5a886eb1f5f50e84eea307d3ad9f4dd956982c7c8b9e497e4bab2e36ab01dfa110d150f1bb9021df84d38b316ce803927e907e593505bbbf6c49b
   languageName: node
   linkType: hard
 
-"@medusajs/ui-preset@npm:2.12.3":
-  version: 2.12.3
-  resolution: "@medusajs/ui-preset@npm:2.12.3"
+"@medusajs/ui-preset@npm:2.21.1":
+  version: 2.21.1
+  resolution: "@medusajs/ui-preset@npm:2.21.1"
   dependencies:
     "@tailwindcss/forms": "npm:^0.5.3"
     tailwindcss-animate: "npm:^1.0.6"
   peerDependencies:
     tailwindcss: ^3.4.3
-  checksum: 10/2c59b7c4e72fd2c0ac649b9dbc51a8a6629bfa991f72ec6921721b1d8d970e0b8d3cb9634f126c08f8221f753e9edceb34b5303d604b433d5dd0edcbd9a855a9
+  checksum: 10/0554600b070526122f419b22ad8b25cfaea497c9954e51ced3bd77f15517d7bbc5a6ea1e167315a9f578307bca9d83c682b55e47474dadbe64f2aeb8b824c175
   languageName: node
   linkType: hard
 
-"@medusajs/ui@npm:4.0.31":
-  version: 4.0.31
-  resolution: "@medusajs/ui@npm:4.0.31"
+"@medusajs/ui@npm:4.2.4":
+  version: 4.2.4
+  resolution: "@medusajs/ui@npm:4.2.4"
   dependencies:
     "@dnd-kit/core": "npm:^6.1.0"
     "@dnd-kit/sortable": "npm:^8.0.0"
     "@dnd-kit/utilities": "npm:^3.2.2"
-    "@medusajs/icons": "npm:2.12.3"
+    "@medusajs/icons": "npm:2.21.0"
     "@radix-ui/react-dialog": "npm:1.1.4"
     "@radix-ui/react-dismissable-layer": "npm:1.1.4"
     "@tanstack/react-table": "npm:8.20.5"
     clsx: "npm:^1.2.1"
     copy-to-clipboard: "npm:^3.3.3"
     cva: "npm:1.0.0-beta.1"
+    lodash.isequal: "npm:^4.5.0"
     prism-react-renderer: "npm:^2.0.6"
     prismjs: "npm:^1.30.0"
     radix-ui: "npm:1.1.2"
@@ -1227,7 +1237,7 @@ __metadata:
   peerDependencies:
     react: ^18.3.1
     react-dom: ^18.3.1
-  checksum: 10/be3f3476cca23f6dcd402493676e352ca3b7e9afe5aa5fb102a1fa911c696a0737046ed84d6bd80fdc352ec75d4e0645fb1c7a65a8602091ec603fbc54b3a729
+  checksum: 10/b3813e203e0aac58d1f4e9dec7045870f261c01cc734cc69f05f48ef7a07e1ae9f544d7234a129ad6e6d1fb9b2a052d816e2251385aa2d6ec3433641c477e023
   languageName: node
   linkType: hard
 
@@ -8045,6 +8055,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lodash.isequal@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "lodash.isequal@npm:4.5.0"
+  checksum: 10/82fc58a83a1555f8df34ca9a2cd300995ff94018ac12cc47c349655f0ae1d4d92ba346db4c19bbfc90510764e0c00ddcc985a358bdcd4b3b965abf8f2a48a214
+  languageName: node
+  linkType: hard
+
 "lodash.merge@npm:^4.6.2":
   version: 4.6.2
   resolution: "lodash.merge@npm:4.6.2"
@@ -8143,11 +8160,11 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.17.5"
     "@headlessui/react": "npm:^2.2.0"
-    "@medusajs/icons": "npm:2.12.3"
-    "@medusajs/js-sdk": "npm:2.12.3"
-    "@medusajs/types": "npm:2.12.3"
-    "@medusajs/ui": "npm:4.0.31"
-    "@medusajs/ui-preset": "npm:2.12.3"
+    "@medusajs/icons": "npm:2.21.1"
+    "@medusajs/js-sdk": "npm:2.21.1"
+    "@medusajs/types": "npm:2.21.1"
+    "@medusajs/ui": "npm:4.2.4"
+    "@medusajs/ui-preset": "npm:2.21.1"
     "@radix-ui/react-accordion": "npm:^1.2.1"
     "@types/lodash": "npm:^4.14.195"
     "@types/node": "npm:17.0.21"
@@ -9134,6 +9151,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"qs@npm:^6.15.2":
+  version: 6.17.1
+  resolution: "qs@npm:6.17.1"
+  dependencies:
+    es-define-property: "npm:^1.0.1"
+    side-channel: "npm:^1.1.1"
+  checksum: 10/032a642c783fa93277c703591643734519c1e96ed2a9ea83a371fda4187dd9d6c2e5b66a69378a77e5a824bf8c4d1d0654295c069a9ff6c55509c0112c459a28
+  languageName: node
+  linkType: hard
+
 "queue-microtask@npm:^1.2.2":
   version: 1.2.3
   resolution: "queue-microtask@npm:1.2.3"
@@ -9917,6 +9944,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"side-channel-list@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "side-channel-list@npm:1.0.1"
+  dependencies:
+    es-errors: "npm:^1.3.0"
+    object-inspect: "npm:^1.13.4"
+  checksum: 10/3499671cd52adaee739eac1e14d07530b8e3530192741aeb05e7fe4ad1b51d1368ceea2cd3c21b0f62b05410a5c70a7c4d997ba4b143303ef73d0c65dfd1c252
+  languageName: node
+  linkType: hard
+
 "side-channel-map@npm:^1.0.1":
   version: 1.0.1
   resolution: "side-channel-map@npm:1.0.1"
@@ -9952,6 +9989,19 @@ __metadata:
     side-channel-map: "npm:^1.0.1"
     side-channel-weakmap: "npm:^1.0.2"
   checksum: 10/7d53b9db292c6262f326b6ff3bc1611db84ece36c2c7dc0e937954c13c73185b0406c56589e2bb8d071d6fee468e14c39fb5d203ee39be66b7b8174f179afaba
+  languageName: node
+  linkType: hard
+
+"side-channel@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "side-channel@npm:1.1.1"
+  dependencies:
+    es-errors: "npm:^1.3.0"
+    object-inspect: "npm:^1.13.4"
+    side-channel-list: "npm:^1.0.1"
+    side-channel-map: "npm:^1.0.1"
+    side-channel-weakmap: "npm:^1.0.2"
+  checksum: 10/5fa6393ff6ad25d8b4a38e9ba095481e498c8ebe5ab78481c1455146255a3d18ca37a6f936595cc671a6149134cdc295bbd2fa017620bdc73cbc7380634fa2fc
   languageName: node
   linkType: hard
 
