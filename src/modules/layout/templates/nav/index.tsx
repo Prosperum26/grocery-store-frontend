@@ -3,20 +3,17 @@ import { LuUser } from "react-icons/lu"
 import { retrieveCustomer } from "@lib/data/customer"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import {
-  AddressPill,
-  MobileAddressRow,
-} from "@modules/layout/components/address-pill"
-import {
   LiveCartDesktop,
   LiveCartMobile,
 } from "@modules/layout/components/cart-button/live"
 import CategoryNav from "@modules/layout/components/category-nav"
+import DeliverySlotPill from "@modules/layout/components/delivery-slot-pill"
 import HeaderSearch from "@modules/layout/components/header-search"
 import Logo from "@modules/layout/components/logo"
 import MobileNav from "@modules/layout/components/mobile-nav"
 
 /**
- * Store header: logo, search, delivery slot, account, cart, then a thin row of
+ * Store header: logo, search, delivery slot (spec R1), account, cart, then a thin row of
  * shortcuts (category menu, deals, Mua lại, Trợ lý Bếp). Phones get the same pieces stacked plus the floating bottom nav.
  * Breakpoint `small` = 1024px. Everything here leads somewhere: there is no
  * announcement strip (the delivery pill already says when the order arrives)
@@ -36,7 +33,7 @@ export default async function Nav() {
               <Logo />
             </LocalizedClientLink>
             <HeaderSearch className="flex-1" />
-            <AddressPill />
+            <DeliverySlotPill variant="desktop" />
             <LocalizedClientLink
               href="/account"
               aria-label={accountLabel}
@@ -60,7 +57,7 @@ export default async function Nav() {
             </LocalizedClientLink>
             <LiveCartMobile />
           </div>
-          <MobileAddressRow />
+          <DeliverySlotPill variant="phone" />
           <HeaderSearch />
         </div>
       </header>
