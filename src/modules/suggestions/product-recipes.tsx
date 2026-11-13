@@ -29,6 +29,8 @@ export default function ProductRecipes({ handle, title }: { handle: string; titl
   }, [countryCode, handle])
 
   if (state === "none") return null
+  // The full product name carries the pack size ("… chai 500ml"); the dish's own ingredient name reads better.
+  const heading = state !== "loading" ? (state[0]?.matched[0]?.name.trim().toLocaleLowerCase("vi") ?? title) : title
 
   if (state === "loading") {
     return <div aria-hidden="true" className="h-[250px] animate-pulse rounded-card bg-page-2" />
@@ -37,7 +39,7 @@ export default function ProductRecipes({ handle, title }: { handle: string; titl
   return (
     <section aria-labelledby="product-recipes" className="flex flex-col gap-3">
       <h2 id="product-recipes" className="font-display text-xl font-bold text-ink small:text-[26px] small:leading-8">
-        Món nấu với {title}
+        Món nấu với {heading}
       </h2>
       <ul className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1 small:mx-0 small:grid small:grid-cols-3 small:overflow-visible small:px-0">
         {state.map((s) => (
