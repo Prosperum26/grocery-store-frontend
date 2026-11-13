@@ -24,6 +24,8 @@ export type RawBasket = {
   status: "ready" | "warming" | "empty"
   items: RawBasketItem[]
   total: number
+  /** model: picked from the customer's own orders. popular: not enough history yet, best sellers instead. */
+  source?: "model" | "popular"
 }
 
 export type BasketItemView = {
@@ -45,9 +47,11 @@ export type BasketView = {
   /** What the "Thêm tất cả" button adds: only items that are in stock. */
   total: number
   addableCount: number
+  /** True when these are the shop's best sellers, not a reorder of the customer's own items. */
+  popular: boolean
 }
 
-export const EMPTY_BASKET: BasketView = { items: [], total: 0, addableCount: 0 }
+export const EMPTY_BASKET: BasketView = { items: [], total: 0, addableCount: 0, popular: false }
 
 const TINTS: Tint[] = ["red", "orange", "green", "cream", "blue", "yellow", "brown", "pink"]
 
@@ -71,5 +75,6 @@ export function buildBasketView(raw: RawBasket | null | undefined): BasketView {
     // The backend already sums only the items in stock.
     total: raw.total,
     addableCount: items.filter((i) => i.inStock).length,
+    popular: raw.source === "popular",
   }
 }

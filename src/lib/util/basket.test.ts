@@ -16,6 +16,12 @@ const item = (over: Partial<RawBasketItem>): RawBasketItem => ({
 })
 
 describe("buildBasketView", () => {
+  it("marks best sellers apart from a reorder", () => {
+    expect(buildBasketView({ status: "ready", total: 1, items: [item({})], source: "popular" }).popular).toBe(true)
+    expect(buildBasketView({ status: "ready", total: 1, items: [item({})], source: "model" }).popular).toBe(false)
+    expect(buildBasketView({ status: "ready", total: 1, items: [item({})] }).popular).toBe(false)
+  })
+
   it("is empty unless the backend says the basket is ready", () => {
     expect(buildBasketView(null)).toEqual(EMPTY_BASKET)
     expect(buildBasketView({ status: "empty", items: [], total: 0 })).toEqual(EMPTY_BASKET)
