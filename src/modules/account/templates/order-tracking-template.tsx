@@ -1,7 +1,6 @@
 import type { OrderView } from "@lib/util/order-view"
 import { TRACKING_STEPS, trackingIndex } from "@lib/util/stage"
 import { formatVnd } from "@lib/util/price"
-import { ComingSoonBadge } from "@modules/common/components/coming-soon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import OrderStatusChip from "@modules/common/components/order-status-chip"
 import CancelOrderButton from "@modules/account/components/order-actions/cancel-button"
@@ -10,9 +9,10 @@ import ProductArt from "@modules/products/components/product-art"
 import { LuCheck, LuChevronLeft, LuTruck } from "react-icons/lu"
 
 /**
- * Order tracking (08_Theo_Doi_Don_Hang). The timeline is static: it shows
- * the stage the order is in, not a live position (no map, phase 2). The
- * arrival time is a placeholder until live tracking exists.
+ * Order tracking (08_Theo_Doi_Don_Hang). The timeline shows the stage the
+ * order is in. There is no map and no arrival estimate (the team dropped
+ * both, 2026-11-11); once the order is on its way the side column names the
+ * driver and the plate.
  */
 export default function OrderTrackingTemplate({ order }: { order: OrderView }) {
   const currentIndex = trackingIndex(order.stage)
@@ -49,7 +49,7 @@ export default function OrderTrackingTemplate({ order }: { order: OrderView }) {
           Đơn này đã được hủy. Không có bước giao nào được thực hiện.
         </p>
       ) : (
-        <div className="grid gap-5 small:grid-cols-[minmax(0,1fr)_280px]">
+        <div className={driver ? "grid gap-5 small:grid-cols-[minmax(0,1fr)_280px]" : "grid gap-5"}>
           <section aria-labelledby="tracking-steps" className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 small:p-6">
             <h2 id="tracking-steps" className="font-display text-lg font-bold text-ink">
               Tiến trình đơn
@@ -89,27 +89,8 @@ export default function OrderTrackingTemplate({ order }: { order: OrderView }) {
             </ol>
           </section>
 
-          <aside className="flex flex-col gap-4">
-            <section aria-labelledby="tracking-eta" className="flex flex-col gap-3 rounded-card border border-dashed border-line-2 bg-surface p-5">
-              <h2 id="tracking-eta" className="text-sm font-semibold text-ink">
-                Dự kiến tới lúc
-              </h2>
-              {driver?.etaTime ? (
-                <p className="font-mono text-2xl font-bold text-ink">
-                  {driver.etaTime}
-                  {driver.distanceKm !== null && (
-                    <span className="ml-2 text-sm font-normal text-ink-2">còn {driver.distanceKm} km</span>
-                  )}
-                </p>
-              ) : (
-                <>
-                  <ComingSoonBadge className="self-start" />
-                  <p className="text-sm text-ink-2">Thời gian tới dự kiến sẽ hiện ở đây khi có theo dõi trực tiếp.</p>
-                </>
-              )}
-            </section>
-
-            {driver && (
+          {driver && (
+            <aside className="flex flex-col gap-4">
               <section aria-labelledby="tracking-driver" className="flex items-center gap-3 rounded-card border border-line bg-surface p-5">
                 <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-bg text-brand">
                   <LuTruck />
@@ -121,8 +102,8 @@ export default function OrderTrackingTemplate({ order }: { order: OrderView }) {
                   <p className="font-mono text-xs text-ink-2">Biển số {driver.plate}</p>
                 </div>
               </section>
-            )}
-          </aside>
+            </aside>
+          )}
         </div>
       )}
 
