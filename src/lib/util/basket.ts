@@ -14,6 +14,7 @@ export type RawBasketItem = {
   unit_label: string
   art: string | null
   tint: string | null
+  thumbnail?: string | null
   quantity: number
   unit_price: number
   in_stock: boolean
@@ -33,6 +34,7 @@ export type BasketItemView = {
   quantityLabel: string
   art: string | undefined
   tint: Tint
+  thumbnail: string | undefined
   /** Price of the whole line. */
   linePrice: number
   inStock: boolean
@@ -59,6 +61,7 @@ export function buildBasketView(raw: RawBasket | null | undefined): BasketView {
     title: item.title,
     quantityLabel: item.unit_label + (item.quantity > 1 ? ` · ×${item.quantity}` : ""),
     art: item.art ?? undefined,
+    thumbnail: item.thumbnail ?? undefined,
     tint: TINTS.includes(item.tint as Tint) ? (item.tint as Tint) : "green",
     linePrice: item.unit_price * item.quantity,
     inStock: item.in_stock,

@@ -22,6 +22,12 @@ describe("buildBasketView", () => {
     expect(buildBasketView({ status: "warming", items: [item({})], total: 38000 })).toEqual(EMPTY_BASKET)
   })
 
+  it("passes the product photo through, and leaves it out when the product has none", () => {
+    const withPhoto = buildBasketView({ status: "ready", total: 1, items: [item({ thumbnail: "https://x/a.jpg" })] })
+    expect(withPhoto.items[0].thumbnail).toBe("https://x/a.jpg")
+    expect(buildBasketView({ status: "ready", total: 1, items: [item({ thumbnail: null })] }).items[0].thumbnail).toBeUndefined()
+  })
+
   it("prices each line, labels the quantity and defaults art and tint", () => {
     const view = buildBasketView({
       status: "ready",

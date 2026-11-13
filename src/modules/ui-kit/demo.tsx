@@ -5,7 +5,6 @@
 import { useState } from "react"
 import {
   LuArrowRight,
-  LuBell,
   LuChefHat,
   LuCheck,
   LuPercent,
@@ -19,11 +18,6 @@ import {
 
 import Button from "@modules/common/components/button"
 import Chip from "@modules/common/components/chip"
-import {
-  ComingSoonBadge,
-  ComingSoonButton,
-  ComingSoonPanel,
-} from "@modules/common/components/coming-soon"
 import Field from "@modules/common/components/field"
 import FilterChip from "@modules/common/components/filter-chip"
 import LiveStock from "@modules/common/components/live-stock"
@@ -139,15 +133,6 @@ export default function UiKitDemo() {
         <Banner tone="warn" title="Giá Thịt ba rọi heo vừa thay đổi" description="Từ 89.000đ lên 92.000đ. Tổng tiền đã tính theo giá mới." action={<Button variant="secondary" size="sm">Đã hiểu</Button>} />
         <Banner tone="err" title="5 món cần nhập gấp" />
         <Banner tone="tip" title="Mẹo: thêm cả công thức vào giỏ" />
-      </Section>
-
-      <Section title="Giữ chỗ tính năng chưa có">
-        <div className="flex flex-wrap items-center gap-3">
-          <ComingSoonBadge />
-          <ComingSoonButton feature="Trợ lý Bếp" icon={<LuChefHat />} variant="accent">Hỏi Trợ lý Bếp</ComingSoonButton>
-          <ComingSoonButton feature="Báo khi có hàng" icon={<LuBell />} variant="secondary" size="sm">Báo khi có hàng</ComingSoonButton>
-        </div>
-        <ComingSoonPanel title="Trợ lý Bếp" description="Gợi ý thực đơn và gom nguyên liệu vào giỏ cho bạn." />
       </Section>
     </div>
   )

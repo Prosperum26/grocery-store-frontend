@@ -111,8 +111,21 @@ export default function RecipeView({ initial, backQuery }: { initial: RawRecipeD
     }
   }
 
+  const addButton = (className?: string) => (
+    <Button
+      fullWidth
+      size="lg"
+      className={className}
+      icon={<LuPlus />}
+      onClick={addToCart}
+      aria-disabled={adding || loading || summary.count === 0 || undefined}
+    >
+      {adding ? "Đang thêm…" : `Thêm ${summary.count} nguyên liệu · ${formatVnd(summary.total)}`}
+    </Button>
+  )
+
   return (
-    <article aria-labelledby="kitchen-recipe" className="content-container flex flex-col gap-6 py-8 small:py-12">
+    <article aria-labelledby="kitchen-recipe" className="content-container flex flex-col gap-6 pb-44 pt-8 small:py-12">
       <LocalizedClientLink
         href={backQuery ? `/tro-ly-bep?q=${encodeURIComponent(backQuery)}` : "/tro-ly-bep"}
         className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-brand hover:underline"
@@ -131,7 +144,7 @@ export default function RecipeView({ initial, backQuery }: { initial: RawRecipeD
             <button
               type="button"
               aria-label="Giảm số người"
-              className="touch-target flex h-9 w-9 items-center justify-center rounded-full disabled:opacity-35"
+              className="touch-target relative flex h-9 w-9 items-center justify-center rounded-full disabled:opacity-35"
               disabled={servings <= 1 || loading}
               onClick={() => void changeServings(servings - 1)}
             >
@@ -143,7 +156,7 @@ export default function RecipeView({ initial, backQuery }: { initial: RawRecipeD
             <button
               type="button"
               aria-label="Tăng số người"
-              className="touch-target flex h-9 w-9 items-center justify-center rounded-full disabled:opacity-35"
+              className="touch-target relative flex h-9 w-9 items-center justify-center rounded-full disabled:opacity-35"
               disabled={servings >= 50 || loading}
               onClick={() => void changeServings(servings + 1)}
             >
@@ -157,7 +170,10 @@ export default function RecipeView({ initial, backQuery }: { initial: RawRecipeD
 
       {failure && <FailureNote reason={failure} />}
 
-      <div className={"grid gap-6 small:grid-cols-[1fr_380px] " + (loading ? "opacity-60" : "")}>
+      {/* Left: what to buy, then how to cook. Right (desktop): the subtotal, the add button and "Hỏi thêm",
+          kept in view while the shopper scrolls the list. Phones: one column and a bottom bar with the button. */}
+      <div className={"grid gap-6 small:grid-cols-[1fr_380px] small:items-start " + (loading ? "opacity-60" : "")}>
+        <div className="flex min-w-0 flex-col gap-6">
         <section aria-labelledby="kitchen-ingredients" className="rounded-card border border-line bg-surface p-4 small:p-6">
           <div className="flex items-baseline justify-between gap-3">
             <div>
@@ -193,7 +209,34 @@ export default function RecipeView({ initial, backQuery }: { initial: RawRecipeD
           )}
         </section>
 
-        <div className="flex flex-col gap-6">
+        {steps.length > 0 && (
+          <section aria-labelledby="kitchen-steps" className="rounded-card border border-line bg-surface p-4 small:p-6">
+            <h2 id="kitchen-steps" className="font-display text-xl font-bold">
+              Cách nấu · {steps.length} bước
+            </h2>
+            <ol className="mt-3 flex flex-col gap-3 text-[15px] leading-6">
+              {steps.map((step, i) => (
+                <li key={i} className="flex gap-3">
+                  <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warn font-mono text-xs font-bold">
+                    {i + 1}
+                  </span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+            {recipe.source_url.startsWith("http") && (
+              <p className="mt-3 text-xs text-ink-3">
+                Nguồn công thức:{" "}
+                <a href={recipe.source_url} target="_blank" rel="noopener noreferrer" className="underline">
+                  {new URL(recipe.source_url).hostname}
+                </a>
+              </p>
+            )}
+          </section>
+        )}
+        </div>
+
+        <div className="flex flex-col gap-6 small:sticky small:top-4 small:max-h-[calc(100vh-2rem)] small:overflow-y-auto">
           <section aria-labelledby="kitchen-summary" className="rounded-card border border-line bg-surface p-4 small:p-6">
             <h2 id="kitchen-summary" className="font-mono text-xs uppercase tracking-wider text-ink-3">
               Tóm tắt
@@ -220,47 +263,18 @@ export default function RecipeView({ initial, backQuery }: { initial: RawRecipeD
               <span className="font-semibold">Tạm tính</span>
               <span className="font-mono text-2xl font-bold">{formatVnd(summary.total)}</span>
             </div>
-            <Button
-              fullWidth
-              size="lg"
-              className="mt-3"
-              icon={<LuPlus />}
-              onClick={addToCart}
-              aria-disabled={adding || loading || summary.count === 0 || undefined}
-            >
-              {adding ? "Đang thêm…" : `Thêm ${summary.count} nguyên liệu · ${formatVnd(summary.total)}`}
-            </Button>
+            {/* Desktop only: on phones the same button sits in the bottom bar below. */}
+            <div className="hidden small:block">{addButton("mt-3")}</div>
           </section>
 
-          {steps.length > 0 && (
-            <section aria-labelledby="kitchen-steps" className="rounded-card border border-line bg-surface p-4 small:p-6">
-              <h2 id="kitchen-steps" className="font-mono text-xs uppercase tracking-wider text-ink-3">
-                Cách nấu · {steps.length} bước
-              </h2>
-              <ol className="mt-3 flex flex-col gap-3 text-sm">
-                {steps.map((step, i) => (
-                  <li key={i} className="flex gap-3">
-                    <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warn font-mono text-xs font-bold">
-                      {i + 1}
-                    </span>
-                    <span>{step}</span>
-                  </li>
-                ))}
-              </ol>
-              {recipe.source_url.startsWith("http") && (
-                <p className="mt-3 text-xs text-ink-3">
-                  Nguồn công thức:{" "}
-                  <a href={recipe.source_url} target="_blank" rel="noopener noreferrer" className="underline">
-                    {new URL(recipe.source_url).hostname}
-                  </a>
-                </p>
-              )}
-            </section>
-          )}
+          <AskPanel recipeId={recipe.id} servings={servings} />
         </div>
       </div>
 
-      <AskPanel recipeId={recipe.id} servings={servings} />
+      {/* Phones: the add button stays above the bottom nav, like the product page. */}
+      <div className="fixed inset-x-4 bottom-24 z-30 rounded-card border border-line bg-surface p-3 shadow-toast small:hidden">
+        {addButton()}
+      </div>
     </article>
   )
 }

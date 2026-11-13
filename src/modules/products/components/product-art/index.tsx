@@ -20,6 +20,12 @@ type ProductArtProps = {
   sizes?: string
   /** Overrides the tint plate colour, e.g. white circles on a dark banner. */
   plateColor?: string
+  /**
+   * How a photo fills the box. "cover" crops it to fill (banners, thumbnails
+   * in rows); "contain" shows the whole pack on white, which product cards
+   * need: retail photos are packshots and cropping cuts the label off.
+   */
+  fit?: "cover" | "contain"
 }
 
 /**
@@ -35,19 +41,20 @@ export default function ProductArt({
   className,
   sizes = "(max-width: 1024px) 50vw, 300px",
   plateColor,
+  fit = "cover",
 }: ProductArtProps) {
   const alt = decorative ? "" : product.title
   const { plate, dot } = tintColors(product.tint)
 
   if (product.thumbnail) {
     return (
-      <div className={clx("relative h-full w-full overflow-hidden", className)}>
+      <div className={clx("relative h-full w-full overflow-hidden", fit === "contain" && "bg-white", className)}>
         <Image
           src={product.thumbnail}
           alt={alt}
           fill
           sizes={sizes}
-          className="object-cover"
+          className={fit === "contain" ? "object-contain p-2" : "object-cover"}
         />
       </div>
     )

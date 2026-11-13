@@ -42,7 +42,7 @@ export default function IngredientList({
         const picking = openKey === line.key
 
         return (
-          <li key={line.key} className="py-3.5">
+          <li key={line.key} className="py-2.5">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <input
                 id={inputId}
@@ -52,10 +52,10 @@ export default function IngredientList({
                 disabled={!buyable}
                 onChange={(e) => onTick(line.key, e.target.checked)}
               />
-              <label htmlFor={inputId} className="min-w-0 flex-1 basis-40 text-sm">
-                <span className={cx("block font-medium", !ticked && "text-ink-2")}>
+              <label htmlFor={inputId} className="min-w-0 flex-1 basis-40">
+                <span className={cx("block text-[15px] font-semibold leading-5", ticked ? "text-ink" : "text-ink-2")}>
                   {line.label}
-                  {line.needLabel && <span className="font-normal text-ink-2"> · {line.needLabel}</span>}
+                  {line.needLabel && <span className="text-sm font-normal text-ink-2"> · {line.needLabel}</span>}
                 </span>
                 {line.maybeHave && (
                   <span className="mt-0.5 inline-flex items-center gap-1 rounded-md bg-page-2 px-1.5 py-0.5 text-xs text-ink-2">
@@ -80,7 +80,7 @@ export default function IngredientList({
               {line.options.length > 1 && (
                 <button
                   type="button"
-                  className="touch-target inline-flex h-8 items-center gap-1 rounded-full border border-line-2 px-3 text-xs font-semibold hover:bg-page"
+                  className="touch-target relative inline-flex h-8 items-center gap-1 rounded-full border border-line-2 px-3 text-xs font-semibold hover:bg-page"
                   aria-expanded={picking}
                   aria-controls={`${inputId}-brands`}
                   onClick={() => setOpenKey(picking ? null : line.key)}

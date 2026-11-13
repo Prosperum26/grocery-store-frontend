@@ -36,6 +36,7 @@ export function toProductVM(product: HttpTypes.StoreProduct): ProductVM {
     handle: product.handle ?? "",
     title: product.title ?? "",
     categoryHandle: product.categories?.[0]?.handle ?? undefined,
+    categoryName: product.categories?.[0]?.name ?? undefined,
     unitLabel: main?.label ?? "",
     price: main?.price ?? 0,
     originalPrice: main?.originalPrice,

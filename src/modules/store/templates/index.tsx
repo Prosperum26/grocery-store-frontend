@@ -1,15 +1,17 @@
 import { listCategories } from "@lib/data/categories"
 import { getListing } from "@lib/data/catalog"
 import { getRegion } from "@lib/data/regions"
-import { ListingParams } from "@lib/util/catalog"
+import { hasListingFilters, ListingParams, relatedWords } from "@lib/util/catalog"
+import { isMockMode } from "@lib/mock/mode"
 import Button from "@modules/common/components/button"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductCard from "@modules/products/components/product-card"
-import ListingControls, { SortSelect } from "@modules/store/components/listing-controls"
 import ListingPagination from "@modules/store/components/listing-pagination"
+import ListingSidebar from "@modules/store/components/listing-sidebar"
+import { LuChefHat, LuSlidersHorizontal } from "react-icons/lu"
 
-/** 9 cards: a full 3×3 grid on desktop (design 02). */
-export const PAGE_SIZE = 9
+/** 24 cards fill whole rows at every width the grid uses (2, 3 and 4 columns). */
+export const PAGE_SIZE = 24
 
 type StoreTemplateProps = {
   countryCode: string
@@ -19,10 +21,14 @@ type StoreTemplateProps = {
 }
 
 /**
- * Product list of the v2 design (02_San_Pham_*). Server component: it asks
- * getListing for the page the URL describes (mock data or the Medusa search)
- * and renders it. The filter controls are small client components that only
- * change the URL.
+ * Product list. Server component: it asks getListing for the page the URL
+ * describes (mock data or the Medusa search) and renders it. The filter
+ * controls are small client components that only change the URL.
+ *
+ * Layout: on desktop the filters (sort, category, kind, price, state,
+ * keywords) sit in a left column and the grid holds four products per row.
+ * On phones the same filters fold into a "Bộ lọc" panel above the grid, so
+ * the products still start near the top of the screen.
  */
 export default async function StoreTemplate({
   countryCode,
@@ -35,7 +41,7 @@ export default async function StoreTemplate({
   }
 
   const categories = (await listCategories()) ?? []
-  const { page, totalAll, categoryCounts } = await getListing({
+  const { page, totalAll, categoryCounts, subcategories } = await getListing({
     countryCode,
     params,
     category,
@@ -45,16 +51,44 @@ export default async function StoreTemplate({
 
   const basePath = category ? `/categories/${category.handle}` : "/store"
   const title = category?.name ?? (params.q ? `Kết quả cho “${params.q}”` : "Tất cả sản phẩm")
-  const hasFilters = Boolean(params.q || params.inStock || params.onSale)
-  const countIn = (handle: string) => categoryCounts[handle] ?? 0
+  const hasFilters = hasListingFilters(params)
+  // How many filters are on, shown on the phone "Bộ lọc" button.
+  const activeCount = [
+    params.q,
+    params.inStock,
+    params.onSale,
+    params.minPrice || params.maxPrice,
+    params.sub,
+  ].filter(Boolean).length
 
-  const categoryLinkClass = (active: boolean) =>
-    `flex items-center justify-between gap-3 rounded-[10px] px-3 py-2.5 text-sm ${
-      active ? "bg-brand-bg font-semibold text-brand" : "text-ink hover:bg-page"
-    }`
+  const sidebar = (
+    <ListingSidebar
+      params={params}
+      basePath={basePath}
+      categories={categories.map((c) => ({ handle: c.handle, name: c.name, count: categoryCounts[c.handle] }))}
+      currentCategory={category?.handle}
+      totalAll={totalAll}
+      subcategories={subcategories}
+      related={relatedWords(
+        page.items.map((p) => p.title),
+        [params.q, category?.name].filter(Boolean).join(" ")
+      )}
+    />
+  )
+
+  // A typed word may be a dish, not a product ("canh chua"): offer the recipe search for the same words.
+  const recipeSearch = params.q && !isMockMode() && (
+    <LocalizedClientLink
+      href={`/tro-ly-bep?q=${encodeURIComponent(params.q)}`}
+      className="inline-flex w-fit items-center gap-2 rounded-full bg-accent-soft px-4 py-2 text-sm font-semibold text-accent-ink hover:bg-accent"
+    >
+      <LuChefHat aria-hidden="true" />
+      Tìm món ăn với “{params.q}” ở Trợ lý Bếp
+    </LocalizedClientLink>
+  )
 
   return (
-    <div className="content-container flex flex-col gap-6 py-6 small:py-8">
+    <div className="content-container flex flex-col gap-4 py-5 small:gap-5 small:py-7">
       <nav aria-label="Đường dẫn">
         <ol className="flex flex-wrap items-center gap-2 text-sm text-ink-2">
           <li>
@@ -83,110 +117,54 @@ export default async function StoreTemplate({
         </ol>
       </nav>
 
-      <div className="flex items-start gap-8">
+      <div className="flex flex-col gap-4 small:flex-row small:items-start small:gap-8">
+        {/* Desktop: the filters in a column that stays in view while the grid scrolls. */}
         <aside
-          aria-label="Bộ lọc sản phẩm"
-          className="hidden w-[264px] shrink-0 flex-col gap-6 small:flex"
+          aria-label="Bộ lọc"
+          className="hidden small:sticky small:top-4 small:block small:max-h-[calc(100vh-2rem)] small:w-[260px] small:shrink-0 small:overflow-y-auto small:pb-4 small:pr-1"
         >
-          <section aria-labelledby="listing-categories" className="rounded-card border border-line bg-surface p-3">
-            <h2 id="listing-categories" className="px-3 pb-2 pt-1 font-mono text-xs font-semibold uppercase tracking-wide text-ink-2">
-              Danh mục
-            </h2>
-            <ul className="flex flex-col gap-0.5">
-              <li>
-                <LocalizedClientLink
-                  href="/store"
-                  aria-current={!category ? "page" : undefined}
-                  className={categoryLinkClass(!category)}
-                >
-                  <span>Tất cả sản phẩm</span>
-                  <span className="font-mono text-xs text-ink-3">{totalAll}</span>
-                </LocalizedClientLink>
-              </li>
-              {categories.map((c) => (
-                <li key={c.id}>
-                  <LocalizedClientLink
-                    href={`/categories/${c.handle}`}
-                    aria-current={category?.handle === c.handle ? "page" : undefined}
-                    className={categoryLinkClass(category?.handle === c.handle)}
-                  >
-                    <span>{c.name}</span>
-                    <span className="font-mono text-xs text-ink-3">{countIn(c.handle)}</span>
-                  </LocalizedClientLink>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section aria-label="Lọc nhanh" className="rounded-card border border-line bg-surface p-5">
-            <ListingControls params={params} variant="sidebar" />
-          </section>
+          {sidebar}
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-5">
-          {/* Phone: categories as a scrolling row of links. */}
-          <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 small:hidden" aria-label="Danh mục">
-            <li className="shrink-0">
-              <LocalizedClientLink
-                href="/store"
-                aria-current={!category ? "page" : undefined}
-                className={`inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-full border px-3.5 text-sm font-medium ${
-                  !category ? "border-ink bg-ink text-white" : "border-line-2 bg-surface text-ink"
-                }`}
-              >
-                Tất cả
-              </LocalizedClientLink>
-            </li>
-            {categories.map((c) => {
-              const on = category?.handle === c.handle
-              return (
-                <li key={c.id} className="shrink-0">
-                  <LocalizedClientLink
-                    href={`/categories/${c.handle}`}
-                    aria-current={on ? "page" : undefined}
-                    className={`inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-full border px-3.5 text-sm font-medium ${
-                      on ? "border-ink bg-ink text-white" : "border-line-2 bg-surface text-ink"
-                    }`}
-                  >
-                    {c.name}
-                  </LocalizedClientLink>
-                </li>
-              )
-            })}
-          </ul>
-          <div className="small:hidden">
-            <ListingControls params={params} variant="chips" />
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h1 className="font-display text-2xl font-bold text-ink small:text-[32px] small:leading-tight">{title}</h1>
+            {/* The count of what is listed (search and filters applied), not of the whole catalog. */}
+            <p aria-live="polite" className="text-sm text-ink-2">
+              {page.total > 0 ? `${page.total} sản phẩm` : "Không có sản phẩm nào"}
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <p className="font-mono text-xs font-semibold uppercase tracking-wide text-ink-2">
-                {category ? countIn(category.handle) : totalAll} món
-              </p>
-              <h1 className="font-display text-2xl font-bold text-ink small:text-[32px] small:leading-tight">
-                {title}
-              </h1>
-            </div>
-            <SortSelect params={params} />
-          </div>
+          {/* Phones: the same filters folded into a panel, so the grid starts near the top. */}
+          <details className="small:hidden">
+            <summary className="inline-flex h-10 cursor-pointer list-none items-center gap-2 rounded-btn border border-line-2 bg-surface px-3.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+              <LuSlidersHorizontal aria-hidden="true" />
+              Sắp xếp và lọc
+              {activeCount > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-ink px-1.5 text-xs text-white">
+                  {activeCount}
+                </span>
+              )}
+            </summary>
+            <div className="mt-3 rounded-card border border-line bg-surface p-4">{sidebar}</div>
+          </details>
 
-          <p aria-live="polite" className="text-sm text-ink-2">
-            {page.total > 0
-              ? `Hiển thị ${page.from}–${page.to} / ${page.total} sản phẩm`
-              : "Không có sản phẩm nào"}
-          </p>
+          {recipeSearch}
 
           {page.items.length > 0 ? (
             <>
-            {/* Cards use h3; this keeps the heading order h1 → h2 → h3. */}
-            <h2 className="sr-only">Danh sách sản phẩm</h2>
-            <ul className="grid grid-cols-2 gap-3 small:grid-cols-3 small:gap-5" data-testid="products-list">
-              {page.items.map((p) => (
-                <li key={p.id} className="flex">
-                  <ProductCard product={p} className="w-full" />
-                </li>
-              ))}
-            </ul>
+              {/* Cards use h3; this keeps the heading order h1 → h2 → h3. */}
+              <h2 className="sr-only">Danh sách sản phẩm</h2>
+              <ul
+                className="grid grid-cols-2 gap-3 xsmall:grid-cols-3 small:gap-4 medium:grid-cols-4"
+                data-testid="products-list"
+              >
+                {page.items.map((p) => (
+                  <li key={p.id} className="flex">
+                    <ProductCard product={p} className="w-full" />
+                  </li>
+                ))}
+              </ul>
             </>
           ) : (
             <section
@@ -197,9 +175,7 @@ export default async function StoreTemplate({
                 Không có sản phẩm phù hợp
               </h2>
               <p className="text-sm text-ink-2">
-                {hasFilters
-                  ? "Thử bỏ bớt bộ lọc hoặc tìm bằng từ khóa khác."
-                  : "Danh mục này chưa có sản phẩm."}
+                {hasFilters ? "Thử bỏ bớt bộ lọc hoặc tìm bằng từ khóa khác." : "Danh mục này chưa có sản phẩm."}
               </p>
               {hasFilters && (
                 <Button variant="secondary" href={basePath}>
@@ -209,12 +185,7 @@ export default async function StoreTemplate({
             </section>
           )}
 
-          <ListingPagination
-            basePath={basePath}
-            params={params}
-            page={page.page}
-            totalPages={page.totalPages}
-          />
+          <ListingPagination basePath={basePath} params={params} page={page.page} totalPages={page.totalPages} />
         </div>
       </div>
     </div>

@@ -1,28 +1,31 @@
-import { MOCK_CATEGORY_LIST } from "@lib/mock/categories"
-import { resolveVariant } from "@lib/mock/cart"
-import { ComingSoonBadge, ComingSoonButton } from "@modules/common/components/coming-soon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import ProductRow from "@modules/home/components/product-row"
 import ProductCard from "@modules/products/components/product-card"
 import ProductActions from "@modules/products/components/product-actions"
 import ProductArt from "@modules/products/components/product-art"
-import ProductTabs from "@modules/products/components/product-tabs"
-import ScaleLabel from "@modules/products/components/scale-label"
 import type { ProductVM } from "types/viewmodels"
 
 /**
- * Product page of the v2 design (03_Chi_Tiet_San_Pham_*). Desktop: image
- * with the scale label on the left, buying panel on the right. Phone: one
- * column, with the buying bar floating above the bottom nav.
+ * Product page. Desktop: the photo on the left (whole pack on white, as on
+ * the cards), the buying panel on the right. Phone: one column, with the
+ * buying bar floating above the bottom nav (ProductActions). Below: the
+ * description when the catalog has a real one, "Thường mua kèm", then other
+ * products of the same category.
  */
 export default function ProductTemplate({
   product,
   companions,
+  sameCategory,
 }: {
   product: ProductVM
   companions: ProductVM[]
+  sameCategory: ProductVM[]
 }) {
-  const category = MOCK_CATEGORY_LIST.find((c) => c.handle === product.categoryHandle)
-  const defaultVariant = resolveVariant(product)
+  const category =
+    product.categoryHandle && product.categoryName ? { handle: product.categoryHandle, name: product.categoryName } : null
+  // Many catalog descriptions only repeat the name: show the block only when it says more.
+  const description = product.description?.trim()
+  const hasDescription = Boolean(description && description.toLowerCase() !== product.title.toLowerCase())
 
   return (
     <div className="content-container flex flex-col gap-10 pb-44 pt-6 small:pb-16 small:pt-8">
@@ -50,13 +53,8 @@ export default function ProductTemplate({
       </nav>
 
       <div className="grid gap-8 small:grid-cols-[minmax(0,560px)_minmax(0,1fr)] small:gap-12">
-        <div className="relative aspect-square w-full overflow-hidden rounded-[24px] border border-line">
-          <ProductArt product={product} scale={0.62} dots sizes="(max-width: 1024px) 100vw, 560px" />
-          {defaultVariant && (
-            <div className="absolute bottom-5 right-5 hidden small:block">
-              <ScaleLabel variant={defaultVariant} packLabel={defaultVariant.label} />
-            </div>
-          )}
+        <div className="relative aspect-square w-full overflow-hidden rounded-[24px] border border-line bg-white">
+          <ProductArt product={product} scale={0.62} dots fit="contain" sizes="(max-width: 1024px) 100vw, 560px" />
         </div>
 
         <div className="flex min-w-0 flex-col gap-6">
@@ -73,12 +71,14 @@ export default function ProductTemplate({
         </div>
       </div>
 
-      <section aria-labelledby="pdp-info" className="flex flex-col gap-4">
-        <h2 id="pdp-info" className="font-display text-xl font-bold text-ink">
-          Thông tin sản phẩm
-        </h2>
-        <ProductTabs description={product.description} />
-      </section>
+      {hasDescription && (
+        <section aria-labelledby="pdp-info" className="flex max-w-3xl flex-col gap-3">
+          <h2 id="pdp-info" className="font-display text-xl font-bold text-ink">
+            Thông tin sản phẩm
+          </h2>
+          <p className="whitespace-pre-line text-sm leading-6 text-ink-2">{description}</p>
+        </section>
+      )}
 
       {companions.length > 0 && (
         <section aria-labelledby="pdp-companions" className="flex flex-col gap-4">
@@ -94,25 +94,15 @@ export default function ProductTemplate({
           </ul>
         </section>
       )}
-
-      {/* Recipes are not built yet (phase 2, Trợ lý Bếp). Same layout, placeholder content. */}
-      <section
-        aria-labelledby="pdp-recipe"
-        className="flex flex-col gap-4 rounded-card bg-brand-deep p-6 text-white small:flex-row small:items-center small:justify-between small:p-8"
-      >
-        <div className="flex flex-col gap-2">
-          <ComingSoonBadge />
-          <h2 id="pdp-recipe" className="font-display text-xl font-bold">
-            Món ngon với {product.title.toLowerCase()}
-          </h2>
-          <p className="max-w-xl text-sm text-on-dark">
-            Gợi ý món ăn và nguyên liệu còn hàng sẽ có ở Trợ lý Bếp.
-          </p>
-        </div>
-        <ComingSoonButton feature="Gợi ý món ăn" variant="onDark" className="self-start small:self-auto">
-          Xem gợi ý món
-        </ComingSoonButton>
-      </section>
+      {category && sameCategory.length > 0 && (
+        <ProductRow
+          id="pdp-same-category"
+          title={`Cùng danh mục ${category.name.toLowerCase()}`}
+          href={`/categories/${category.handle}`}
+          linkLabel={`Xem tất cả ${category.name.toLowerCase()}`}
+          products={sameCategory}
+        />
+      )}
     </div>
   )
 }

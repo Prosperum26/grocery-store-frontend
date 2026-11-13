@@ -35,6 +35,8 @@ export type ProductVM = {
   handle: string
   title: string
   categoryHandle?: string
+  /** Category name as the search index stores it, e.g. "Rau củ". */
+  categoryName?: string
   /** Pack size shown under the name, e.g. "Khay 500g". */
   unitLabel: string
   price: number

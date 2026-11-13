@@ -22,8 +22,19 @@ export type CatalogQuery = {
   inStock?: boolean
   /** "Đang giảm giá". */
   onSale?: boolean
+  /** Price range in VND, both ends included. */
+  minPrice?: number
+  maxPrice?: number
   sort?: SortKey
 }
+
+/** Quick price ranges of the sidebar. `max` undefined means no upper end. */
+export const PRICE_PRESETS: { label: string; min?: number; max?: number }[] = [
+  { label: "Dưới 20.000đ", max: 20000 },
+  { label: "20.000đ – 50.000đ", min: 20000, max: 50000 },
+  { label: "50.000đ – 100.000đ", min: 50000, max: 100000 },
+  { label: "Trên 100.000đ", min: 100000 },
+]
 
 /** Unknown or missing values fall back to the default order. */
 export function parseSort(value: unknown): SortKey {
@@ -48,6 +59,8 @@ export function filterCatalog(products: ProductVM[], query: CatalogQuery): Produ
       (!query.category || p.categoryHandle === query.category) &&
       (!query.inStock || p.stockQty > 0) &&
       (!query.onSale || p.originalPrice !== undefined) &&
+      (query.minPrice === undefined || p.price >= query.minPrice) &&
+      (query.maxPrice === undefined || p.price <= query.maxPrice) &&
       (!term || normalizeText(p.title).includes(term))
   )
 }
@@ -73,6 +86,11 @@ export type ListingParams = {
   q?: string
   inStock: boolean
   onSale: boolean
+  /** Price range in VND (?min=&max=). */
+  minPrice?: number
+  maxPrice?: number
+  /** Subcategory inside the category, e.g. "Rau lá" (?loai=). */
+  sub?: string
   sort: SortKey
   page: number
 }
@@ -81,14 +99,30 @@ type RawSearchParams = Record<string, string | string[] | undefined>
 
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
 
-/** Reads ?q=&stock=1&sale=1&sort=&page= . Anything unreadable gets its default. */
+/** A whole number of đồng above 0, or undefined for anything else ("", "abc", "-5"). */
+function parsePrice(v: string | string[] | undefined): number | undefined {
+  const n = Number.parseInt(first(v) ?? "", 10)
+  return Number.isFinite(n) && n > 0 ? n : undefined
+}
+
+/** Reads ?q=&stock=1&sale=1&min=&max=&loai=&sort=&page= . Anything unreadable gets its default. */
 export function parseListingParams(raw: RawSearchParams): ListingParams {
   const q = first(raw.q)?.trim()
+  const sub = first(raw.loai)?.trim()
   const page = Number.parseInt(first(raw.page) ?? "1", 10)
+  let minPrice = parsePrice(raw.min)
+  let maxPrice = parsePrice(raw.max)
+  // "từ 50.000 đến 20.000" is read as the range the shopper meant.
+  if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
+    ;[minPrice, maxPrice] = [maxPrice, minPrice]
+  }
   return {
     q: q || undefined,
     inStock: first(raw.stock) === "1",
     onSale: first(raw.sale) === "1",
+    minPrice,
+    maxPrice,
+    sub: sub || undefined,
     sort: parseSort(first(raw.sort)),
     page: Number.isFinite(page) && page > 0 ? page : 1,
   }
@@ -103,6 +137,9 @@ export function listingHref(basePath: string, params: Partial<ListingParams>): s
   if (params.q) search.set("q", params.q)
   if (params.inStock) search.set("stock", "1")
   if (params.onSale) search.set("sale", "1")
+  if (params.minPrice) search.set("min", String(params.minPrice))
+  if (params.maxPrice) search.set("max", String(params.maxPrice))
+  if (params.sub) search.set("loai", params.sub)
   if (params.sort && params.sort !== "popular") search.set("sort", params.sort)
   if (params.page && params.page > 1) search.set("page", String(params.page))
   const qs = search.toString()
@@ -165,4 +202,51 @@ export function paginate<T>(items: T[], page: number, pageSize: number): Page<T>
   const { page: current } = toPage([], items.length, page, pageSize)
   const start = (current - 1) * pageSize
   return toPage(items.slice(start, start + pageSize), items.length, current, pageSize)
+}
+
+/** True when any filter narrows the list (sorting and paging do not count). */
+export function hasListingFilters(params: ListingParams): boolean {
+  return Boolean(
+    params.q || params.inStock || params.onSale || params.minPrice || params.maxPrice || params.sub
+  )
+}
+
+// Syllables too common in product names to say anything as a pair ("gói 200g", "loại 1").
+const RELATED_STOP = new Set([
+  "goi", "hop", "chai", "lon", "tui", "khay", "vi", "bich", "thung", "loc", "ly", "hu",
+  "va", "voi", "cho", "cua", "loai", "con", "trai", "bo", "kg", "g", "ml", "l",
+])
+
+/**
+ * Two-word phrases that come up in several product names of the list, most
+ * frequent first ("đà lạt", "hữu cơ", "rau muống"). The sidebar offers them as
+ * extra keywords. Words already in the query are left out.
+ */
+export function relatedWords(titles: string[], query = "", limit = 6): string[] {
+  const asked = new Set(normalizeText(query).split(/\s+/).filter(Boolean))
+  const counts = new Map<string, { label: string; n: number }>()
+  for (const title of titles) {
+    // Words with a digit ("200g", "1kg") are sizes, not keywords.
+    const words = title
+      .toLowerCase()
+      .split(/[\s,.;:()/+&%-]+/)
+      .filter((w) => w && !/\d/.test(w))
+    const seen = new Set<string>()
+    for (let i = 0; i + 1 < words.length; i++) {
+      const pair = [words[i], words[i + 1]]
+      const keys = pair.map(normalizeText)
+      if (keys.some((k) => k.length < 2 || RELATED_STOP.has(k) || asked.has(k))) continue
+      const key = keys.join(" ")
+      if (seen.has(key)) continue // a title counts once per phrase
+      seen.add(key)
+      const entry = counts.get(key) ?? { label: pair.join(" "), n: 0 }
+      entry.n++
+      counts.set(key, entry)
+    }
+  }
+  return Array.from(counts.values())
+    .filter((e) => e.n >= 2)
+    .sort((a, b) => b.n - a.n)
+    .slice(0, limit)
+    .map((e) => e.label)
 }
