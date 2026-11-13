@@ -72,7 +72,7 @@ export default function AskPanel({ recipeId, servings }: { recipeId: string; ser
         role="log"
         aria-label="Hỏi đáp về món này"
         tabIndex={0}
-        className="mt-3 flex h-72 flex-col gap-3 overflow-y-auto rounded-2xl bg-page p-3"
+        className="mt-3 flex h-60 flex-col gap-3 overflow-y-auto rounded-2xl bg-page p-3"
       >
         {turns.length === 0 && !pending && (
           <div className="m-auto flex flex-col items-center gap-2 text-center">
