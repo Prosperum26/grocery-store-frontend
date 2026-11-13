@@ -1,4 +1,5 @@
 import { Metadata } from "next"
+import { notFound } from "next/navigation"
 
 import UiKitDemo from "@modules/ui-kit/demo"
 
@@ -9,5 +10,7 @@ export const metadata: Metadata = {
 }
 
 export default function UiKitPage() {
+  // Design review only: not part of the shop.
+  if (process.env.NODE_ENV === "production") notFound()
   return <UiKitDemo />
 }
