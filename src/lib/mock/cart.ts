@@ -53,6 +53,9 @@ export type CartLineView = {
   handle: string
   title: string
   art?: string
+  /** Real cart: the product photo and category (stand-in illustration when there is no photo). */
+  thumbnail?: string
+  categoryHandle?: string
   tint: Tint
   variantLabel: string
   unitPrice: number

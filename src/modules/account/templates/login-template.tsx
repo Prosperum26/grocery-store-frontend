@@ -7,11 +7,12 @@ import { isVietnamesePhone } from "@lib/mock/checkout"
 import { authErrorMessage } from "@lib/util/auth-error"
 import { isEmail, splitName } from "@lib/util/checkout"
 import { MOCK_NO_BACKEND } from "@lib/util/mock-copy"
+import { clearDraft, loadDraft, LOGIN_DRAFT, saveDraft } from "@lib/util/draft"
 import Button from "@modules/common/components/button"
 import Field from "@modules/common/components/field"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { useParams, useRouter } from "next/navigation"
-import { useState, type FormEvent } from "react"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useRef, useState, type FormEvent } from "react"
 
 /**
  * Sign-in page of the v2 design (09_Dang_Nhap_*). Left: the brand panel on
@@ -34,6 +35,26 @@ export default function LoginTemplate() {
   // "Quên mật khẩu": cùng form, chỉ còn ô email; gửi xong thì hiện lời nhắn kiểm tra hộp thư.
   const [forgot, setForgot] = useState(false)
   const [sent, setSent] = useState(false)
+  // Came from the checkout (?next=checkout): say why, and go back there after signing in.
+  const toCheckout = useSearchParams().get("next") === "checkout"
+  const draftLoaded = useRef(false)
+
+  // Restore what was typed before a reload or a trip to another page (not the password). After mount, so the
+  // server and the browser render the same first page.
+  useEffect(() => {
+    const saved = loadDraft<{ registering: boolean; name: string; phone: string; email: string }>(LOGIN_DRAFT)
+    if (saved) {
+      setRegistering(saved.registering)
+      setName(saved.name)
+      setPhone(saved.phone)
+      setEmail(saved.email)
+    }
+    draftLoaded.current = true
+  }, [])
+  useEffect(() => {
+    if (draftLoaded.current) saveDraft(LOGIN_DRAFT, { registering, name, phone, email })
+  }, [registering, name, phone, email])
+
   const demoAvailable = process.env.NODE_ENV !== "production" && mock
 
   const onSubmit = async (e: FormEvent) => {
@@ -98,6 +119,11 @@ export default function LoginTemplate() {
       return
     }
     setErrors({})
+    clearDraft(LOGIN_DRAFT)
+    if (toCheckout) {
+      router.push(`/${countryCode}/checkout`)
+      return
+    }
     router.refresh() // the account layout reads the signed-in customer again
   }
 
@@ -129,6 +155,11 @@ export default function LoginTemplate() {
         <div className="flex max-w-md flex-col gap-2">
           <h1 className="font-display text-3xl font-bold text-ink">{forgot ? "Quên mật khẩu" : registering ? "Đăng ký" : "Đăng nhập"}</h1>
           {mock && <p className="text-sm text-ink-2">Bản xem thử không nối máy chủ, nên chưa đăng nhập được.</p>}
+          {toCheckout && !mock && (
+            <p role="status" className="rounded-2xl bg-accent-soft p-3 text-sm text-ink">
+              Đăng nhập hoặc tạo tài khoản để thanh toán, giúp bạn theo dõi và huỷ đơn sau này. Giỏ hàng vẫn được giữ nguyên.
+            </p>
+          )}
         </div>
 
         <form onSubmit={onSubmit} noValidate className="flex max-w-md flex-col gap-4 rounded-card border border-line bg-surface p-6">

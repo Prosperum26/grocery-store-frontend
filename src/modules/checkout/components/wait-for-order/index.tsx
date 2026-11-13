@@ -1,5 +1,6 @@
 "use client"
 
+import { CHECKOUT_DRAFT, clearDraft } from "@lib/util/draft"
 import { findPaidOrder } from "@lib/data/checkout"
 import type { RefundNotice } from "@lib/util/checkout"
 import { useCart } from "@lib/context/cart-context"
@@ -38,6 +39,7 @@ export default function WaitForOrder() {
         }
         if (orderId) {
           await clear()
+          clearDraft(CHECKOUT_DRAFT)
           router.replace(`/${countryCode}/order/${orderId}/confirmed`)
           return
         }

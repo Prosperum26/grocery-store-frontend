@@ -9,6 +9,8 @@ export type KitchenVariant = {
   variant_id: string
   product_id: string
   handle: string
+  /** Product photo, for the strip of ingredient photos on a suggestion card. */
+  thumbnail?: string | null
   title: string
   unit_label: string
   unit_price: number

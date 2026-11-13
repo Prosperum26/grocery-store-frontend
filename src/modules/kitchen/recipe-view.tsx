@@ -267,7 +267,6 @@ export default function RecipeView({ initial, backQuery }: { initial: RawRecipeD
             <div className="hidden small:block">{addButton("mt-3")}</div>
           </section>
 
-          <AskPanel recipeId={recipe.id} servings={servings} />
         </div>
       </div>
 
@@ -275,6 +274,9 @@ export default function RecipeView({ initial, backQuery }: { initial: RawRecipeD
       <div className="fixed inset-x-4 bottom-24 z-30 rounded-card border border-line bg-surface p-3 shadow-toast small:hidden">
         {addButton()}
       </div>
+
+      {/* Floating bar that opens the question chat; fixed, so it does not take room in the layout. */}
+      <AskPanel recipeId={recipe.id} servings={servings} />
     </article>
   )
 }

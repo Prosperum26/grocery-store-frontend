@@ -1,8 +1,10 @@
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { isMockMode } from "@lib/mock/mode"
 import ProductRow from "@modules/home/components/product-row"
 import ProductCard from "@modules/products/components/product-card"
 import ProductActions from "@modules/products/components/product-actions"
 import ProductArt from "@modules/products/components/product-art"
+import ProductRecipes from "@modules/suggestions/product-recipes"
 import type { ProductVM } from "types/viewmodels"
 
 /**
@@ -94,6 +96,8 @@ export default function ProductTemplate({
           </ul>
         </section>
       )}
+      {/* C: dishes that use this product; needs the backend, so mock mode leaves it out. */}
+      {!isMockMode() && <ProductRecipes handle={product.handle} title={product.title} />}
       {category && sameCategory.length > 0 && (
         <ProductRow
           id="pdp-same-category"

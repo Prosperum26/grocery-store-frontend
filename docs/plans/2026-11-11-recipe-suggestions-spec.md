@@ -1,6 +1,6 @@
 # Spec: gợi ý món ăn ở storefront (A, B, C)
 
-Ngày: 2026-11-11. Trạng thái: **bản nháp chờ duyệt**, chưa code. Phạm vi: 3 repo (ai, backend, frontend).
+Ngày: 2026-11-11. Trạng thái: **đã code A, B, C** (2026-11-13, nhánh `feature/recipe-suggest` ở cả 3 repo, xem mục 13). Phạm vi: 3 repo (ai, backend, frontend).
 
 | Mã | Tên hiển thị | Ở đâu | Ý chính |
 | :-- | :-- | :-- | :-- |
@@ -246,3 +246,28 @@ Làm theo thứ tự này để C và B có thể demo sau bước 3, trước k
 1. Có cho phép thay nguyên liệu hết hàng bằng `alternatives` không (làm tăng số món hiển thị, nhưng phức tạp hơn)? Quyết định sau khi có số đo ở mục 9 (2).
 2. Tên rút gọn của sản phẩm trong câu dẫn B ("Cá lóc" thay vì "Cá lóc phi lê 500g"): lấy từ tên nguyên liệu của công thức (`ingredient`) hay tự rút gọn tên sản phẩm? Đề xuất: lấy `ingredient` của công thức.
 3. Có báo cho thầy về việc thêm tính năng ngoài 4 tính năng trong proposal không. Hai tính năng này thuộc nhóm Chef Copilot nhưng không dùng RAG.
+
+## 13. Trạng thái (2026-11-13)
+
+Đã làm ở cả 3 repo, nhánh `feature/recipe-suggest`, chưa push.
+
+| Phần | Kết quả | Đã kiểm |
+| :-- | :-- | :-- |
+| AI `SuggestService` + `/suggest/by-products`, `/suggest/discover` | Như mục 3–6 | `pytest` 111 xanh (12 test mới cho luật xếp hạng) |
+| Backend `/store/ai/suggest/by-products`, `/store/ai/suggest/discover` | Như mục 7; thêm `thumbnail` vào `StoreVariantInfo` | `jest` đơn vị xanh, `tsc` sạch. Chưa có test tích hợp route |
+| Storefront C (trang sản phẩm), B (giỏ, trang chủ), A (trang chủ, `/mua-lai`, giỏ) | Như mục 8 | Edge, bản build, backend + AI thật: xem dưới |
+
+Kiểm trên trình duyệt: C hiện 3 món và tiêu đề dùng tên nguyên liệu ("Món nấu với nước mắm ngon"); sản phẩm không có món thì khối biến mất, không để chỗ trống; "Thêm" chỉ thêm phần còn thiếu. B hiện câu dẫn và 3 món ở giỏ và trang chủ. A: cùng món sau khi tải lại, "Đổi món khác" ra món khác, "Thêm cả giỏ" chạy. Tắt AI service: trang sản phẩm, giỏ, trang chủ vẫn đủ, các khối ẩn, không lỗi. Không cuộn ngang ở 500px.
+
+**Khác spec:**
+
+- **Không loại món có sản phẩm `needs_review`** (mục 3.1). Đo trên dữ liệu thật: loại thì chỉ còn 158/1.061 món đủ điều kiện, A cho khách mới chỉ còn 42 món; bỏ điều kiện thì 1.025 món. `/search` vốn đã hiện các sản phẩm này. Có cờ `skip_needs_review` để bật lại.
+- Backend gửi chính các sản phẩm đầu vào làm `have` (B, C), nếu không thì món bị loại vì dòng của sản phẩm đang trong giỏ bị tính là "đang giữ, hết hàng".
+- `missing_total` tính theo số gói như nút "Thêm" (`pack_hint`), không theo `default_qty`, để số tiền trên thẻ khớp giỏ.
+
+**Chưa làm hoặc chưa kiểm:**
+
+- A với khách có lịch sử (bậc 1, 2, 3): cần đăng nhập tài khoản demo có đơn đã giao. Chỉ có số đo giả lập (200 khách mua 40 sản phẩm ngẫu nhiên: cả 200 rơi vào bậc 1, món đầu trung bình 3,3 nguyên liệu mới).
+- Mục 9: tỉ lệ món qua bộ lọc tồn kho và độ trễ cả đường đi chưa đo có hệ thống. Thấy trong log: backend trả `/suggest/by-products` trong 15–600 ms; **chưa phải số đo**.
+- Đo tác động (`metadata.suggest_source`) chưa làm, ngoài MVP.
+

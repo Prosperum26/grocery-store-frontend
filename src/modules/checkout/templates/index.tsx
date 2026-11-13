@@ -1,6 +1,7 @@
 "use client"
 
 import { useCart } from "@lib/context/cart-context"
+import { CHECKOUT_DRAFT, loadDraft, saveDraft } from "@lib/util/draft"
 import { DEMO_ADDRESSES, type DemoAddress } from "@lib/mock/customer"
 import { isMockMode } from "@lib/mock/mode"
 import { DEFAULT_SLOT_ID, DELIVERY_SLOTS, isVietnamesePhone, NOTE_MAX_LENGTH } from "@lib/mock/checkout"
@@ -57,6 +58,26 @@ export default function CheckoutTemplate({
   const [errors, setErrors] = useState<Errors>({})
   const [submitting, setSubmitting] = useState(false)
   const summaryRef = useRef<HTMLDivElement>(null)
+  const draftLoaded = useRef(false)
+
+  // Restore the form after a reload or a trip to another page; a draft older than 30 minutes is dropped (draft.ts).
+  // The slot is only a wish: loadSlots keeps it if it is still open. Saved addresses are kept only if still there.
+  useEffect(() => {
+    if (!mock) {
+      const saved = loadDraft<{ addressId: string; draft: Draft; slotId: string; note: string }>(CHECKOUT_DRAFT)
+      if (saved) {
+        setDraft(saved.draft)
+        setNote(saved.note)
+        if (saved.slotId) setSlotId((current) => current || saved.slotId)
+        if (saved.addressId === NEW_ADDRESS || addresses.some((a) => a.id === saved.addressId)) setAddressId(saved.addressId)
+      }
+    }
+    draftLoaded.current = true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  useEffect(() => {
+    if (draftLoaded.current && !mock) saveDraft(CHECKOUT_DRAFT, { addressId, draft, slotId, note })
+  }, [mock, addressId, draft, slotId, note])
 
   // Real mode: the slots come from the backend. Keep the slot already chosen on this page if it is
   // still open; otherwise the one picked in the header (cookie), otherwise the earliest open one.
