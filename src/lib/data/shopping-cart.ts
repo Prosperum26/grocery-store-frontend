@@ -28,7 +28,7 @@ import {
 
 // *items.product brings the product metadata (art, tint, stock unit...).
 const CART_FIELDS =
-  "id,region_id,discount_total,*items,*items.product,*promotions"
+  "id,region_id,discount_total,*items,*items.product,+items.product.categories.handle,*promotions"
 
 type CartWithRegion = RawCart & {
   id: string

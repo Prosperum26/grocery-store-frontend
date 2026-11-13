@@ -61,7 +61,7 @@ export default function CartLine({ line, liveQty }: { line: CartLineView; liveQt
         aria-hidden="true"
         className={cx("relative h-20 w-20 shrink-0 overflow-hidden rounded-[14px]", !line.inStock && "opacity-50")}
       >
-        <ProductArt product={line} decorative dots={false} scale={0.7} />
+        <ProductArt product={line} decorative dots={false} scale={0.7} fit="contain" sizes="80px" />
       </LocalizedClientLink>
 
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">

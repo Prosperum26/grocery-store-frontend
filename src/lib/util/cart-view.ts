@@ -22,7 +22,9 @@ export type RawCartLine = {
   product_handle?: string | null
   /** Written by the storefront when the line is added. */
   metadata?: { price_at_add?: unknown } | null
-  product?: { metadata?: Record<string, any> | null } | null
+  /** Photo of the product (Medusa copies it onto the line). */
+  thumbnail?: string | null
+  product?: { metadata?: Record<string, any> | null; categories?: { handle?: string | null }[] | null } | null
 }
 
 /** The part of a Medusa cart this file reads. */
@@ -69,6 +71,8 @@ export function buildCartViewFromMedusa(
       handle: item.product_handle ?? "",
       title: item.product_title ?? "",
       art: typeof meta.art === "string" ? meta.art : undefined,
+      thumbnail: item.thumbnail ?? undefined,
+      categoryHandle: item.product?.categories?.[0]?.handle ?? undefined,
       tint: TINTS.includes(meta.tint) ? meta.tint : "green",
       variantLabel: item.variant_title ?? "",
       unitPrice: item.unit_price,
