@@ -1,6 +1,5 @@
 import { MOCK_CATEGORY_LIST } from "@lib/mock/categories"
 import { resolveVariant } from "@lib/mock/cart"
-import { ComingSoonBadge, ComingSoonButton } from "@modules/common/components/coming-soon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductCard from "@modules/products/components/product-card"
 import ProductActions from "@modules/products/components/product-actions"
@@ -94,25 +93,6 @@ export default function ProductTemplate({
           </ul>
         </section>
       )}
-
-      {/* Recipes are not built yet (phase 2, Trợ lý Bếp). Same layout, placeholder content. */}
-      <section
-        aria-labelledby="pdp-recipe"
-        className="flex flex-col gap-4 rounded-card bg-brand-deep p-6 text-white small:flex-row small:items-center small:justify-between small:p-8"
-      >
-        <div className="flex flex-col gap-2">
-          <ComingSoonBadge />
-          <h2 id="pdp-recipe" className="font-display text-xl font-bold">
-            Món ngon với {product.title.toLowerCase()}
-          </h2>
-          <p className="max-w-xl text-sm text-on-dark">
-            Gợi ý món ăn và nguyên liệu còn hàng sẽ có ở Trợ lý Bếp.
-          </p>
-        </div>
-        <ComingSoonButton feature="Gợi ý món ăn" variant="onDark" className="self-start small:self-auto">
-          Xem gợi ý món
-        </ComingSoonButton>
-      </section>
     </div>
   )
 }
