@@ -3,7 +3,7 @@
 import { sdk } from "@lib/config"
 import { isMockMode } from "@lib/mock/mode"
 import type { RawSuggestResponse } from "@lib/util/suggest"
-import { getAuthHeaders, getCartId } from "./cookies"
+import { retrieveCart } from "./cart"
 import type { KitchenResult } from "./kitchen"
 import { listProducts } from "./products"
 
@@ -34,18 +34,8 @@ const unique = (skus: (string | null | undefined)[]) => Array.from(new Set(skus.
  */
 export async function getRecipesForCart(excludeIds: string[] = []): Promise<KitchenResult<RawSuggestResponse>> {
   if (isMockMode()) return NOTHING
-  const cartId = await getCartId()
-  if (!cartId) return NOTHING
-
-  const cart = await sdk.client
-    .fetch<{ cart: { items?: { variant?: { sku?: string | null } | null }[] } }>(`/store/carts/${cartId}`, {
-      query: { fields: "id,items.id,items.variant.sku" },
-      headers: { ...(await getAuthHeaders()) },
-      cache: "no-store",
-    })
-    .then((r) => r.cart)
-    .catch(() => null)
-
+  // Same reader as the cart page (cached per cart, refreshed when the cart changes).
+  const cart = await retrieveCart(undefined, "id,*items,*items.variant")
   const skus = unique((cart?.items ?? []).map((item) => item.variant?.sku))
   if (skus.length === 0) return NOTHING
   return suggest({ catalog_ids: skus, mode: "cart", limit: 3, exclude_ids: excludeIds })
