@@ -1,0 +1,40 @@
+# CI cho storefront: lint, kiểm kiểu, test (vitest) và build thử.
+# Build chạy ở chế độ mock (NEXT_PUBLIC_UI_MOCK=true) nên không cần backend thật.
+# CD: Vercel tự deploy khi có push (Git integration), không cần job riêng ở đây. Xem docs/deploy.md.
+name: CI
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      NEXT_PUBLIC_UI_MOCK: "true"
+      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_ci
+      MEDUSA_BACKEND_URL: http://localhost:9000
+      NEXT_PUBLIC_BASE_URL: http://localhost:8000
+      NEXT_PUBLIC_DEFAULT_REGION: vn
+    steps:
+      - uses: actions/checkout@v4
+
+      # Yarn 4 chạy từ .yarn/releases (yarnPath trong .yarnrc.yml), không cần corepack.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+
+      - run: yarn install --immutable
+      - run: yarn lint
+      - run: yarn tsc --noEmit
+      - run: yarn test
+      - run: yarn build

@@ -8,6 +8,16 @@ checkEnvVariables()
 const S3_HOSTNAME = process.env.MEDUSA_CLOUD_S3_HOSTNAME
 const S3_PATHNAME = process.env.MEDUSA_CLOUD_S3_PATHNAME
 
+// Host của backend (bỏ qua localhost vì đã cho phép ở dưới).
+const BACKEND_HOST = (() => {
+  try {
+    const host = new URL(process.env.MEDUSA_BACKEND_URL || "").hostname
+    return host === "localhost" ? null : host
+  } catch {
+    return null
+  }
+})()
+
 /**
  * @type {import('next').NextConfig}
  */
@@ -84,6 +94,10 @@ const nextConfig = {
         "thucphamsachgiatot.vn",
         "thumbor.asia-southeast1.aeon-vn-prod.e.spresso.com",
       ].map((hostname) => ({ protocol: "https", hostname })),
+      // Ảnh do chính backend phục vụ (/static) khi deploy, ví dụ com4fud-backend.onrender.com.
+      ...(BACKEND_HOST
+        ? [{ protocol: "https", hostname: BACKEND_HOST, pathname: "/static/**" }]
+        : []),
       ...(S3_HOSTNAME && S3_PATHNAME
         ? [
             {
