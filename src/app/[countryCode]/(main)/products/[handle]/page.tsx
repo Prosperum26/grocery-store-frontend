@@ -1,0 +1,134 @@
+import { Metadata } from "next"
+import { notFound } from "next/navigation"
+
+import { listShortRow } from "@lib/data/catalog"
+import { listProducts } from "@lib/data/products"
+import { getRegion, listRegions } from "@lib/data/regions"
+import { pickProducts } from "@lib/mock/home"
+import { toProductVM } from "@lib/viewmodels/product"
+import ProductTemplate from "@modules/products/templates"
+
+type Props = {
+  params: Promise<{ countryCode: string; handle: string }>
+}
+
+export async function generateStaticParams() {
+  try {
+    const countryCodes = await listRegions().then((regions) =>
+      regions?.map((r) => r.countries?.map((c) => c.iso_2)).flat()
+    )
+
+    if (!countryCodes) {
+      return []
+    }
+
+    const promises = countryCodes.map(async (country) => {
+      const { response } = await listProducts({
+        countryCode: country,
+        queryParams: { limit: 100, fields: "handle" },
+      })
+
+      return {
+        country,
+        products: response.products,
+      }
+    })
+
+    const countryProducts = await Promise.all(promises)
+
+    return countryProducts
+      .flatMap((countryData) =>
+        countryData.products.map((product) => ({
+          countryCode: countryData.country,
+          handle: product.handle,
+        }))
+      )
+      .filter((param) => param.handle)
+  } catch (error) {
+    console.error(
+      `Failed to generate static paths for product pages: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }.`
+    )
+    return []
+  }
+}
+
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const { countryCode, handle } = await props.params
+  const region = await getRegion(countryCode)
+
+  if (!region) {
+    notFound()
+  }
+
+  const product = await listProducts({
+    countryCode,
+    queryParams: { handle },
+  }).then(({ response }) => response.products[0])
+
+  if (!product) {
+    notFound()
+  }
+
+  return {
+    title: `${product.title} | Com4Fud`,
+    description: product.description || `${product.title}, tươi mỗi ngày tại Com4Fud.`,
+    openGraph: {
+      title: `${product.title} | Com4Fud`,
+      description: product.description || `${product.title}, tươi mỗi ngày tại Com4Fud.`,
+      images: product.thumbnail ? [product.thumbnail] : [],
+    },
+  }
+}
+
+export default async function ProductPage(props: Props) {
+  const { countryCode, handle } = await props.params
+  const region = await getRegion(countryCode)
+
+  if (!region) {
+    notFound()
+  }
+
+  const { response: byHandle } = await listProducts({
+    countryCode,
+    queryParams: { handle },
+  })
+  const product = byHandle.products[0]
+
+  if (!product) {
+    notFound()
+  }
+
+  // "Thường mua kèm" points at other products by handle: read just those.
+  const vm = toProductVM(product)
+  const companionHandles = vm.companions ?? []
+  const found = await Promise.all(
+    companionHandles.map((companion) =>
+      listProducts({ countryCode, queryParams: { handle: companion } }).then(
+        ({ response }) => response.products[0]
+      )
+    )
+  )
+  const companions = pickProducts(
+    found.filter((p) => p).map(toProductVM),
+    companionHandles
+  )
+
+  // "Cùng danh mục": in-stock products of the same category, without this one and the companions above.
+  const shown = new Set([vm.id, ...companions.map((p) => p.id)])
+  const sameCategory =
+    vm.categoryHandle && vm.categoryName
+      ? (
+          await listShortRow({
+            countryCode,
+            category: { handle: vm.categoryHandle, name: vm.categoryName },
+            take: 10,
+          })
+        )
+          .filter((p) => !shown.has(p.id))
+          .slice(0, 5)
+      : []
+
+  return <ProductTemplate product={vm} companions={companions} sameCategory={sameCategory} />
+}

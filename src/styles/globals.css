@@ -1,0 +1,196 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* Com4Fud theme: point the @medusajs/ui variables (used by the Starter pages
+   not yet rebuilt) at the green palette, so nothing stays blue/zinc.
+   Variable names come from node_modules/@medusajs/ui-preset (light theme). */
+@layer base {
+  :root {
+    --bg-base: #ffffff;
+    --bg-subtle: #f2f4ec;
+    --bg-component: #f2f4ec;
+    --bg-field: #ffffff;
+    --bg-highlight: #dcefd9;
+    --bg-interactive: #1f6b3a;
+    --bg-switch-off: #c3ccbd;
+    --fg-base: #10241b;
+    --fg-subtle: #4e5d55;
+    --fg-muted: #626e67;
+    --fg-interactive: #1f6b3a;
+    --fg-interactive-hover: #0f3d2e;
+    --fg-error: #c8361f;
+    --border-base: #dde3d6;
+    --border-strong: #c3ccbd;
+    --border-interactive: #1f6b3a;
+    --border-error: #c8361f;
+    --button-inverted: #1f6b3a;
+    --button-inverted-hover: #16503a;
+    --button-inverted-pressed: #0f3d2e;
+    --buttons-inverted: 0px 1px 2px 0px rgba(15, 61, 46, 0.4),
+      0px 0px 0px 1px #0f3d2e;
+    --buttons-inverted-focus: 0px 0px 0px 1px #0f3d2e, 0px 0px 0px 2px #ffffff,
+      0px 0px 0px 4px rgba(31, 107, 58, 0.6);
+    --borders-focus: 0px 0px 0px 1px #ffffff, 0px 0px 0px 3px rgba(31, 107, 58, 0.6);
+    --borders-interactive-with-focus: 0px 0px 0px 1px #1f6b3a,
+      0px 0px 0px 2px #ffffff, 0px 0px 0px 4px rgba(31, 107, 58, 0.6);
+  }
+
+  /* One visible focus style everywhere (WCAG 2.4.7). On dark surfaces
+     (data-surface="dark") the ring turns lime so it stays visible. */
+  :focus-visible {
+    outline: 2px solid #1f6b3a;
+    outline-offset: 2px;
+  }
+  [data-surface="dark"] :focus-visible {
+    outline-color: #c8f169;
+  }
+
+  h1, h2, h3 {
+    font-family: theme("fontFamily.display");
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  input:focus ~ label,
+  input:not(:placeholder-shown) ~ label {
+    @apply -translate-y-2 text-xsmall-regular;
+  }
+
+  input:focus ~ label {
+    @apply left-0;
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus {
+    border: 1px solid #212121;
+    -webkit-text-fill-color: #212121;
+    -webkit-box-shadow: 0 0 0px 1000px #fff inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  input[type="search"]::-webkit-search-decoration,
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-results-button,
+  input[type="search"]::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+  }
+}
+
+@layer components {
+  /* Hidden until focused, then pinned top-left above the header. */
+  .skip-link {
+    @apply absolute left-4 top-0 z-[100] -translate-y-full rounded-btn bg-brand-deep px-4 py-3 font-semibold text-white transition-transform focus:translate-y-4;
+  }
+
+  /* Order-status "ticket" (v2): notched left edge. Pair with a punched hole
+     drawn inside the component. */
+  .ticket {
+    clip-path: polygon(10px 0, 100% 0, 100% 100%, 10px 100%, 0 50%);
+  }
+
+  .content-container {
+    @apply max-w-[1440px] w-full mx-auto px-6;
+  }
+
+  .contrast-btn {
+    @apply px-4 py-2 border border-black rounded-full hover:bg-black hover:text-white transition-colors duration-200 ease-in;
+  }
+
+  .text-xsmall-regular {
+    @apply text-[10px] leading-4 font-normal;
+  }
+
+  .text-small-regular {
+    @apply text-xs leading-5 font-normal;
+  }
+
+  .text-small-semi {
+    @apply text-xs leading-5 font-semibold;
+  }
+
+  .text-base-regular {
+    @apply text-sm leading-6 font-normal;
+  }
+
+  .text-base-semi {
+    @apply text-sm leading-6 font-semibold;
+  }
+
+  .text-large-regular {
+    @apply text-base leading-6 font-normal;
+  }
+
+  .text-large-semi {
+    @apply text-base leading-6 font-semibold;
+  }
+
+  .text-xl-regular {
+    @apply text-2xl leading-[36px] font-normal;
+  }
+
+  .text-xl-semi {
+    @apply text-2xl leading-[36px] font-semibold;
+  }
+
+  .text-2xl-regular {
+    @apply text-[30px] leading-[48px] font-normal;
+  }
+
+  .text-2xl-semi {
+    @apply text-[30px] leading-[48px] font-semibold;
+  }
+
+  .text-3xl-regular {
+    @apply text-[32px] leading-[44px] font-normal;
+  }
+
+  .text-3xl-semi {
+    @apply text-[32px] leading-[44px] font-semibold;
+  }
+}
+
+@layer utilities {
+  /* Grows the clickable area of a small control to at least 44x44px without
+     changing how it looks (WCAG 2.5.5 target size). Needs a positioned
+     parent, so the control itself gets `relative`. */
+  .touch-target::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}
